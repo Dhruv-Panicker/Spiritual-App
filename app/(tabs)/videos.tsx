@@ -14,7 +14,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
-import Share from 'react-native-share';
+import * as Sharing from 'expo-sharing';
 import Toast from 'react-native-toast-message';
 
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS, SPIRITUAL_TYPOGRAPHY } from '@/constants/SpiritualColors';
@@ -96,10 +96,23 @@ export default function VideosPage() {
     const shareText = `🎥 ${video.title}\n\n${video.description}\n\nWatch on YouTube: https://youtube.com/watch?v=${video.youtubeId}`;
     
     try {
-      await Share.open({
-        message: shareText,
-        title: 'Sacred Video',
-      });
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(shareText);
+      } else {
+        // Fallback to native share on web
+        if (navigator.share) {
+          await navigator.share({
+            title: 'Sacred Video',
+            text: shareText,
+          });
+        } else {
+          Toast.show({
+            type: 'info',
+            text1: 'Share',
+            text2: 'Copy link to share this video',
+          });
+        }
+      }
     } catch (error) {
       // User cancelled sharing
     }
@@ -126,10 +139,23 @@ export default function VideosPage() {
     const shareText = "🙏 Check out these inspiring spiritual videos! This app has been such a source of peace and wisdom for me.";
     
     try {
-      await Share.open({
-        message: shareText,
-        title: 'Spiritual Wisdom App',
-      });
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(shareText);
+      } else {
+        // Fallback to native share on web
+        if (navigator.share) {
+          await navigator.share({
+            title: 'Spiritual Wisdom App',
+            text: shareText,
+          });
+        } else {
+          Toast.show({
+            type: 'info',
+            text1: 'Share App',
+            text2: 'Copy this text to share the app',
+          });
+        }
+      }
     } catch (error) {
       Toast.show({
         type: 'error',
