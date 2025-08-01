@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { View, ActivityIndicator, Image, Animated, useRef, useEffect } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import { View, ActivityIndicator, Image, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../contexts/AuthContext';
 import { LoginScreen } from './LoginScreen';
