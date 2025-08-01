@@ -4,21 +4,22 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
   StyleSheet,
+  TouchableOpacity,
   Image,
-  Share,
   Dimensions,
   Linking,
-  SafeAreaView,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import { Ionicons } from '@expo/vector-icons';
+import Share from 'react-native-share';
 import Toast from 'react-native-toast-message';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS, SPIRITUAL_TYPOGRAPHY } from '@/constants/SpiritualColors';
 
-const { width, height } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get('window');
 
 interface Video {
   id: string;
@@ -33,107 +34,112 @@ const mockVideos: Video[] = [
   {
     id: '1',
     title: 'Morning Meditation Practice',
-    thumbnail: 'https://img.youtube.com/vi/ZwdjklJGi80/maxresdefault.jpg',
-    youtubeId: 'ZwdjklJGi80',
+    thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+    youtubeId: 'dQw4w9WgXcQ',
     duration: '10:30',
-    description: 'Start your day with peace and mindfulness through guided meditation'
+    description: 'Start your day with peace and mindfulness'
   },
   {
-    id: '2',
+    id: '2', 
     title: 'The Power of Gratitude',
-    thumbnail: 'https://img.youtube.com/vi/WPPPFqsECz0/maxresdefault.jpg',
-    youtubeId: 'WPPPFqsECz0',
+    thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+    youtubeId: 'dQw4w9WgXcQ',
     duration: '15:45',
-    description: 'Transform your life through grateful awareness and appreciation'
+    description: 'Transform your life through grateful awareness'
   },
   {
     id: '3',
     title: 'Finding Inner Peace',
-    thumbnail: 'https://img.youtube.com/vi/inpok4MKVLM/maxresdefault.jpg',
-    youtubeId: 'inpok4MKVLM',
+    thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+    youtubeId: 'dQw4w9WgXcQ',
     duration: '20:15',
-    description: 'Discover the sanctuary within your own heart through spiritual practice'
+    description: 'Discover the sanctuary within your own heart'
   },
   {
     id: '4',
-    title: 'Chakra Healing Journey',
-    thumbnail: 'https://img.youtube.com/vi/StrbppmsZJw/maxresdefault.jpg',
-    youtubeId: 'StrbppmsZJw',
+    title: 'Chakra Alignment Journey',
+    thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+    youtubeId: 'dQw4w9WgXcQ',
     duration: '25:00',
-    description: 'Balance your energy centers for spiritual awakening and healing'
+    description: 'Balance your energy centers with guided meditation'
   },
   {
     id: '5',
     title: 'Sacred Mantras for Peace',
-    thumbnail: 'https://img.youtube.com/vi/F8nkyljZj0w/maxresdefault.jpg',
-    youtubeId: 'F8nkyljZj0w',
-    duration: '12:30',
-    description: 'Ancient Sanskrit mantras to elevate consciousness and find tranquility'
-  },
-  {
-    id: '6',
-    title: 'Breathwork for Clarity',
-    thumbnail: 'https://img.youtube.com/vi/tybOi4hjZFQ/maxresdefault.jpg',
-    youtubeId: 'tybOi4hjZFQ',
-    duration: '18:20',
-    description: 'Sacred breathing techniques to clear mind and awaken spirit'
+    thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+    youtubeId: 'dQw4w9WgXcQ',
+    duration: '12:15',
+    description: 'Ancient chants to calm the mind and open the heart'
   }
 ];
 
-const VideoCard: React.FC<{ video: Video; onPlayVideo: (video: Video) => void }> = ({ video, onPlayVideo }) => {
-  const handleShareVideo = async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    
-    const shareText = `🎥 ${video.title}\n\n${video.description}\n\nWatch on our Spiritual Wisdom app`;
-    
-    try {
-      await Share.share({
-        title: video.title,
-        message: `${shareText}\n\nhttps://youtube.com/watch?v=${video.youtubeId}`,
-        url: `https://youtube.com/watch?v=${video.youtubeId}`,
-      });
-    } catch (error) {
-      Toast.show({
-        type: 'info',
-        text1: 'Video Link Ready',
-        text2: 'Share this inspiring video with others!',
-        visibilityTime: 3000,
-      });
-    }
-  };
+export default function VideosPage() {
+  const [currentVideo, setCurrentVideo] = useState<Video | null>(null);
 
-  const openInYouTube = async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const youtubeUrl = `https://youtube.com/watch?v=${video.youtubeId}`;
+  const handlePlayVideo = async (video: Video) => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const youtubeUrl = `https://www.youtube.com/watch?v=${video.youtubeId}`;
     
     try {
-      const supported = await Linking.canOpenURL(youtubeUrl);
-      if (supported) {
-        await Linking.openURL(youtubeUrl);
-      } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Cannot Open YouTube',
-          text2: 'Please install the YouTube app or try again later.',
-          visibilityTime: 4000,
-        });
-      }
+      await Linking.openURL(youtubeUrl);
     } catch (error) {
       Toast.show({
         type: 'error',
-        text1: 'Error Opening Video',
-        text2: 'Please try again later.',
-        visibilityTime: 3000,
+        text1: 'Error',
+        text2: 'Unable to open YouTube video',
       });
     }
   };
 
-  const handlePlayVideo = async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    onPlayVideo(video);
+  const handleShareVideo = async (video: Video) => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const shareText = `🎥 ${video.title}\n\n${video.description}\n\nWatch on YouTube: https://youtube.com/watch?v=${video.youtubeId}`;
+    
+    try {
+      await Share.open({
+        message: shareText,
+        title: 'Sacred Video',
+      });
+    } catch (error) {
+      // User cancelled sharing
+    }
   };
 
-  return (
+  const openInYouTube = async (video: Video) => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const youtubeUrl = Platform.select({
+      ios: `youtube://www.youtube.com/watch?v=${video.youtubeId}`,
+      android: `intent://youtube.com/watch?v=${video.youtubeId}#Intent;package=com.google.android.youtube;scheme=https;end`,
+      default: `https://youtube.com/watch?v=${video.youtubeId}`
+    });
+
+    try {
+      await Linking.openURL(youtubeUrl);
+    } catch (error) {
+      // Fallback to web URL
+      await Linking.openURL(`https://youtube.com/watch?v=${video.youtubeId}`);
+    }
+  };
+
+  const shareApp = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const shareText = "🙏 Check out these inspiring spiritual videos! This app has been such a source of peace and wisdom for me.";
+    
+    try {
+      await Share.open({
+        message: shareText,
+        title: 'Spiritual Wisdom App',
+      });
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Share Failed',
+        text2: 'Unable to share app at this time.',
+      });
+    }
+  };
+
+  const VideoCard = ({ video }: { video: Video }) => (
     <View style={styles.videoCard}>
       <View style={styles.thumbnailContainer}>
         <Image 
@@ -145,134 +151,106 @@ const VideoCard: React.FC<{ video: Video; onPlayVideo: (video: Video) => void }>
         {/* Play Button Overlay */}
         <TouchableOpacity 
           style={styles.playButtonOverlay}
-          onPress={handlePlayVideo}
+          onPress={() => handlePlayVideo(video)}
           activeOpacity={0.8}
         >
-          <View style={styles.playButton}>
-            <IconSymbol name="play.fill" size={32} color={SPIRITUAL_COLORS.primaryForeground} />
-          </View>
+          <LinearGradient
+            colors={SPIRITUAL_GRADIENTS.divine}
+            style={styles.playButton}
+          >
+            <Ionicons name="play" size={32} color={SPIRITUAL_COLORS.primaryForeground} />
+          </LinearGradient>
         </TouchableOpacity>
-        
+
         {/* Duration Badge */}
         <View style={styles.durationBadge}>
           <Text style={styles.durationText}>{video.duration}</Text>
         </View>
       </View>
-      
-      {/* Video Info */}
+
       <View style={styles.videoInfo}>
         <Text style={styles.videoTitle}>{video.title}</Text>
         <Text style={styles.videoDescription}>{video.description}</Text>
         
-        {/* Action Buttons */}
         <View style={styles.actionButtons}>
           <TouchableOpacity 
             style={styles.actionButton}
-            onPress={handleShareVideo}
-            activeOpacity={0.7}
+            onPress={() => handleShareVideo(video)}
           >
-            <IconSymbol name="square.and.arrow.up" size={16} color={SPIRITUAL_COLORS.primary} />
+            <Ionicons name="share-outline" size={18} color={SPIRITUAL_COLORS.primary} />
             <Text style={styles.actionButtonText}>Share</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
             style={styles.actionButton}
-            onPress={openInYouTube}
-            activeOpacity={0.7}
+            onPress={() => openInYouTube(video)}
           >
-            <IconSymbol name="link" size={16} color={SPIRITUAL_COLORS.primary} />
+            <Ionicons name="logo-youtube" size={18} color={SPIRITUAL_COLORS.spiritualRed} />
             <Text style={styles.actionButtonText}>YouTube</Text>
           </TouchableOpacity>
         </View>
       </View>
     </View>
   );
-};
-
-export default function VideosScreen() {
-  const [currentVideo, setCurrentVideo] = useState<Video | null>(null);
-
-  const handlePlayVideo = (video: Video) => {
-    setCurrentVideo(video);
-    // In a real app, you'd navigate to a video player or open YouTube
-    Toast.show({
-      type: 'success',
-      text1: '🎥 Opening Video',
-      text2: `Now playing: ${video.title}`,
-      visibilityTime: 3000,
-    });
-  };
-
-  const shareApp = async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    
-    const shareText = "🙏 Check out these inspiring spiritual videos! This app has been such a source of peace and wisdom for me.";
-    
-    try {
-      await Share.share({
-        title: 'Spiritual Wisdom Videos',
-        message: shareText,
-      });
-    } catch (error) {
-      Toast.show({
-        type: 'info',
-        text1: 'Share the Wisdom',
-        text2: 'Spread peace and mindfulness with others!',
-        visibilityTime: 3000,
-      });
-    }
-  };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <LinearGradient
         colors={SPIRITUAL_GRADIENTS.peace}
         style={styles.gradient}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Sacred Videos</Text>
-          <Text style={styles.headerSubtitle}>Wisdom teachings and guided practices</Text>
-        </View>
-
-        {/* Videos ScrollView */}
-        <ScrollView
+        <ScrollView 
           style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
-          {mockVideos.map((video, index) => (
-            <VideoCard 
-              key={video.id} 
-              video={video} 
-              onPlayVideo={handlePlayVideo}
+          {/* Header */}
+          <View style={styles.header}>
+            <Image
+              source={require('@/assets/images/om-symbol.png')}
+              style={styles.omIcon}
+              resizeMode="contain"
             />
-          ))}
-          
+            <Text style={styles.headerTitle}>Sacred Videos</Text>
+            <Text style={styles.headerSubtitle}>Wisdom teachings and guided practices</Text>
+          </View>
+
+          {/* Videos List */}
+          <View style={styles.videosContainer}>
+            {mockVideos.map((video, index) => (
+              <VideoCard key={video.id} video={video} />
+            ))}
+          </View>
+
           {/* Share App CTA */}
-          <View style={styles.shareSection}>
+          <View style={styles.shareAppContainer}>
             <LinearGradient
               colors={SPIRITUAL_GRADIENTS.divine}
-              style={styles.shareCard}
+              style={styles.shareAppCard}
             >
-              <Text style={styles.shareSectionTitle}>Share the Wisdom</Text>
-              <Text style={styles.shareSectionDescription}>
+              <Image
+                source={require('@/assets/images/om-symbol.png')}
+                style={styles.shareOmIcon}
+                resizeMode="contain"
+              />
+              <Text style={styles.shareAppTitle}>Share the Wisdom</Text>
+              <Text style={styles.shareAppDescription}>
                 Share this app with someone who might find it meaningful
               </Text>
-              <TouchableOpacity
+              <TouchableOpacity 
                 style={styles.shareAppButton}
                 onPress={shareApp}
-                activeOpacity={0.8}
               >
-                <IconSymbol name="square.and.arrow.up" size={20} color={SPIRITUAL_COLORS.secondaryForeground} />
-                <Text style={styles.shareAppText}>Share App</Text>
+                <Ionicons name="share" size={20} color={SPIRITUAL_COLORS.primary} />
+                <Text style={styles.shareAppButtonText}>Share App</Text>
               </TouchableOpacity>
             </LinearGradient>
           </View>
         </ScrollView>
       </LinearGradient>
+
       <Toast />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -283,29 +261,36 @@ const styles = StyleSheet.create({
   gradient: {
     flex: 1,
   },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 100, // Extra space for tab bar
+  },
   header: {
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 16,
     alignItems: 'center',
+    paddingTop: 60,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+  },
+  omIcon: {
+    width: 40,
+    height: 40,
+    marginBottom: 10,
+    tintColor: SPIRITUAL_COLORS.primary,
   },
   headerTitle: {
     ...SPIRITUAL_TYPOGRAPHY.spiritualHeading,
     fontSize: 28,
     marginBottom: 8,
-    color: SPIRITUAL_COLORS.primary,
   },
   headerSubtitle: {
     fontSize: 16,
     color: SPIRITUAL_COLORS.textMuted,
     textAlign: 'center',
   },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
+  videosContainer: {
     paddingHorizontal: 16,
-    paddingBottom: 100,
   },
   videoCard: {
     backgroundColor: SPIRITUAL_COLORS.cardBackground,
@@ -316,9 +301,8 @@ const styles = StyleSheet.create({
   },
   thumbnailContainer: {
     position: 'relative',
-    width: '100%',
-    height: 220,
-    backgroundColor: SPIRITUAL_COLORS.accent,
+    aspectRatio: 16/9,
+    backgroundColor: SPIRITUAL_COLORS.border,
   },
   thumbnail: {
     width: '100%',
@@ -335,102 +319,104 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   playButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: SPIRITUAL_COLORS.primary,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     justifyContent: 'center',
     alignItems: 'center',
-    ...SPIRITUAL_SHADOWS.peaceful,
+    ...SPIRITUAL_SHADOWS.divine,
   },
   durationBadge: {
     position: 'absolute',
     top: 12,
     right: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 4,
   },
   durationText: {
-    color: '#FFFFFF',
+    color: 'white',
     fontSize: 12,
     fontWeight: '600',
   },
   videoInfo: {
-    padding: 20,
+    padding: 16,
   },
   videoTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: SPIRITUAL_COLORS.foreground,
     marginBottom: 8,
-    lineHeight: 24,
   },
   videoDescription: {
     fontSize: 14,
     color: SPIRITUAL_COLORS.textMuted,
-    lineHeight: 20,
     marginBottom: 16,
+    lineHeight: 20,
   },
   actionButtons: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
+    gap: 20,
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
     paddingVertical: 8,
+    paddingHorizontal: 12,
     backgroundColor: SPIRITUAL_COLORS.accent,
     borderRadius: 20,
-    flex: 0.48,
-    justifyContent: 'center',
   },
   actionButtonText: {
+    marginLeft: 6,
     fontSize: 14,
     fontWeight: '600',
-    color: SPIRITUAL_COLORS.primary,
-    marginLeft: 6,
+    color: SPIRITUAL_COLORS.foreground,
   },
-  shareSection: {
-    marginTop: 20,
-    marginBottom: 20,
+  shareAppContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 40,
   },
-  shareCard: {
-    borderRadius: 16,
+  shareAppCard: {
     padding: 24,
+    borderRadius: 16,
     alignItems: 'center',
-    ...SPIRITUAL_SHADOWS.divine,
+    ...SPIRITUAL_SHADOWS.peaceful,
   },
-  shareSectionTitle: {
-    fontSize: 22,
+  shareOmIcon: {
+    width: 32,
+    height: 32,
+    marginBottom: 12,
+    tintColor: SPIRITUAL_COLORS.primaryForeground,
+  },
+  shareAppTitle: {
+    fontSize: 20,
     fontWeight: 'bold',
     color: SPIRITUAL_COLORS.primaryForeground,
     marginBottom: 8,
-    textAlign: 'center',
   },
-  shareSectionDescription: {
-    fontSize: 16,
+  shareAppDescription: {
+    fontSize: 14,
     color: SPIRITUAL_COLORS.primaryForeground,
     textAlign: 'center',
     marginBottom: 20,
+    lineHeight: 20,
     opacity: 0.9,
-    lineHeight: 22,
   },
   shareAppButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SPIRITUAL_COLORS.secondary,
-    paddingHorizontal: 24,
+    backgroundColor: SPIRITUAL_COLORS.primaryForeground,
     paddingVertical: 12,
-    borderRadius: 24,
-    ...SPIRITUAL_SHADOWS.peaceful,
+    paddingHorizontal: 24,
+    borderRadius: 25,
   },
-  shareAppText: {
+  shareAppButtonText: {
+    marginLeft: 8,
     fontSize: 16,
     fontWeight: '600',
-    color: SPIRITUAL_COLORS.secondaryForeground,
-    marginLeft: 8,
+    color: SPIRITUAL_COLORS.primary,
   },
 });
