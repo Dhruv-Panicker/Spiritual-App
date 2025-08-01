@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { Platform, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 
 import { Collapsible } from '@/components/Collapsible';
 import { ExternalLink } from '@/components/ExternalLink';
@@ -7,8 +7,31 @@ import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { useAuth } from '@/contexts/AuthContext';
+import { SPIRITUAL_COLORS } from '@/constants/SpiritualColors';
 
 export default function TabTwoScreen() {
+  const { logout, user } = useAuth();
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: logout,
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
@@ -22,7 +45,23 @@ export default function TabTwoScreen() {
       }>
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Explore</ThemedText>
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={handleLogout}
+          activeOpacity={0.7}
+        >
+          <IconSymbol size={24} name="xmark.circle" color={SPIRITUAL_COLORS.spiritualRed} />
+          <ThemedText style={styles.logoutText}>Logout</ThemedText>
+        </TouchableOpacity>
       </ThemedView>
+      
+      {user && (
+        <ThemedView style={styles.userContainer}>
+          <ThemedText style={styles.welcomeText}>
+            Welcome, {user.name}!
+          </ThemedText>
+        </ThemedView>
+      )}
       <ThemedText>This app includes example code to help you get started.</ThemedText>
       <Collapsible title="File-based routing">
         <ThemedText>
@@ -105,6 +144,37 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     gap: 8,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: SPIRITUAL_COLORS.cardBackground,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: SPIRITUAL_COLORS.spiritualRed,
+    gap: 6,
+  },
+  logoutText: {
+    color: SPIRITUAL_COLORS.spiritualRed,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  userContainer: {
+    marginBottom: 16,
+    padding: 12,
+    backgroundColor: SPIRITUAL_COLORS.cardBackground,
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: SPIRITUAL_COLORS.primary,
+  },
+  welcomeText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: SPIRITUAL_COLORS.foreground,
   },
 });
