@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Platform } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -52,9 +53,7 @@ export default function TabLayout() {
           options={{
             title: 'Videos',
             tabBarIcon: ({ color, focused }) => (
-              <HapticTab>
-                <Ionicons name={focused ? 'play-circle' : 'play-circle-outline'} size={28} color={color} />
-              </HapticTab>
+              <Ionicons name={focused ? 'play-circle' : 'play-circle-outline'} size={28} color={color} />
             ),
           }}
         />
@@ -63,9 +62,7 @@ export default function TabLayout() {
           options={{
             title: 'Calendar',
             tabBarIcon: ({ color, focused }) => (
-              <HapticTab>
-                <Ionicons name={focused ? 'calendar' : 'calendar-outline'} size={28} color={color} />
-              </HapticTab>
+              <Ionicons name={focused ? 'calendar' : 'calendar-outline'} size={28} color={color} />
             ),
           }}
         />
