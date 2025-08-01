@@ -66,6 +66,15 @@ export default function TabLayout() {
             ),
           }}
         />
+        <Tabs.Screen
+          name="gurudev"
+          options={{
+            title: 'Gurudev',
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons name={focused ? 'person' : 'person-outline'} size={28} color={color} />
+            ),
+          }}
+        />
       </Tabs>
     </AuthGuard>
   );
