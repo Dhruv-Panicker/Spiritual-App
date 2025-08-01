@@ -86,7 +86,7 @@ export default function GurudevScreen() {
           {/* Hero Section */}
           <View style={styles.heroContainer}>
             <Image
-              source={require('@/assets/images/gurudev-hero.jpg')}
+              source={require('@/assets/images/om-symbol.png')}
               style={styles.heroImage}
               resizeMode="cover"
             />
@@ -224,6 +224,8 @@ const styles = StyleSheet.create({
   heroImage: {
     width: '100%',
     height: '100%',
+    tintColor: SPIRITUAL_COLORS.omGold,
+    opacity: 0.3,
   },
   heroOverlay: {
     position: 'absolute',
