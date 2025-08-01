@@ -1,95 +1,74 @@
+import { Image } from "expo-image";
+import { Platform, StyleSheet, Text, View } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  Alert,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '@/contexts/AuthContext';
-import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
+import { HelloWave } from "@/components/HelloWave";
+import ParallaxScrollView from "@/components/ParallaxScrollView";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { UserProfile } from "@/components/auth/UserProfile";
+import { useAuth } from "@/contexts/AuthContext";
+import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS } from "@/constants/SpiritualColors";
 
 export default function HomeScreen() {
-  const { user, logout } = useAuth();
-
-  const handleLogout = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: logout,
-        },
-      ]
-    );
-  };
+  const { user } = useAuth();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <LinearGradient
         colors={SPIRITUAL_GRADIENTS.peace}
         style={styles.gradient}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.header}>
-            <View style={styles.welcomeContainer}>
-              <Image
-                source={require('../../assets/images/om-symbol.png')}
-                style={styles.omSymbol}
-                resizeMode="contain"
-              />
-              <Text style={styles.title}>Spiritual Wisdom</Text>
-              <Text style={styles.welcomeTitle}>Welcome, {user?.name}</Text>
-              <Text style={styles.welcomeSubtitle}>Find peace in daily wisdom</Text>
-            </View>
-            
-            <TouchableOpacity
-              style={styles.logoutButton}
-              onPress={handleLogout}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.logoutText}>Sign Out</Text>
-            </TouchableOpacity>
-          </View>
+        <ParallaxScrollView
+          headerBackgroundColor={{ light: SPIRITUAL_COLORS.background, dark: '#1D3D47' }}
+          headerImage={
+            <Image
+              source={require('@/assets/images/partial-react-logo.png')}
+              style={styles.reactLogo}
+            />
+          }>
+          <ThemedView style={styles.titleContainer}>
+            <Text style={styles.welcomeText}>
+              Welcome, {user?.name || 'Spiritual Seeker'}! <HelloWave />
+            </Text>
+          </ThemedView>
 
-          <View style={styles.content}>
-            <View style={styles.inspirationCard}>
-              <Text style={styles.inspirationTitle}>Today's Inspiration</Text>
-              <Text style={styles.inspirationQuote}>
-                "The soul is here for its own joy."
-              </Text>
-              <Text style={styles.inspirationAuthor}>- Rumi</Text>
-            </View>
+          <UserProfile />
 
-            <View style={styles.statsContainer}>
-              <View style={styles.statCard}>
-                <Text style={styles.statNumber}>7</Text>
-                <Text style={styles.statLabel}>Days Active</Text>
-              </View>
-              <View style={styles.statCard}>
-                <Text style={styles.statNumber}>42</Text>
-                <Text style={styles.statLabel}>Quotes Read</Text>
-              </View>
-              <View style={styles.statCard}>
-                <Text style={styles.statNumber}>15</Text>
-                <Text style={styles.statLabel}>Videos Watched</Text>
-              </View>
-            </View>
-          </View>
-        </ScrollView>
+          <ThemedView style={styles.stepContainer}>
+            <ThemedText type="subtitle">Step 1: Try it</ThemedText>
+            <ThemedText>
+              Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
+              Press{' '}
+              <ThemedText type="defaultSemiBold">
+                {Platform.select({
+                  ios: 'cmd + d',
+                  android: 'cmd + m',
+                  web: 'F12'
+                })}
+              </ThemedText>{' '}
+              to open developer tools.
+            </ThemedText>
+          </ThemedView>
+          <ThemedView style={styles.stepContainer}>
+            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
+            <ThemedText>
+              Tap the Explore tab to learn more about what's included in this starter app.
+            </ThemedText>
+          </ThemedView>
+          <ThemedView style={styles.stepContainer}>
+            <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
+            <ThemedText>
+              When you're ready, run{' '}
+              <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
+              <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
+              <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
+              <ThemedText type="defaultSemiBold">app-example</ThemedText>.
+            </ThemedText>
+          </ThemedView>
+        </ParallaxScrollView>
       </LinearGradient>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -100,110 +79,26 @@ const styles = StyleSheet.create({
   gradient: {
     flex: 1,
   },
-  scrollContent: {
-    flexGrow: 1,
-    padding: 20,
-  },
-  header: {
+  titleContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 30,
-  },
-  welcomeContainer: {
-    alignItems: 'center',
+    gap: 8,
     marginBottom: 20,
   },
-  omSymbol: {
-    width: 80,
-    height: 80,
-    marginBottom: 16,
-    tintColor: SPIRITUAL_COLORS.omGold,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: SPIRITUAL_COLORS.foreground,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  welcomeTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: SPIRITUAL_COLORS.foreground,
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  welcomeSubtitle: {
-    fontSize: 16,
-    color: SPIRITUAL_COLORS.textMuted,
-    textAlign: 'center',
-    fontStyle: 'italic',
-  },
-  logoutButton: {
-    backgroundColor: SPIRITUAL_COLORS.spiritualRed,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-    ...SPIRITUAL_SHADOWS.peaceful,
-  },
-  logoutText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  content: {
-    flex: 1,
-  },
-  inspirationCard: {
-    backgroundColor: SPIRITUAL_COLORS.cardBackground,
-    borderRadius: 16,
-    padding: 24,
-    marginBottom: 20,
-    ...SPIRITUAL_SHADOWS.card,
-  },
-  inspirationTitle: {
+  welcomeText: {
     fontSize: 20,
     fontWeight: 'bold',
     color: SPIRITUAL_COLORS.foreground,
-    marginBottom: 16,
-    textAlign: 'center',
   },
-  inspirationQuote: {
-    fontSize: 18,
-    color: SPIRITUAL_COLORS.foreground,
-    textAlign: 'center',
-    fontStyle: 'italic',
-    lineHeight: 26,
-    marginBottom: 12,
+  stepContainer: {
+    gap: 8,
+    marginBottom: 8,
   },
-  inspirationAuthor: {
-    fontSize: 14,
-    color: SPIRITUAL_COLORS.textMuted,
-    textAlign: 'center',
-    fontWeight: '600',
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: SPIRITUAL_COLORS.cardBackground,
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    ...SPIRITUAL_SHADOWS.peaceful,
-  },
-  statNumber: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: SPIRITUAL_COLORS.primary,
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: SPIRITUAL_COLORS.textMuted,
-    textAlign: 'center',
-    fontWeight: '500',
+  reactLogo: {
+    height: 178,
+    width: 290,
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
   },
 });
