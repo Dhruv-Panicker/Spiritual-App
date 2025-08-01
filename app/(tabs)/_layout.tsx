@@ -47,6 +47,28 @@ export default function TabLayout() {
             tabBarIcon: ({ color }) => <IconSymbol size={28} name="book" color={color} />,
           }}
         />
+        <Tabs.Screen
+          name="videos"
+          options={{
+            title: 'Videos',
+            tabBarIcon: ({ color, focused }) => (
+              <HapticTab>
+                <Ionicons name={focused ? 'play-circle' : 'play-circle-outline'} size={28} color={color} />
+              </HapticTab>
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="calendar"
+          options={{
+            title: 'Calendar',
+            tabBarIcon: ({ color, focused }) => (
+              <HapticTab>
+                <Ionicons name={focused ? 'calendar' : 'calendar-outline'} size={28} color={color} />
+              </HapticTab>
+            ),
+          }}
+        />
       </Tabs>
     </AuthGuard>
   );
