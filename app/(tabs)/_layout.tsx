@@ -16,7 +16,6 @@ export default function TabLayout() {
   return (
     <AuthGuard>
       <Tabs
-        initialRouteName="quotes"
         screenOptions={{
           tabBarActiveTintColor: SPIRITUAL_COLORS.primary,
           tabBarInactiveTintColor: SPIRITUAL_COLORS.textMuted,
@@ -37,14 +36,15 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            href: null, // Hide from tab bar
+            title: 'Home',
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
           }}
         />
         <Tabs.Screen
           name="quotes"
           options={{
             title: 'Quotes',
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="quote" color={color} />,
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="book" color={color} />,
           }}
         />
         <Tabs.Screen
