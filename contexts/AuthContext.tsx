@@ -8,13 +8,15 @@ export interface User {
   name: string;
   email: string;
   isAdmin: boolean;
+  avatar?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string, name: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -32,6 +34,8 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+const USER_STORAGE_KEY = 'spiritual-app-user';
+
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,9 +46,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const checkExistingSession = async () => {
     try {
-      const savedUser = await AsyncStorage.getItem('spiritual-app-user');
+      setIsLoading(true);
+      const savedUser = await AsyncStorage.getItem(USER_STORAGE_KEY);
       if (savedUser) {
-        setUser(JSON.parse(savedUser));
+        const userData = JSON.parse(savedUser);
+        setUser(userData);
       }
     } catch (error) {
       console.error('Error checking existing session:', error);
@@ -53,65 +59,110 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const login = async (email: string, password: string) => {
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const login = async (email: string, password: string): Promise<void> => {
     setIsLoading(true);
     try {
-      // Add haptic feedback
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       
-      // Simulate API call - replace with actual authentication
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Basic email validation
-      if (!email.includes('@') || password.length < 3) {
-        throw new Error('Invalid credentials');
+      if (!validateEmail(email)) {
+        throw new Error('Please enter a valid email address');
       }
       
-      const mockUser: User = {
-        id: '1',
-        name: 'Spiritual Seeker',
-        email,
-        isAdmin: email === 'admin@example.com'
-      };
+      if (password.length < 6) {
+        throw new Error('Password must be at least 6 characters');
+      }
       
-      setUser(mockUser);
-      await AsyncStorage.setItem('spiritual-app-user', JSON.stringify(mockUser));
-      
-      // Success haptic feedback
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      // Mock authentication - replace with real API
+      if (email === 'test@example.com' && password === 'password') {
+        const newUser: User = {
+          id: '1',
+          name: 'Spiritual Seeker',
+          email,
+          isAdmin: email === 'admin@spiritual.com',
+          avatar: undefined
+        };
+        
+        await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(newUser));
+        setUser(newUser);
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else {
+        throw new Error('Invalid email or password');
+      }
     } catch (error) {
-      // Error haptic feedback
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      throw new Error('Authentication failed');
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const loginWithGoogle = async () => {
+  const signup = async (email: string, password: string, name: string): Promise<void> => {
     setIsLoading(true);
     try {
-      // Add haptic feedback
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       
-      // Simulate Google OAuth - replace with actual Google OAuth implementation
-      // You would integrate with expo-auth-session or @react-native-google-signin/google-signin
+      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      const mockUser: User = {
-        id: '2',
-        name: 'Google User',
-        email: 'user@gmail.com',
-        isAdmin: false
+      if (!validateEmail(email)) {
+        throw new Error('Please enter a valid email address');
+      }
+      
+      if (password.length < 6) {
+        throw new Error('Password must be at least 6 characters');
+      }
+      
+      if (name.trim().length < 2) {
+        throw new Error('Name must be at least 2 characters');
+      }
+      
+      const newUser: User = {
+        id: Date.now().toString(),
+        name: name.trim(),
+        email,
+        isAdmin: email === 'admin@spiritual.com',
+        avatar: undefined
       };
       
-      setUser(mockUser);
-      await AsyncStorage.setItem('spiritual-app-user', JSON.stringify(mockUser));
-      
-      // Success haptic feedback
+      await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(newUser));
+      setUser(newUser);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
-      // Error haptic feedback
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loginWithGoogle = async (): Promise<void> => {
+    setIsLoading(true);
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      
+      // Simulate Google OAuth flow
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const googleUser: User = {
+        id: 'google_' + Date.now(),
+        name: 'Google User',
+        email: 'user@gmail.com',
+        isAdmin: false,
+        avatar: 'https://via.placeholder.com/100'
+      };
+      
+      await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(googleUser));
+      setUser(googleUser);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       throw new Error('Google authentication failed');
     } finally {
@@ -119,19 +170,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const logout = async () => {
+  const logout = async (): Promise<void> => {
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      await AsyncStorage.removeItem(USER_STORAGE_KEY);
       setUser(null);
-      await AsyncStorage.removeItem('spiritual-app-user');
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
       console.error('Error during logout:', error);
+      // Clear user state even if storage fails
+      setUser(null);
     }
   };
 
   const value: AuthContextType = {
     user,
     login,
+    signup,
     loginWithGoogle,
     logout,
     isLoading
