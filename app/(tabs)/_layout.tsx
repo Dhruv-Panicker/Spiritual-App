@@ -41,6 +41,13 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
+          name="quotes"
+          options={{
+            title: 'Quotes',
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="book" color={color} />,
+          }}
+        />
+        <Tabs.Screen
           name="explore"
           options={{
             title: 'Explore',
