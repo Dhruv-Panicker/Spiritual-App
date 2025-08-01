@@ -47,6 +47,13 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
+          name="videos"
+          options={{
+            title: 'Videos',
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="play.circle" color={color} />,
+          }}
+        />
+        <Tabs.Screen
           name="explore"
           options={{
             title: 'Explore',

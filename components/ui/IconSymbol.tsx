@@ -15,6 +15,7 @@ type IconSymbolName = keyof typeof MAPPING;
  */
 const MAPPING = {
   'quote': 'quote.opening',
+  'play.circle': 'play-circle',
   // See SF Symbols 6 app for complete list of icons
   'house.fill': 'home',
   'paperplane.fill': 'send',
