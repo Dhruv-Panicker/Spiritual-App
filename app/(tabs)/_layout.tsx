@@ -75,6 +75,15 @@ export default function TabLayout() {
             ),
           }}
         />
+        <Tabs.Screen
+          name="admin"
+          options={{
+            title: 'Admin',
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons name={focused ? 'settings' : 'settings-outline'} size={28} color={color} />
+            ),
+          }}
+        />
       </Tabs>
     </AuthGuard>
   );
