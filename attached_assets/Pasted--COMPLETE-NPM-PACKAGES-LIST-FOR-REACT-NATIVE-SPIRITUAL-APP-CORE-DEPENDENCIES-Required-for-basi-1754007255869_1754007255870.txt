@@ -1,0 +1,78 @@
+# COMPLETE NPM PACKAGES LIST FOR REACT NATIVE SPIRITUAL APP
+
+## CORE DEPENDENCIES (Required for basic functionality)
+
+### Navigation System
+```bash
+npm install @react-navigation/native
+npm install @react-navigation/bottom-tabs  
+npm install @react-navigation/stack
+npm install react-native-screens
+npm install react-native-safe-area-context
+```
+
+### UI Components & Styling
+```bash
+npm install react-native-vector-icons
+npm install react-native-linear-gradient
+npm install react-native-elements
+npm install react-native-super-grid
+```
+
+### App Functionality
+```bash
+npm install react-native-share
+npm install react-native-toast-message
+npm install react-native-haptic-feedback
+npm install @react-native-async-storage/async-storage
+```
+
+### State Management (Keep existing)
+```bash
+npm install @tanstack/react-query
+```
+
+## FEATURE-SPECIFIC DEPENDENCIES
+
+### For Videos Page
+```bash
+npm install react-native-video
+# OR for Expo:
+expo install expo-av
+```
+
+### For Calendar Page
+```bash
+npm install react-native-calendars
+```
+
+### For Image Features
+```bash
+npm install expo-image-picker
+```
+
+### For Enhanced UX
+```bash
+npm install react-native-device-info
+npm install react-native-orientation-locker
+npm install react-native-keyboard-aware-scroll-view
+```
+
+### For Animations (Optional but recommended)
+```bash
+npm install react-native-gesture-handler
+npm install react-native-reanimated
+npm install react-native-animated-loader
+npm install react-native-modal
+```
+
+## ONE-COMMAND INSTALL (Copy & Paste)
+
+### For Standard React Native:
+```bash
+npm install @react-navigation/native @react-navigation/bottom-tabs @react-navigation/stack react-native-screens react-native-safe-area-context react-native-vector-icons react-native-linear-gradient react-native-elements react-native-share react-native-toast-message react-native-haptic-feedback @react-native-async-storage/async-storage @tanstack/react-query react-native-video react-native-calendars expo-image-picker react-native-gesture-handler react-native-reanimated
+```
+
+### For Expo Managed Workflow:
+```bash
+expo install @react-navigation/native @react-navigation/bottom-tabs @react-navigation/stack react-native-screens react-native-safe-area-context react-native-vector-icons expo-linear-gradient expo-sharing expo-haptics @react-native-async-storage/async-storage @tanstack/react-query expo-av react-native-calendars expo-image-picker
