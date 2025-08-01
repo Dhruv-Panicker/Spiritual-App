@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   View,
@@ -111,9 +112,9 @@ export default function HomeScreen() {
           <View style={styles.inspirationCard}>
             <Text style={styles.inspirationTitle}>Today's Inspiration</Text>
             <Text style={styles.inspirationQuote}>
-              "The journey of a thousand miles begins with a single step."
+              "The soul is here for its own joy."
             </Text>
-            <Text style={styles.inspirationAuthor}>- Lao Tzu</Text>
+            <Text style={styles.inspirationAuthor}>- Rumi</Text>
           </View>
         </ScrollView>
       </LinearGradient>
@@ -141,9 +142,9 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   omSymbol: {
-    width: 60,
-    height: 60,
-    marginBottom: 12,
+    width: 80,
+    height: 80,
+    marginBottom: 16,
     tintColor: SPIRITUAL_COLORS.omGold,
   },
   title: {
@@ -166,8 +167,8 @@ const styles = StyleSheet.create({
     ...SPIRITUAL_SHADOWS.peaceful,
   },
   welcomeTitle: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: 22,
+    fontWeight: 'bold',
     color: SPIRITUAL_COLORS.foreground,
     marginBottom: 12,
     textAlign: 'center',

@@ -14,7 +14,7 @@ type IconSymbolName = keyof typeof MAPPING;
  * - see SF Symbols in the [SF Symbols](https://developer.apple.com/sf-symbols/) app.
  */
 const MAPPING = {
-  'quote': 'quote.opening',
+  'quote': 'book',
   'play.circle': 'play-circle',
   // See SF Symbols 6 app for complete list of icons
   'house.fill': 'home',
