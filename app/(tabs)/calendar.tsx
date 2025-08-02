@@ -542,18 +542,22 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 20,
   },
   blurOverlay: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 20,
   },
   modalContainer: {
     backgroundColor: SPIRITUAL_COLORS.cardBackground,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: screenHeight * 0.8,
+    borderRadius: 20,
+    maxHeight: screenHeight * 0.7,
     ...SPIRITUAL_SHADOWS.divine,
+    marginVertical: 20,
   },
   modalHeader: {
     flexDirection: 'row',
