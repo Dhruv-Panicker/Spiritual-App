@@ -145,47 +145,34 @@ export function VideosScreen() {
   const panResponder = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (evt, gestureState) => {
-        // Only respond to vertical swipes
-        return Math.abs(gestureState.dy) > Math.abs(gestureState.dx) && Math.abs(gestureState.dy) > 10;
+        // Only respond to vertical swipes with sufficient movement
+        return Math.abs(gestureState.dy) > Math.abs(gestureState.dx) && Math.abs(gestureState.dy) > 20;
       },
       onPanResponderGrant: () => {
-        translateY.setOffset(translateY._value);
+        // Reset any existing offset
+        translateY.setOffset(0);
+        translateY.setValue(0);
       },
       onPanResponderMove: (evt, gestureState) => {
-        // Limit the movement to create resistance at boundaries
-        let limitedDy = gestureState.dy;
-        
-        if (currentVideoIndex === 0 && gestureState.dy > 0) {
-          // At first video, resist downward swipe
-          limitedDy = gestureState.dy * 0.3;
-        } else if (currentVideoIndex === spiritualVideos.length - 1 && gestureState.dy < 0) {
-          // At last video, resist upward swipe
-          limitedDy = gestureState.dy * 0.3;
-        }
-        
-        translateY.setValue(limitedDy);
+        // Allow smooth movement during gesture
+        translateY.setValue(gestureState.dy * 0.5);
       },
       onPanResponderRelease: (evt, gestureState) => {
-        translateY.flattenOffset();
+        // Reset transform
+        translateY.setValue(0);
+        translateY.setOffset(0);
         
-        const swipeThreshold = 50;
-        const velocityThreshold = 0.3;
+        const swipeThreshold = 80;
+        const velocityThreshold = 0.5;
         
-        if (gestureState.dy > swipeThreshold || gestureState.vy > velocityThreshold) {
-          // Swiped down - go to previous video
-          goToPreviousVideo();
-        } else if (gestureState.dy < -swipeThreshold || gestureState.vy < -velocityThreshold) {
-          // Swiped up - go to next video
+        // Check for swipe up (next video)
+        if (gestureState.dy < -swipeThreshold || gestureState.vy < -velocityThreshold) {
           goToNextVideo();
         }
-        
-        // Animate back to center
-        Animated.spring(translateY, {
-          toValue: 0,
-          useNativeDriver: true,
-          tension: 100,
-          friction: 8,
-        }).start();
+        // Check for swipe down (previous video)  
+        else if (gestureState.dy > swipeThreshold || gestureState.vy > velocityThreshold) {
+          goToPreviousVideo();
+        }
       },
     })
   ).current;
@@ -319,19 +306,6 @@ export function VideosScreen() {
               {currentVideo.description}
             </Text>
           </View>
-          
-          {/* Progress Indicators */}
-          <View style={styles.progressIndicators}>
-            {spiritualVideos.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.progressDot,
-                  index === currentVideoIndex && styles.progressDotActive
-                ]}
-              />
-            ))}
-          </View>
         </View>
 
         {/* Swipe Hint (for first-time users) */}
@@ -424,25 +398,7 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
-  progressIndicators: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  progressDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    marginHorizontal: 3,
-  },
-  progressDotActive: {
-    backgroundColor: '#fff',
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
+  
   swipeHint: {
     position: 'absolute',
     top: '50%',
