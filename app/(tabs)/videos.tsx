@@ -112,35 +112,39 @@ export function VideosScreen() {
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       
-      // Try YouTube app first (Shorts format), then fallback to browser
       const youtubeAppUrl = `youtube://shorts/${video.youtubeId}`;
       const browserUrl = `https://www.youtube.com/shorts/${video.youtubeId}`;
       
+      // Check if we're on web platform
+      if (typeof window !== 'undefined' && window.open) {
+        // Web environment - use window.open
+        window.open(browserUrl, '_blank');
+        return;
+      }
+      
+      // Native environment - try app first, then fallback
       const canOpenApp = await Linking.canOpenURL(youtubeAppUrl);
       
       if (canOpenApp) {
         await Linking.openURL(youtubeAppUrl);
       } else {
         // Fallback to browser with Shorts URL
-        const canOpenBrowser = await Linking.canOpenURL(browserUrl);
-        if (canOpenBrowser) {
-          await Linking.openURL(browserUrl);
-        } else {
-          Toast.show({
-            type: 'error',
-            text1: 'Cannot Open Video',
-            text2: 'No app available to play videos',
-            visibilityTime: 3000,
-          });
-        }
+        await Linking.openURL(browserUrl);
       }
     } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error Opening Video',
-        text2: 'Please try again or check your internet connection',
-        visibilityTime: 3000,
-      });
+      console.error('Error opening video:', error);
+      
+      // Final fallback for web - try direct window.open
+      if (typeof window !== 'undefined' && window.open) {
+        window.open(`https://www.youtube.com/shorts/${video.youtubeId}`, '_blank');
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Error Opening Video',
+          text2: 'Please try again or check your internet connection',
+          visibilityTime: 3000,
+        });
+      }
     }
   };
 
