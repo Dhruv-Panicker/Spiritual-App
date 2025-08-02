@@ -77,7 +77,6 @@ const spiritualVideos: Video[] = [
 export function VideosScreen() {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const translateY = useRef(new Animated.Value(0)).current;
-  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const currentVideo = spiritualVideos[currentVideoIndex];
 
@@ -120,24 +119,26 @@ export function VideosScreen() {
 
   // Navigation functions
   const goToNextVideo = () => {
-    if (currentVideoIndex < spiritualVideos.length - 1 && !isTransitioning) {
-      setIsTransitioning(true);
-      setCurrentVideoIndex(currentVideoIndex + 1);
+    console.log('goToNextVideo called, currentIndex:', currentVideoIndex, 'maxIndex:', spiritualVideos.length - 1);
+    if (currentVideoIndex < spiritualVideos.length - 1) {
+      const nextIndex = currentVideoIndex + 1;
+      setCurrentVideoIndex(nextIndex);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      
-      // Reset transition state after animation
-      setTimeout(() => setIsTransitioning(false), 300);
+      console.log('Moving to next video, new index:', nextIndex);
+    } else {
+      console.log('Already at last video');
     }
   };
 
   const goToPreviousVideo = () => {
-    if (currentVideoIndex > 0 && !isTransitioning) {
-      setIsTransitioning(true);
-      setCurrentVideoIndex(currentVideoIndex - 1);
+    console.log('goToPreviousVideo called, currentIndex:', currentVideoIndex);
+    if (currentVideoIndex > 0) {
+      const prevIndex = currentVideoIndex - 1;
+      setCurrentVideoIndex(prevIndex);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      
-      // Reset transition state after animation
-      setTimeout(() => setIsTransitioning(false), 300);
+      console.log('Moving to previous video, new index:', prevIndex);
+    } else {
+      console.log('Already at first video');
     }
   };
 
@@ -146,32 +147,38 @@ export function VideosScreen() {
     PanResponder.create({
       onMoveShouldSetPanResponder: (evt, gestureState) => {
         // Only respond to vertical swipes with sufficient movement
-        return Math.abs(gestureState.dy) > Math.abs(gestureState.dx) && Math.abs(gestureState.dy) > 20;
+        const shouldRespond = Math.abs(gestureState.dy) > Math.abs(gestureState.dx) && Math.abs(gestureState.dy) > 20;
+        console.log('Should respond to gesture:', shouldRespond, 'dy:', gestureState.dy, 'dx:', gestureState.dx);
+        return shouldRespond;
       },
       onPanResponderGrant: () => {
-        // Reset any existing offset
-        translateY.setOffset(0);
+        console.log('Pan responder granted');
         translateY.setValue(0);
       },
       onPanResponderMove: (evt, gestureState) => {
         // Allow smooth movement during gesture
-        translateY.setValue(gestureState.dy * 0.5);
+        translateY.setValue(gestureState.dy * 0.3);
       },
       onPanResponderRelease: (evt, gestureState) => {
+        console.log('Pan released - dy:', gestureState.dy, 'vy:', gestureState.vy);
+        
         // Reset transform
         translateY.setValue(0);
-        translateY.setOffset(0);
         
-        const swipeThreshold = 80;
-        const velocityThreshold = 0.5;
+        const swipeThreshold = 50;
+        const velocityThreshold = 0.3;
         
         // Check for swipe up (next video)
         if (gestureState.dy < -swipeThreshold || gestureState.vy < -velocityThreshold) {
+          console.log('Detected swipe up');
           goToNextVideo();
         }
         // Check for swipe down (previous video)  
         else if (gestureState.dy > swipeThreshold || gestureState.vy > velocityThreshold) {
+          console.log('Detected swipe down');
           goToPreviousVideo();
+        } else {
+          console.log('No significant swipe detected');
         }
       },
     })
