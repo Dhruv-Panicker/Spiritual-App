@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -76,13 +75,12 @@ const spiritualVideos: Video[] = [
 
 export function VideosScreen() {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const translateY = useRef(new Animated.Value(0)).current;
   const panRef = useRef(null);
 
   const currentVideo = spiritualVideos[currentVideoIndex];
 
-  // Create embedded YouTube player HTML
+  // Create embedded YouTube player HTML with autoplay
   const createYouTubeHTML = (videoId: string) => {
     return `
       <!DOCTYPE html>
@@ -98,6 +96,7 @@ export function VideosScreen() {
               justify-content: center;
               align-items: center;
               height: 100vh;
+              overflow: hidden;
             }
             iframe {
               border: none;
@@ -107,10 +106,11 @@ export function VideosScreen() {
         <body>
           <iframe 
             width="${screenWidth}" 
-            height="${screenHeight * 0.7}" 
-            src="https://www.youtube.com/embed/${videoId}?autoplay=1&controls=1&rel=0&showinfo=0&fs=0&modestbranding=1&iv_load_policy=3&cc_load_policy=0&disablekb=1"
+            height="${screenHeight}" 
+            src="https://www.youtube.com/embed/${videoId}?autoplay=1&controls=1&rel=0&showinfo=0&fs=0&modestbranding=1&iv_load_policy=3&cc_load_policy=0&disablekb=1&mute=0&loop=1&playlist=${videoId}"
             frameborder="0" 
-            allowfullscreen>
+            allowfullscreen
+            allow="autoplay; encrypted-media">
           </iframe>
         </body>
       </html>
@@ -152,15 +152,15 @@ export function VideosScreen() {
   const openInYouTube = async (video: Video) => {
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      
+
       const browserUrl = `https://www.youtube.com/shorts/${video.youtubeId}`;
-      
+
       // Check if we're on web platform
       if (typeof window !== 'undefined' && window.open) {
         window.open(browserUrl, '_blank');
         return;
       }
-      
+
       // Native environment - open in external browser
       const { Linking } = require('react-native');
       await Linking.openURL(browserUrl);
@@ -175,15 +175,6 @@ export function VideosScreen() {
     }
   };
 
-  const handlePlayVideo = async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    setIsVideoPlaying(true);
-  };
-
-  const handleCloseVideo = () => {
-    setIsVideoPlaying(false);
-  };
-
   const onGestureEvent = Animated.event(
     [{ nativeEvent: { translationY: translateY } }],
     { useNativeDriver: true }
@@ -192,23 +183,21 @@ export function VideosScreen() {
   const onHandlerStateChange = (event: any) => {
     if (event.nativeEvent.state === 5) { // END state
       const { translationY, velocityY } = event.nativeEvent;
-      
+
       if (translationY < -100 || velocityY < -500) {
         // Swipe up - next video
         if (currentVideoIndex < spiritualVideos.length - 1) {
           setCurrentVideoIndex(currentVideoIndex + 1);
-          setIsVideoPlaying(false);
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         }
       } else if (translationY > 100 || velocityY > 500) {
         // Swipe down - previous video
         if (currentVideoIndex > 0) {
           setCurrentVideoIndex(currentVideoIndex - 1);
-          setIsVideoPlaying(false);
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         }
       }
-      
+
       // Reset animation
       Animated.spring(translateY, {
         toValue: 0,
@@ -220,7 +209,7 @@ export function VideosScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
-      
+
       <PanGestureHandler
         ref={panRef}
         onGestureEvent={onGestureEvent}
@@ -234,136 +223,66 @@ export function VideosScreen() {
             }
           ]}
         >
-          {/* Video Player Area */}
+          {/* Video Player Area - Full Screen */}
           <View style={styles.videoPlayerContainer}>
-            {isVideoPlaying ? (
-              <View style={styles.webViewContainer}>
-                <WebView
-                  source={{ html: createYouTubeHTML(currentVideo.youtubeId) }}
-                  style={styles.webView}
-                  allowsInlineMediaPlayback
-                  mediaPlaybackRequiresUserAction={false}
-                  javaScriptEnabled
-                  domStorageEnabled
-                  startInLoadingState
-                  scalesPageToFit
-                />
-                
-                {/* Close button */}
-                <TouchableOpacity 
-                  style={styles.closeButton}
-                  onPress={handleCloseVideo}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons name="close" size={24} color="#fff" />
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <View style={styles.thumbnailContainer}>
-                {/* Background with thumbnail blur effect */}
-                <LinearGradient
-                  colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.7)']}
-                  style={styles.thumbnailOverlay}
-                />
-                
-                {/* Play Button */}
-                <TouchableOpacity
-                  style={[styles.playButton, SPIRITUAL_SHADOWS.divine]}
-                  onPress={handlePlayVideo}
-                  activeOpacity={0.8}
-                >
-                  <LinearGradient
-                    colors={SPIRITUAL_GRADIENTS.divine}
-                    style={styles.playButtonGradient}
-                  >
-                    <Ionicons
-                      name="play"
-                      size={60}
-                      color={SPIRITUAL_COLORS.primaryForeground}
-                      style={styles.playIcon}
-                    />
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-            )}
+            <WebView
+              key={currentVideo.youtubeId} // Force re-render when video changes
+              source={{ html: createYouTubeHTML(currentVideo.youtubeId) }}
+              style={styles.webView}
+              allowsInlineMediaPlayback
+              mediaPlaybackRequiresUserAction={false}
+              javaScriptEnabled
+              domStorageEnabled
+              startInLoadingState
+              scalesPageToFit
+            />
           </View>
 
-          {/* Video Info Overlay */}
-          <View style={styles.videoInfoOverlay}>
-            {/* Video Navigation Indicator */}
-            <View style={styles.navigationIndicator}>
-              <Text style={styles.navigationText}>
-                {currentVideoIndex + 1} / {spiritualVideos.length}
-              </Text>
-            </View>
+          {/* Side Action Buttons - Instagram Reels Style */}
+          <View style={styles.sideActionButtons}>
+            <TouchableOpacity
+              style={styles.sideActionButton}
+              onPress={() => shareVideo(currentVideo)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.actionIconContainer}>
+                <Ionicons
+                  name="share-outline"
+                  size={28}
+                  color="#fff"
+                />
+              </View>
+            </TouchableOpacity>
 
-            {/* Video Details */}
+            <TouchableOpacity
+              style={styles.sideActionButton}
+              onPress={() => openInYouTube(currentVideo)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.actionIconContainer}>
+                <Ionicons
+                  name="logo-youtube"
+                  size={28}
+                  color="#ff0000"
+                />
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {/* Video Info Overlay - Bottom */}
+          <View style={styles.videoInfoOverlay}>
             <View style={styles.videoDetails}>
               <Text style={styles.videoTitle} numberOfLines={2}>
                 {currentVideo.title}
               </Text>
-              <Text style={styles.videoDescription} numberOfLines={3}>
+              <Text style={styles.videoDescription} numberOfLines={2}>
                 {currentVideo.description}
               </Text>
-              <Text style={styles.videoDuration}>
-                Duration: {currentVideo.duration}
-              </Text>
             </View>
-
-            {/* Action Buttons */}
-            <View style={styles.actionButtonsContainer}>
-              <TouchableOpacity
-                style={[styles.actionButton, SPIRITUAL_SHADOWS.card]}
-                onPress={() => shareVideo(currentVideo)}
-                activeOpacity={0.7}
-              >
-                <LinearGradient
-                  colors={SPIRITUAL_GRADIENTS.peace}
-                  style={styles.actionButtonGradient}
-                >
-                  <Ionicons
-                    name="share-outline"
-                    size={24}
-                    color={SPIRITUAL_COLORS.primary}
-                  />
-                  <Text style={styles.actionButtonText}>Share</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.actionButton, SPIRITUAL_SHADOWS.card]}
-                onPress={() => openInYouTube(currentVideo)}
-                activeOpacity={0.7}
-              >
-                <LinearGradient
-                  colors={SPIRITUAL_GRADIENTS.divine}
-                  style={styles.actionButtonGradient}
-                >
-                  <Ionicons
-                    name="logo-youtube"
-                    size={24}
-                    color={SPIRITUAL_COLORS.primaryForeground}
-                  />
-                  <Text style={[styles.actionButtonText, { color: SPIRITUAL_COLORS.primaryForeground }]}>
-                    YouTube
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
-
-            {/* Swipe Instructions */}
-            {!isVideoPlaying && (
-              <View style={styles.swipeInstructions}>
-                <Text style={styles.swipeText}>
-                  Swipe up for next video • Swipe down for previous
-                </Text>
-                <Ionicons name="chevron-up" size={20} color="rgba(255,255,255,0.6)" />
-              </View>
-            )}
           </View>
         </Animated.View>
       </PanGestureHandler>
-      
+
       <Toast />
     </SafeAreaView>
   );
@@ -385,77 +304,51 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
   },
-  webViewContainer: {
-    flex: 1,
-    position: 'relative',
-  },
   webView: {
     flex: 1,
     backgroundColor: '#000',
   },
-  closeButton: {
+  sideActionButtons: {
     position: 'absolute',
-    top: 50,
-    right: 20,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    borderRadius: 20,
-    padding: 8,
+    right: 15,
+    bottom: 200,
+    flexDirection: 'column',
+    alignItems: 'center',
     zIndex: 999,
   },
-  thumbnailContainer: {
-    flex: 1,
+  sideActionButton: {
+    marginBottom: 20,
+  },
+  actionIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#000',
-  },
-  thumbnailOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  playButton: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    overflow: 'hidden',
-  },
-  playButtonGradient: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  playIcon: {
-    marginLeft: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
   videoInfoOverlay: {
     position: 'absolute',
     bottom: 0,
     left: 0,
-    right: 0,
+    right: 60, // Leave space for side buttons
     paddingHorizontal: 20,
     paddingBottom: 120, // Space for tab bar
     paddingTop: 20,
-  },
-  navigationIndicator: {
-    alignSelf: 'center',
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginBottom: 20,
-  },
-  navigationText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
   },
   videoDetails: {
     marginBottom: 20,
   },
   videoTitle: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 8,
@@ -464,50 +357,11 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   videoDescription: {
-    fontSize: 14,
+    fontSize: 13,
     color: 'rgba(255,255,255,0.9)',
-    lineHeight: 20,
-    marginBottom: 8,
+    lineHeight: 18,
     textShadowColor: 'rgba(0,0,0,0.8)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
-  },
-  videoDuration: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.7)',
-    fontWeight: '600',
-  },
-  actionButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  actionButton: {
-    flex: 0.48,
-    borderRadius: 25,
-    overflow: 'hidden',
-  },
-  actionButtonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-  },
-  actionButtonText: {
-    color: SPIRITUAL_COLORS.primary,
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  swipeInstructions: {
-    alignItems: 'center',
-    opacity: 0.7,
-  },
-  swipeText: {
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: 12,
-    textAlign: 'center',
-    marginBottom: 4,
   },
 });
