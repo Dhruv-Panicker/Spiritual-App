@@ -438,6 +438,8 @@ export function CalendarScreen() {
           visible={isEventModalOpen}
           animationType="slide"
           transparent={true}
+          statusBarTranslucent={true}
+          presentationStyle="overFullScreen"
           onRequestClose={() => setIsEventModalOpen(false)}
         >
           <TouchableOpacity
