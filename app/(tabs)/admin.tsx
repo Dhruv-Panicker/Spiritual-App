@@ -41,7 +41,7 @@ interface EventForm {
   type: string;
 }
 
-const AdminPanel = () => {
+export const AdminScreen = () => {
   const [index, setIndex] = useState(0);
   const [routes] = useState([
     { key: 'quotes', title: 'Quotes', icon: 'chatbubble' },
@@ -835,4 +835,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AdminPanel;
+export default AdminScreen;

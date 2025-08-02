@@ -99,7 +99,7 @@ const monthNames = [
   'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
-export default function CalendarScreen() {
+export function CalendarScreen() {
   const [selectedMonth, setSelectedMonth] = useState<MonthData | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isMonthModalOpen, setIsMonthModalOpen] = useState(false);
@@ -411,6 +411,8 @@ export default function CalendarScreen() {
     </SafeAreaView>
   );
 }
+
+export default CalendarScreen;
 
 const styles = StyleSheet.create({
   container: {

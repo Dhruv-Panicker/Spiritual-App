@@ -81,7 +81,7 @@ const mockVideos: Video[] = [
   }
 ];
 
-export default function VideosScreen() {
+export function VideosScreen() {
   const [currentVideo, setCurrentVideo] = useState<Video | null>(null);
 
   const shareVideo = async (video: Video) => {
@@ -315,6 +315,8 @@ export default function VideosScreen() {
     </SafeAreaView>
   );
 }
+
+export default VideosScreen;
 
 const styles = StyleSheet.create({
   container: {

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   View,
@@ -49,7 +48,7 @@ const mockQuotes: Quote[] = [
   }
 ];
 
-export default function QuotesPage() {
+export function QuotesScreen() {
   const [quotes] = useState<Quote[]>(mockQuotes);
   const [likedQuotes, setLikedQuotes] = useState<Set<string>>(new Set());
 
@@ -66,7 +65,7 @@ export default function QuotesPage() {
 
   const handleShare = async (quote: Quote) => {
     const shareText = `"${quote.text}" - ${quote.author}\n\nShared from our Spiritual Wisdom app`;
-    
+
     try {
       await Share.share({
         message: shareText,
@@ -83,7 +82,7 @@ export default function QuotesPage() {
 
   const shareApp = async () => {
     const shareText = "🙏 I found this beautiful spiritual app that shares daily wisdom and inspiration. Thought you might find it meaningful too!";
-    
+
     try {
       await Share.share({
         message: shareText,

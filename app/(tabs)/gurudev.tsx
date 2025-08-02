@@ -22,7 +22,7 @@ import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS, SPIRITUAL_TYP
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-export default function GurudevScreen() {
+export function GurudevScreen() {
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -206,6 +206,8 @@ export default function GurudevScreen() {
     </SafeAreaView>
   );
 }
+
+export default GurudevScreen;
 
 const styles = StyleSheet.create({
   container: {
