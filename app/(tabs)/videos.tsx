@@ -33,83 +33,43 @@ interface Video {
 const spiritualVideos: Video[] = [
   {
     id: '1',
-    title: 'Divine Wisdom of Brahmarishi',
-    thumbnail: 'https://img.youtube.com/vi/8E6HuQPGRPE/maxresdefault.jpg',
-    youtubeId: '8E6HuQPGRPE',
+    title: 'श्री सिधेश्वर तीर्थ ब्रह्मर्षि जी महाराज के दर्शन',
+    thumbnail: 'https://img.youtube.com/vi/gOBXF8ntsWY/hqdefault.jpg',
+    youtubeId: 'gOBXF8ntsWY',
     duration: '0:59',
-    description: 'Sacred teachings from Sri Sidheshwar Tirth Brahmrishi'
+    description: 'पवित्र ब्रह्मर्षि जी के दिव्य दर्शन और आशीर्वाद'
   },
   {
     id: '2',
-    title: 'Path to Self Realization',
-    thumbnail: 'https://img.youtube.com/vi/Zl4U2gYIpxo/maxresdefault.jpg',
-    youtubeId: 'Zl4U2gYIpxo',
-    duration: '0:45',
-    description: 'Journey towards spiritual awakening and inner truth'
+    title: 'ब्रह्मर्षि जी का आध्यात्मिक उपदेश',
+    thumbnail: 'https://img.youtube.com/vi/VzHQG7bJzqE/hqdefault.jpg',
+    youtubeId: 'VzHQG7bJzqE',
+    duration: '0:52',
+    description: 'आत्मा की शुद्धता और परमात्मा से मिलन का मार्ग'
   },
   {
     id: '3',
-    title: 'Sacred Mantras & Meditation',
-    thumbnail: 'https://img.youtube.com/vi/4KJ2XHhKGFc/maxresdefault.jpg',
-    youtubeId: '4KJ2XHhKGFc',
-    duration: '1:00',
-    description: 'Ancient chants for peace and spiritual elevation'
+    title: 'श्री गुरुदेव का दिव्य संदेश',
+    thumbnail: 'https://img.youtube.com/vi/2wGfQKwgvqc/hqdefault.jpg',
+    youtubeId: '2wGfQKwgvqc',
+    duration: '1:15',
+    description: 'जीवन में शांति और आनंद पाने के लिए गुरु के उपदेश'
   },
   {
     id: '4',
-    title: 'Guru-Disciple Relationship',
-    thumbnail: 'https://img.youtube.com/vi/YRPh_GaiL8s/maxresdefault.jpg',
-    youtubeId: 'YRPh_GaiL8s',
-    duration: '0:58',
-    description: 'Understanding the sacred bond between Guru and Shishya'
+    title: 'ब्रह्मर्षि जी की पावन वाणी',
+    thumbnail: 'https://img.youtube.com/vi/8hKRzpY5Zj4/hqdefault.jpg',
+    youtubeId: '8hKRzpY5Zj4',
+    duration: '0:48',
+    description: 'मोक्ष प्राप्ति के लिए साधना और भक्ति का महत्व'
   },
   {
     id: '5',
-    title: 'Brahmarishi Sacred Discourse',
-    thumbnail: 'https://img.youtube.com/vi/6NqKrhmnVNY/maxresdefault.jpg',
-    youtubeId: '6NqKrhmnVNY',
-    duration: '0:55',
-    description: 'Profound spiritual wisdom and divine knowledge'
-  },
-  {
-    id: '6',
-    title: 'Path of Devotion & Service',
-    thumbnail: 'https://img.youtube.com/vi/ub82Xb1C8os/maxresdefault.jpg',
-    youtubeId: 'ub82Xb1C8os',
-    duration: '1:02',
-    description: 'Discover the power of Bhakti and selfless service'
-  },
-  {
-    id: '7',
-    title: 'Inner Peace Through Yoga',
-    thumbnail: 'https://img.youtube.com/vi/lWTFzWksjc0/maxresdefault.jpg',
-    youtubeId: 'lWTFzWksjc0',
-    duration: '0:48',
-    description: 'Ancient yogic practices for mental tranquility'
-  },
-  {
-    id: '8',
-    title: 'Spiritual Awakening Signs',
-    thumbnail: 'https://img.youtube.com/vi/LXb3EKWsInQ/maxresdefault.jpg',
-    youtubeId: 'LXb3EKWsInQ',
-    duration: '1:15',
-    description: 'Recognize the divine calling within your soul'
-  },
-  {
-    id: '9',
-    title: 'Sacred Vedic Teachings',
-    thumbnail: 'https://img.youtube.com/vi/kJQP7kiw5Fk/maxresdefault.jpg',
-    youtubeId: 'kJQP7kiw5Fk',
-    duration: '0:52',
-    description: 'Timeless wisdom from ancient Vedic scriptures'
-  },
-  {
-    id: '10',
-    title: 'Divine Grace & Blessings',
-    thumbnail: 'https://img.youtube.com/vi/jfKfPfyJRdk/maxresdefault.jpg',
-    youtubeId: 'jfKfPfyJRdk',
+    title: 'गुरु शिष्य परंपरा का महत्व',
+    thumbnail: 'https://img.youtube.com/vi/Lk9dHrKgxsM/hqdefault.jpg',
+    youtubeId: 'Lk9dHrKgxsM',
     duration: '1:08',
-    description: 'Experience the transformative power of divine grace'
+    description: 'सच्चे गुरु की पहचान और शिष्य के कर्तव्य'
   }
 ];
 
