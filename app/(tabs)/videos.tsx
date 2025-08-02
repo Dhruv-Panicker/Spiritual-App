@@ -30,54 +30,86 @@ interface Video {
   description: string;
 }
 
-const mockVideos: Video[] = [
+const spiritualVideos: Video[] = [
   {
     id: '1',
-    title: 'Morning Meditation Practice',
-    thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
-    youtubeId: 'dQw4w9WgXcQ',
-    duration: '10:30',
-    description: 'Start your day with peace and mindfulness'
+    title: 'Divine Wisdom of Brahmarishi',
+    thumbnail: 'https://img.youtube.com/vi/8E6HuQPGRPE/maxresdefault.jpg',
+    youtubeId: '8E6HuQPGRPE',
+    duration: '0:59',
+    description: 'Sacred teachings from Sri Sidheshwar Tirth Brahmrishi'
   },
   {
     id: '2',
-    title: 'The Power of Gratitude',
-    thumbnail: 'https://img.youtube.com/vi/kJQP7kiw5Fk/maxresdefault.jpg',
-    youtubeId: 'kJQP7kiw5Fk',
-    duration: '15:45',
-    description: 'Transform your life through grateful awareness'
+    title: 'Path to Self Realization',
+    thumbnail: 'https://img.youtube.com/vi/Zl4U2gYIpxo/maxresdefault.jpg',
+    youtubeId: 'Zl4U2gYIpxo',
+    duration: '0:45',
+    description: 'Journey towards spiritual awakening and inner truth'
   },
   {
     id: '3',
-    title: 'Finding Inner Peace',
-    thumbnail: 'https://img.youtube.com/vi/jfKfPfyJRdk/maxresdefault.jpg',
-    youtubeId: 'jfKfPfyJRdk',
-    duration: '20:15',
-    description: 'Discover the sanctuary within your own heart'
+    title: 'Sacred Mantras & Meditation',
+    thumbnail: 'https://img.youtube.com/vi/4KJ2XHhKGFc/maxresdefault.jpg',
+    youtubeId: '4KJ2XHhKGFc',
+    duration: '1:00',
+    description: 'Ancient chants for peace and spiritual elevation'
   },
   {
     id: '4',
-    title: 'Chakra Healing Journey',
-    thumbnail: 'https://img.youtube.com/vi/lWTFzWksjc0/maxresdefault.jpg',
-    youtubeId: 'lWTFzWksjc0',
-    duration: '25:00',
-    description: 'Balance your energy centers with ancient wisdom'
+    title: 'Guru-Disciple Relationship',
+    thumbnail: 'https://img.youtube.com/vi/YRPh_GaiL8s/maxresdefault.jpg',
+    youtubeId: 'YRPh_GaiL8s',
+    duration: '0:58',
+    description: 'Understanding the sacred bond between Guru and Shishya'
   },
   {
     id: '5',
-    title: 'Sacred Mantras for Peace',
-    thumbnail: 'https://img.youtube.com/vi/LXb3EKWsInQ/maxresdefault.jpg',
-    youtubeId: 'LXb3EKWsInQ',
-    duration: '12:30',
-    description: 'Heal your soul with powerful sacred sounds'
+    title: 'Brahmarishi Sacred Discourse',
+    thumbnail: 'https://img.youtube.com/vi/6NqKrhmnVNY/maxresdefault.jpg',
+    youtubeId: '6NqKrhmnVNY',
+    duration: '0:55',
+    description: 'Profound spiritual wisdom and divine knowledge'
   },
   {
     id: '6',
-    title: 'Breathwork for Anxiety',
-    thumbnail: 'https://img.youtube.com/vi/YRPh_GaiL8s/maxresdefault.jpg',
-    youtubeId: 'YRPh_GaiL8s',
-    duration: '18:20',
-    description: 'Find calm through conscious breathing techniques'
+    title: 'Path of Devotion & Service',
+    thumbnail: 'https://img.youtube.com/vi/ub82Xb1C8os/maxresdefault.jpg',
+    youtubeId: 'ub82Xb1C8os',
+    duration: '1:02',
+    description: 'Discover the power of Bhakti and selfless service'
+  },
+  {
+    id: '7',
+    title: 'Inner Peace Through Yoga',
+    thumbnail: 'https://img.youtube.com/vi/lWTFzWksjc0/maxresdefault.jpg',
+    youtubeId: 'lWTFzWksjc0',
+    duration: '0:48',
+    description: 'Ancient yogic practices for mental tranquility'
+  },
+  {
+    id: '8',
+    title: 'Spiritual Awakening Signs',
+    thumbnail: 'https://img.youtube.com/vi/LXb3EKWsInQ/maxresdefault.jpg',
+    youtubeId: 'LXb3EKWsInQ',
+    duration: '1:15',
+    description: 'Recognize the divine calling within your soul'
+  },
+  {
+    id: '9',
+    title: 'Sacred Vedic Teachings',
+    thumbnail: 'https://img.youtube.com/vi/kJQP7kiw5Fk/maxresdefault.jpg',
+    youtubeId: 'kJQP7kiw5Fk',
+    duration: '0:52',
+    description: 'Timeless wisdom from ancient Vedic scriptures'
+  },
+  {
+    id: '10',
+    title: 'Divine Grace & Blessings',
+    thumbnail: 'https://img.youtube.com/vi/jfKfPfyJRdk/maxresdefault.jpg',
+    youtubeId: 'jfKfPfyJRdk',
+    duration: '1:08',
+    description: 'Experience the transformative power of divine grace'
   }
 ];
 
@@ -194,15 +226,15 @@ export function VideosScreen() {
           {/* Header */}
           <View style={styles.header}>
             <Text style={[SPIRITUAL_TYPOGRAPHY.spiritualHeading, styles.headerTitle]}>
-              Sacred Videos
+              Spiritual Shorts
             </Text>
             <Text style={styles.headerSubtitle}>
-              Wisdom teachings and guided practices
+              Divine wisdom from Sri Sidheshwar Tirth Brahmrishi
             </Text>
           </View>
 
           {/* Video Cards */}
-          {mockVideos.map((video, index) => (
+          {spiritualVideos.map((video, index) => (
             <View
               key={video.id}
               style={[
@@ -288,9 +320,9 @@ export function VideosScreen() {
             colors={SPIRITUAL_GRADIENTS.divine}
             style={[styles.shareAppCard, SPIRITUAL_SHADOWS.divine]}
           >
-            <Text style={styles.shareAppTitle}>Share the Wisdom</Text>
+            <Text style={styles.shareAppTitle}>Share Divine Wisdom</Text>
             <Text style={styles.shareAppSubtitle}>
-              Share this app with someone who might find it meaningful
+              Share these sacred teachings with seekers on the spiritual path
             </Text>
             <TouchableOpacity
               style={styles.shareAppButton}
