@@ -543,28 +543,29 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
-    paddingVertical: 40,
-    paddingHorizontal: 20,
+    paddingVertical: 60,
+    paddingHorizontal: 16,
   },
   blurOverlay: {
     flex: 1,
     justifyContent: 'center',
-    paddingVertical: 40,
-    paddingHorizontal: 20,
+    paddingVertical: 60,
+    paddingHorizontal: 16,
   },
   modalContainer: {
     backgroundColor: SPIRITUAL_COLORS.cardBackground,
     borderRadius: 20,
-    maxHeight: screenHeight * 0.7,
+    maxHeight: screenHeight * 0.8,
     ...SPIRITUAL_SHADOWS.divine,
     marginVertical: 20,
+    flex: 1,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: SPIRITUAL_COLORS.border,
   },
@@ -586,6 +587,7 @@ const styles = StyleSheet.create({
   modalContent: {
     flex: 1,
     paddingHorizontal: 20,
+    paddingVertical: 16,
   },
   eventCard: {
     backgroundColor: SPIRITUAL_COLORS.background,
