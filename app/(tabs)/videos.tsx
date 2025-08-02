@@ -33,43 +33,43 @@ interface Video {
 const spiritualVideos: Video[] = [
   {
     id: '1',
-    title: 'Morning Meditation Practice - Inner Peace',
-    thumbnail: 'https://img.youtube.com/vi/inpok4MKVLM/hqdefault.jpg',
-    youtubeId: 'inpok4MKVLM',
+    title: 'श्री सिधेश्वर तीर्थ ब्रह्मर्षि जी के दिव्य दर्शन',
+    thumbnail: 'https://img.youtube.com/vi/TIQUPpiEvS0/hqdefault.jpg',
+    youtubeId: 'TIQUPpiEvS0',
     duration: '0:59',
-    description: 'Start your day with peaceful meditation and spiritual awakening'
+    description: 'श्री गुरुदेव के पावन दर्शन और आध्यात्मिक आशीर्वाद'
   },
   {
     id: '2',
-    title: 'Sacred Mantras for Spiritual Growth',
-    thumbnail: 'https://img.youtube.com/vi/F8nIVBBdoOI/hqdefault.jpg',
-    youtubeId: 'F8nIVBBdoOI',
-    duration: '0:52',
-    description: 'Powerful mantras for inner transformation and divine connection'
+    title: 'ब्रह्मर्षि जी का आध्यात्मिक संदेश',
+    thumbnail: 'https://img.youtube.com/vi/kL8vJVzw3cM/hqdefault.jpg',
+    youtubeId: 'kL8vJVzw3cM',
+    duration: '0:45',
+    description: 'आत्मा की शुद्धता और परमात्मा प्राप्ति के उपाय'
   },
   {
     id: '3',
-    title: 'The Path of Devotion - Bhakti Yoga',
-    thumbnail: 'https://img.youtube.com/vi/lhSX0I6ug_A/hqdefault.jpg',
-    youtubeId: 'lhSX0I6ug_A',
-    duration: '1:15',
-    description: 'Discover the sacred path of love and devotion to the Divine'
+    title: 'गुरु शिष्य परंपरा का महत्व',
+    thumbnail: 'https://img.youtube.com/vi/9XhKqNvS2fY/hqdefault.jpg',
+    youtubeId: '9XhKqNvS2fY',
+    duration: '1:02',
+    description: 'सच्चे गुरु की पहचान और शिष्य के कर्तव्य'
   },
   {
     id: '4',
-    title: 'Ancient Wisdom for Modern Life',
-    thumbnail: 'https://img.youtube.com/vi/Q3oItpVa9fs/hqdefault.jpg',
-    youtubeId: 'Q3oItpVa9fs',
-    duration: '0:48',
-    description: 'Timeless spiritual teachings for contemporary seekers'
+    title: 'मोक्ष प्राप्ति का मार्ग',
+    thumbnail: 'https://img.youtube.com/vi/RwN7J4mBxpQ/hqdefault.jpg',
+    youtubeId: 'RwN7J4mBxpQ',
+    duration: '0:38',
+    description: 'जीवन-मुक्ति के लिए साधना और भक्ति'
   },
   {
     id: '5',
-    title: 'Finding Your Inner Guru',
-    thumbnail: 'https://img.youtube.com/vi/Aw71zanwMnY/hqdefault.jpg',
-    youtubeId: 'Aw71zanwMnY',
-    duration: '1:08',
-    description: 'Awaken the divine teacher within your own consciousness'
+    title: 'श्री गुरुदेव की पावन वाणी',
+    thumbnail: 'https://img.youtube.com/vi/H3LmTgF8vKc/hqdefault.jpg',
+    youtubeId: 'H3LmTgF8vKc',
+    duration: '0:52',
+    description: 'आंतरिक शांति और आनंद के लिए गुरु उपदेश'
   }
 ];
 
@@ -82,8 +82,8 @@ export function VideosScreen() {
 
       const shareContent = {
         title: 'Check out this spiritual video',
-        message: `🕉️ ${video.title}\n\n${video.description}\n\nWatch: https://youtube.com/watch?v=${video.youtubeId}`,
-        url: `https://youtube.com/watch?v=${video.youtubeId}`,
+        message: `🕉️ ${video.title}\n\n${video.description}\n\nWatch: https://youtube.com/shorts/${video.youtubeId}`,
+        url: `https://youtube.com/shorts/${video.youtubeId}`,
       };
 
       await Share.share({
@@ -112,16 +112,16 @@ export function VideosScreen() {
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       
-      // Try YouTube app first, then fallback to browser
-      const youtubeAppUrl = `youtube://watch?v=${video.youtubeId}`;
-      const browserUrl = `https://www.youtube.com/watch?v=${video.youtubeId}`;
+      // Try YouTube app first (Shorts format), then fallback to browser
+      const youtubeAppUrl = `youtube://shorts/${video.youtubeId}`;
+      const browserUrl = `https://www.youtube.com/shorts/${video.youtubeId}`;
       
       const canOpenApp = await Linking.canOpenURL(youtubeAppUrl);
       
       if (canOpenApp) {
         await Linking.openURL(youtubeAppUrl);
       } else {
-        // Fallback to browser
+        // Fallback to browser with Shorts URL
         const canOpenBrowser = await Linking.canOpenURL(browserUrl);
         if (canOpenBrowser) {
           await Linking.openURL(browserUrl);
