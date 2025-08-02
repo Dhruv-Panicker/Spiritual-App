@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -8,8 +9,8 @@ import {
   SafeAreaView,
   Animated,
   StatusBar,
+  PanResponder,
 } from 'react-native';
-import { PanGestureHandler } from 'react-native-gesture-handler';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
@@ -76,7 +77,7 @@ const spiritualVideos: Video[] = [
 export function VideosScreen() {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const translateY = useRef(new Animated.Value(0)).current;
-  const panRef = useRef(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const currentVideo = spiritualVideos[currentVideoIndex];
 
@@ -116,6 +117,78 @@ export function VideosScreen() {
       </html>
     `;
   };
+
+  // Navigation functions
+  const goToNextVideo = () => {
+    if (currentVideoIndex < spiritualVideos.length - 1 && !isTransitioning) {
+      setIsTransitioning(true);
+      setCurrentVideoIndex(currentVideoIndex + 1);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      
+      // Reset transition state after animation
+      setTimeout(() => setIsTransitioning(false), 300);
+    }
+  };
+
+  const goToPreviousVideo = () => {
+    if (currentVideoIndex > 0 && !isTransitioning) {
+      setIsTransitioning(true);
+      setCurrentVideoIndex(currentVideoIndex - 1);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      
+      // Reset transition state after animation
+      setTimeout(() => setIsTransitioning(false), 300);
+    }
+  };
+
+  // Enhanced PanResponder for better swipe detection
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (evt, gestureState) => {
+        // Only respond to vertical swipes
+        return Math.abs(gestureState.dy) > Math.abs(gestureState.dx) && Math.abs(gestureState.dy) > 10;
+      },
+      onPanResponderGrant: () => {
+        translateY.setOffset(translateY._value);
+      },
+      onPanResponderMove: (evt, gestureState) => {
+        // Limit the movement to create resistance at boundaries
+        let limitedDy = gestureState.dy;
+        
+        if (currentVideoIndex === 0 && gestureState.dy > 0) {
+          // At first video, resist downward swipe
+          limitedDy = gestureState.dy * 0.3;
+        } else if (currentVideoIndex === spiritualVideos.length - 1 && gestureState.dy < 0) {
+          // At last video, resist upward swipe
+          limitedDy = gestureState.dy * 0.3;
+        }
+        
+        translateY.setValue(limitedDy);
+      },
+      onPanResponderRelease: (evt, gestureState) => {
+        translateY.flattenOffset();
+        
+        const swipeThreshold = 50;
+        const velocityThreshold = 0.3;
+        
+        if (gestureState.dy > swipeThreshold || gestureState.vy > velocityThreshold) {
+          // Swiped down - go to previous video
+          goToPreviousVideo();
+        } else if (gestureState.dy < -swipeThreshold || gestureState.vy < -velocityThreshold) {
+          // Swiped up - go to next video
+          goToNextVideo();
+        }
+        
+        // Animate back to center
+        Animated.spring(translateY, {
+          toValue: 0,
+          useNativeDriver: true,
+          tension: 100,
+          friction: 8,
+        }).start();
+      },
+    })
+  ).current;
 
   const shareVideo = async (video: Video) => {
     try {
@@ -175,113 +248,100 @@ export function VideosScreen() {
     }
   };
 
-  const onGestureEvent = Animated.event(
-    [{ nativeEvent: { translationY: translateY } }],
-    { useNativeDriver: true }
-  );
-
-  const onHandlerStateChange = (event: any) => {
-    if (event.nativeEvent.state === 5) { // END state
-      const { translationY, velocityY } = event.nativeEvent;
-
-      if (translationY < -100 || velocityY < -500) {
-        // Swipe up - next video
-        if (currentVideoIndex < spiritualVideos.length - 1) {
-          setCurrentVideoIndex(currentVideoIndex + 1);
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        }
-      } else if (translationY > 100 || velocityY > 500) {
-        // Swipe down - previous video
-        if (currentVideoIndex > 0) {
-          setCurrentVideoIndex(currentVideoIndex - 1);
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        }
-      }
-
-      // Reset animation
-      Animated.spring(translateY, {
-        toValue: 0,
-        useNativeDriver: true,
-      }).start();
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
 
-      <PanGestureHandler
-        ref={panRef}
-        onGestureEvent={onGestureEvent}
-        onHandlerStateChange={onHandlerStateChange}
+      <Animated.View 
+        {...panResponder.panHandlers}
+        style={[
+          styles.videoContainer,
+          {
+            transform: [{ translateY }]
+          }
+        ]}
       >
-        <Animated.View 
-          style={[
-            styles.videoContainer,
-            {
-              transform: [{ translateY }]
-            }
-          ]}
-        >
-          {/* Video Player Area - Full Screen */}
-          <View style={styles.videoPlayerContainer}>
-            <WebView
-              key={currentVideo.youtubeId} // Force re-render when video changes
-              source={{ html: createYouTubeHTML(currentVideo.youtubeId) }}
-              style={styles.webView}
-              allowsInlineMediaPlayback
-              mediaPlaybackRequiresUserAction={false}
-              javaScriptEnabled
-              domStorageEnabled
-              startInLoadingState
-              scalesPageToFit
-            />
-          </View>
+        {/* Video Player Area - Full Screen */}
+        <View style={styles.videoPlayerContainer}>
+          <WebView
+            key={`${currentVideo.youtubeId}-${currentVideoIndex}`} // Force re-render when video changes
+            source={{ html: createYouTubeHTML(currentVideo.youtubeId) }}
+            style={styles.webView}
+            allowsInlineMediaPlayback
+            mediaPlaybackRequiresUserAction={false}
+            javaScriptEnabled
+            domStorageEnabled
+            startInLoadingState
+            scalesPageToFit
+            bounces={false}
+            scrollEnabled={false}
+          />
+        </View>
 
-          {/* Side Action Buttons - Instagram Reels Style */}
-          <View style={styles.sideActionButtons}>
-            <TouchableOpacity
-              style={styles.sideActionButton}
-              onPress={() => shareVideo(currentVideo)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.actionIconContainer}>
-                <Ionicons
-                  name="share-outline"
-                  size={28}
-                  color="#fff"
-                />
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.sideActionButton}
-              onPress={() => openInYouTube(currentVideo)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.actionIconContainer}>
-                <Ionicons
-                  name="logo-youtube"
-                  size={28}
-                  color="#ff0000"
-                />
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          {/* Video Info Overlay - Bottom */}
-          <View style={styles.videoInfoOverlay}>
-            <View style={styles.videoDetails}>
-              <Text style={styles.videoTitle} numberOfLines={2}>
-                {currentVideo.title}
-              </Text>
-              <Text style={styles.videoDescription} numberOfLines={2}>
-                {currentVideo.description}
-              </Text>
+        {/* Side Action Buttons - Instagram Reels Style */}
+        <View style={styles.sideActionButtons}>
+          <TouchableOpacity
+            style={styles.sideActionButton}
+            onPress={() => shareVideo(currentVideo)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.actionIconContainer}>
+              <Ionicons
+                name="share-outline"
+                size={28}
+                color="#fff"
+              />
             </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.sideActionButton}
+            onPress={() => openInYouTube(currentVideo)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.actionIconContainer}>
+              <Ionicons
+                name="logo-youtube"
+                size={28}
+                color="#ff0000"
+              />
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* Video Info Overlay - Bottom */}
+        <View style={styles.videoInfoOverlay}>
+          <View style={styles.videoDetails}>
+            <Text style={styles.videoTitle} numberOfLines={2}>
+              {currentVideo.title}
+            </Text>
+            <Text style={styles.videoDescription} numberOfLines={2}>
+              {currentVideo.description}
+            </Text>
           </View>
-        </Animated.View>
-      </PanGestureHandler>
+          
+          {/* Progress Indicators */}
+          <View style={styles.progressIndicators}>
+            {spiritualVideos.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.progressDot,
+                  index === currentVideoIndex && styles.progressDotActive
+                ]}
+              />
+            ))}
+          </View>
+        </View>
+
+        {/* Swipe Hint (for first-time users) */}
+        {currentVideoIndex === 0 && (
+          <View style={styles.swipeHint}>
+            <Ionicons name="chevron-up" size={24} color="rgba(255,255,255,0.6)" />
+            <Text style={styles.swipeHintText}>Swipe up for next video</Text>
+          </View>
+        )}
+      </Animated.View>
 
       <Toast />
     </SafeAreaView>
@@ -363,5 +423,39 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.8)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
+  },
+  progressIndicators: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  progressDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    marginHorizontal: 3,
+  },
+  progressDotActive: {
+    backgroundColor: '#fff',
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  swipeHint: {
+    position: 'absolute',
+    top: '50%',
+    right: 20,
+    alignItems: 'center',
+    zIndex: 999,
+    opacity: 0.7,
+  },
+  swipeHintText: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12,
+    marginTop: 4,
+    textAlign: 'center',
+    writingDirection: 'ltr',
   },
 });
