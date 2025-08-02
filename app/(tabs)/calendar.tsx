@@ -91,6 +91,42 @@ const mockEvents: Event[] = [
     description: 'Learn the path of selfless service and how to transform daily actions into spiritual practice through Karma Yoga principles.',
     location: 'Workshop Room',
     type: 'teaching'
+  },
+  {
+    id: '7',
+    title: 'Full Moon Meditation Circle',
+    date: '2024-08-05',
+    time: '7:30 PM',
+    description: 'Join us for a powerful full moon meditation to harness the lunar energy for spiritual transformation and inner healing.',
+    location: 'Meditation Hall',
+    type: 'meditation'
+  },
+  {
+    id: '8',
+    title: 'Bhagavad Gita Study Group',
+    date: '2024-08-12',
+    time: '6:00 PM',
+    description: 'Deep dive into the sacred teachings of the Bhagavad Gita and explore its practical wisdom for modern spiritual seekers.',
+    location: 'Study Room',
+    type: 'teaching'
+  },
+  {
+    id: '9',
+    title: 'Krishna Janmashtami Celebration',
+    date: '2024-08-26',
+    time: '5:00 PM',
+    description: 'Celebrate the birth of Lord Krishna with devotional singing, traditional dance, and spiritual discourse on divine love.',
+    location: 'Main Temple',
+    type: 'celebration'
+  },
+  {
+    id: '10',
+    title: 'Mindfulness & Meditation Workshop',
+    date: '2024-08-18',
+    time: '10:00 AM',
+    description: 'Learn practical techniques for cultivating mindfulness in daily life and developing a consistent meditation practice.',
+    location: 'Workshop Hall',
+    type: 'teaching'
   }
 ];
 
@@ -104,6 +140,17 @@ export function CalendarScreen() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isMonthModalOpen, setIsMonthModalOpen] = useState(false);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+
+  // Get current month events
+  const getCurrentMonthEvents = () => {
+    const currentMonth = new Date().getMonth(); // August is month 7 (0-indexed)
+    return mockEvents.filter(event => {
+      const eventMonth = new Date(event.date).getMonth();
+      return eventMonth === currentMonth;
+    });
+  };
+
+  const currentMonthEvents = getCurrentMonthEvents();
 
   // Group events by month
   const monthlyData: MonthData[] = monthNames.map((month, index) => ({
@@ -199,6 +246,50 @@ export function CalendarScreen() {
             </Text>
             <Text style={styles.subtitle}>Upcoming events and teachings</Text>
           </View>
+
+          {/* Current Month Events Banner */}
+          {currentMonthEvents.length > 0 && (
+            <View style={styles.currentMonthBanner}>
+              <Text style={styles.currentMonthTitle}>
+                This Month - {monthNames[new Date().getMonth()]}
+              </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.currentMonthEventsContainer}
+              >
+                {currentMonthEvents.map((event) => (
+                  <TouchableOpacity
+                    key={event.id}
+                    style={styles.currentMonthEventCard}
+                    onPress={() => handleEventPress(event)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={[styles.eventBadge, getEventTypeBadgeStyle(event.type), styles.currentMonthEventBadge]}>
+                      <Text style={styles.eventBadgeText}>{event.type}</Text>
+                    </View>
+                    <Text style={styles.currentMonthEventTitle} numberOfLines={2}>
+                      {event.title}
+                    </Text>
+                    <View style={styles.currentMonthEventDetails}>
+                      <View style={styles.currentMonthEventDetailRow}>
+                        <Ionicons name="calendar" size={14} color={SPIRITUAL_COLORS.primary} />
+                        <Text style={styles.currentMonthEventDetailText}>
+                          {new Date(event.date).getDate()}
+                        </Text>
+                      </View>
+                      <View style={styles.currentMonthEventDetailRow}>
+                        <Ionicons name="time" size={14} color={SPIRITUAL_COLORS.primary} />
+                        <Text style={styles.currentMonthEventDetailText}>
+                          {event.time}
+                        </Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
 
           {/* 12-Month Grid */}
           <View style={styles.monthGrid}>
@@ -668,5 +759,55 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: SPIRITUAL_COLORS.textMuted,
     lineHeight: 24,
+  },
+  currentMonthBanner: {
+    marginHorizontal: 20,
+    marginBottom: 30,
+    backgroundColor: SPIRITUAL_COLORS.cardBackground,
+    borderRadius: 16,
+    padding: 16,
+    ...SPIRITUAL_SHADOWS.peaceful,
+  },
+  currentMonthTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: SPIRITUAL_COLORS.primary,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  currentMonthEventsContainer: {
+    paddingHorizontal: 4,
+    gap: 12,
+  },
+  currentMonthEventCard: {
+    backgroundColor: SPIRITUAL_COLORS.background,
+    borderRadius: 12,
+    padding: 12,
+    width: 180,
+    marginRight: 12,
+    ...SPIRITUAL_SHADOWS.card,
+  },
+  currentMonthEventBadge: {
+    alignSelf: 'flex-start',
+    marginBottom: 8,
+  },
+  currentMonthEventTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: SPIRITUAL_COLORS.foreground,
+    marginBottom: 8,
+    lineHeight: 18,
+  },
+  currentMonthEventDetails: {
+    gap: 4,
+  },
+  currentMonthEventDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  currentMonthEventDetailText: {
+    fontSize: 12,
+    color: SPIRITUAL_COLORS.textMuted,
   },
 });
