@@ -48,7 +48,7 @@ const mockQuotes: Quote[] = [
   }
 ];
 
-export function QuotesScreen() {
+export default function QuotesScreen() {
   const [quotes] = useState<Quote[]>(mockQuotes);
   const [likedQuotes, setLikedQuotes] = useState<Set<string>>(new Set());
 
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 14,
     color: SPIRITUAL_COLORS.textMuted,
-    fontWeight: '500',
+    fontWeight: '500',  
   },
   likedText: {
     color: SPIRITUAL_COLORS.primary,
@@ -337,3 +337,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+
+// Export as default for Expo Router
+export { QuotesScreen };
