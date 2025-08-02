@@ -33,43 +33,43 @@ interface Video {
 const spiritualVideos: Video[] = [
   {
     id: '1',
-    title: 'श्री सिधेश्वर तीर्थ ब्रह्मर्षि जी महाराज के दर्शन',
-    thumbnail: 'https://img.youtube.com/vi/gOBXF8ntsWY/hqdefault.jpg',
-    youtubeId: 'gOBXF8ntsWY',
+    title: 'Morning Meditation Practice - Inner Peace',
+    thumbnail: 'https://img.youtube.com/vi/inpok4MKVLM/hqdefault.jpg',
+    youtubeId: 'inpok4MKVLM',
     duration: '0:59',
-    description: 'पवित्र ब्रह्मर्षि जी के दिव्य दर्शन और आशीर्वाद'
+    description: 'Start your day with peaceful meditation and spiritual awakening'
   },
   {
     id: '2',
-    title: 'ब्रह्मर्षि जी का आध्यात्मिक उपदेश',
-    thumbnail: 'https://img.youtube.com/vi/VzHQG7bJzqE/hqdefault.jpg',
-    youtubeId: 'VzHQG7bJzqE',
+    title: 'Sacred Mantras for Spiritual Growth',
+    thumbnail: 'https://img.youtube.com/vi/F8nIVBBdoOI/hqdefault.jpg',
+    youtubeId: 'F8nIVBBdoOI',
     duration: '0:52',
-    description: 'आत्मा की शुद्धता और परमात्मा से मिलन का मार्ग'
+    description: 'Powerful mantras for inner transformation and divine connection'
   },
   {
     id: '3',
-    title: 'श्री गुरुदेव का दिव्य संदेश',
-    thumbnail: 'https://img.youtube.com/vi/2wGfQKwgvqc/hqdefault.jpg',
-    youtubeId: '2wGfQKwgvqc',
+    title: 'The Path of Devotion - Bhakti Yoga',
+    thumbnail: 'https://img.youtube.com/vi/lhSX0I6ug_A/hqdefault.jpg',
+    youtubeId: 'lhSX0I6ug_A',
     duration: '1:15',
-    description: 'जीवन में शांति और आनंद पाने के लिए गुरु के उपदेश'
+    description: 'Discover the sacred path of love and devotion to the Divine'
   },
   {
     id: '4',
-    title: 'ब्रह्मर्षि जी की पावन वाणी',
-    thumbnail: 'https://img.youtube.com/vi/8hKRzpY5Zj4/hqdefault.jpg',
-    youtubeId: '8hKRzpY5Zj4',
+    title: 'Ancient Wisdom for Modern Life',
+    thumbnail: 'https://img.youtube.com/vi/Q3oItpVa9fs/hqdefault.jpg',
+    youtubeId: 'Q3oItpVa9fs',
     duration: '0:48',
-    description: 'मोक्ष प्राप्ति के लिए साधना और भक्ति का महत्व'
+    description: 'Timeless spiritual teachings for contemporary seekers'
   },
   {
     id: '5',
-    title: 'गुरु शिष्य परंपरा का महत्व',
-    thumbnail: 'https://img.youtube.com/vi/Lk9dHrKgxsM/hqdefault.jpg',
-    youtubeId: 'Lk9dHrKgxsM',
+    title: 'Finding Your Inner Guru',
+    thumbnail: 'https://img.youtube.com/vi/Aw71zanwMnY/hqdefault.jpg',
+    youtubeId: 'Aw71zanwMnY',
     duration: '1:08',
-    description: 'सच्चे गुरु की पहचान और शिष्य के कर्तव्य'
+    description: 'Awaken the divine teacher within your own consciousness'
   }
 ];
 
@@ -111,24 +111,34 @@ export function VideosScreen() {
   const openInYouTube = async (video: Video) => {
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      const url = `https://youtube.com/watch?v=${video.youtubeId}`;
-      const canOpen = await Linking.canOpenURL(url);
       
-      if (canOpen) {
-        await Linking.openURL(url);
+      // Try YouTube app first, then fallback to browser
+      const youtubeAppUrl = `youtube://watch?v=${video.youtubeId}`;
+      const browserUrl = `https://www.youtube.com/watch?v=${video.youtubeId}`;
+      
+      const canOpenApp = await Linking.canOpenURL(youtubeAppUrl);
+      
+      if (canOpenApp) {
+        await Linking.openURL(youtubeAppUrl);
       } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Cannot Open YouTube',
-          text2: 'YouTube app is not available',
-          visibilityTime: 3000,
-        });
+        // Fallback to browser
+        const canOpenBrowser = await Linking.canOpenURL(browserUrl);
+        if (canOpenBrowser) {
+          await Linking.openURL(browserUrl);
+        } else {
+          Toast.show({
+            type: 'error',
+            text1: 'Cannot Open Video',
+            text2: 'No app available to play videos',
+            visibilityTime: 3000,
+          });
+        }
       }
     } catch (error) {
       Toast.show({
         type: 'error',
-        text1: 'Error',
-        text2: 'Unable to open YouTube',
+        text1: 'Error Opening Video',
+        text2: 'Please try again or check your internet connection',
         visibilityTime: 3000,
       });
     }
