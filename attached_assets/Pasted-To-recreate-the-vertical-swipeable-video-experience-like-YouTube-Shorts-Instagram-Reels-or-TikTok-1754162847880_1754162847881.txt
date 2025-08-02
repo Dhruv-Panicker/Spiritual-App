@@ -1,0 +1,138 @@
+To recreate the vertical swipeable video experience (like YouTube Shorts, Instagram Reels, or TikTok) in your own app or website, you need to build a custom UI component that:
+
+Displays one video at a time
+
+Lets users swipe vertically to move to the next or previous video
+
+Autoplays the video that’s currently in view
+
+Pauses the rest
+
+Here’s a full step-by-step breakdown using React + react-swipeable (web stack), but I’ll also explain what each step means in case you're using other frameworks like Flutter or React Native.
+
+🧱 1. Structure: One video per screen
+The core idea is to render only one video per full screen and let users swipe up or down to navigate through them.
+
+Each video is a full-screen div or section:
+
+jsx
+Copy
+Edit
+<div className="video-container">
+  <video src="video1.mp4" autoPlay muted loop></video>
+</div>
+In CSS:
+
+css
+Copy
+Edit
+.video-container {
+  height: 100vh;
+  width: 100%;
+  scroll-snap-align: start;
+  position: relative;
+}
+🔁 2. Stack the videos vertically
+Wrap all video containers in a vertical scroll/swipe area:
+
+jsx
+Copy
+Edit
+<div className="video-feed">
+  {videos.map((video, index) => (
+    <VideoSlide key={index} video={video} isActive={index === currentIndex} />
+  ))}
+</div>
+With CSS:
+
+css
+Copy
+Edit
+.video-feed {
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+👆 3. Add swipe gesture detection (react-swipeable)
+Install the library:
+
+bash
+Copy
+Edit
+npm install react-swipeable
+Then build the swipe logic:
+
+jsx
+Copy
+Edit
+import { useSwipeable } from 'react-swipeable';
+
+const handlers = useSwipeable({
+  onSwipedUp: () => goToNextVideo(),
+  onSwipedDown: () => goToPreviousVideo(),
+  preventDefaultTouchmoveEvent: true,
+  trackTouch: true,
+});
+
+return (
+  <div {...handlers} className="video-feed">
+    {videos.map((video, index) => (
+      <VideoSlide key={index} video={video} isActive={index === currentIndex} />
+    ))}
+  </div>
+);
+goToNextVideo() and goToPreviousVideo() just update the currentIndex state to change which video is active.
+
+▶️ 4. AutoPlay only the current video
+Your <VideoSlide> component should look like this:
+
+jsx
+Copy
+Edit
+const VideoSlide = ({ video, isActive }) => {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (isActive && ref.current) {
+      ref.current.play();
+    } else if (ref.current) {
+      ref.current.pause();
+    }
+  }, [isActive]);
+
+  return (
+    <div className="video-container">
+      <video
+        ref={ref}
+        src={video.url}
+        muted
+        loop
+        playsInline
+        className="video-player"
+      />
+    </div>
+  );
+};
+This ensures only the video in view plays, and the rest stay paused.
+
+🖼️ 5. Make it feel like Shorts
+Add styling:
+
+css
+Copy
+Edit
+.video-player {
+  height: 100vh;
+  width: 100%;
+  object-fit: cover;
+}
+You can also add overlay elements (like likes/comments buttons, channel name, etc.) using position: absolute inside .video-container.
+
+🧪 BONUS: Add smooth transitions
+If you want swiping to feel animated like YouTube:
+
+Animate the transition between videos
+
+Use transform: translateY(-index * 100vh) on the video list
+
+Combine with CSS transitions or use a lib like framer-motion
