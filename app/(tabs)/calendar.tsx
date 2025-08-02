@@ -250,7 +250,7 @@ export function CalendarScreen() {
           {currentMonthEvents.length > 0 && (
             <View style={styles.currentMonthBanner}>
               <Text style={styles.currentMonthTitle}>
-                This Month - {monthNames[new Date().getMonth()]}
+                This Month
               </Text>
               <ScrollView
                 horizontal
@@ -274,7 +274,7 @@ export function CalendarScreen() {
                       <View style={styles.currentMonthEventDetailRow}>
                         <Ionicons name="calendar" size={14} color={SPIRITUAL_COLORS.primary} />
                         <Text style={styles.currentMonthEventDetailText}>
-                          {new Date(event.date).getDate()}
+                          {monthNames[new Date(event.date).getMonth()]} {new Date(event.date).getDate()}
                         </Text>
                       </View>
                       <View style={styles.currentMonthEventDetailRow}>
