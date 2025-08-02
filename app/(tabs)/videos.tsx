@@ -251,9 +251,8 @@ export function VideosScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
-
       <Animated.View 
         {...panResponder.panHandlers}
         style={[
@@ -333,7 +332,7 @@ export function VideosScreen() {
       </Animated.View>
 
       <Toast />
-    </SafeAreaView>
+    </>
   );
 }
 
@@ -345,9 +344,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
   },
   videoContainer: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
     width: screenWidth,
     height: screenHeight,
+    backgroundColor: '#000',
   },
   videoPlayerContainer: {
     flex: 1,
@@ -390,7 +392,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 60, // Leave space for side buttons
     paddingHorizontal: 20,
-    paddingBottom: 120, // Space for tab bar
+    paddingBottom: 80, // Reduced space - move text lower
     paddingTop: 20,
   },
   videoDetails: {
