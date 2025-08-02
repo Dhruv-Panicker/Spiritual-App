@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
 
@@ -47,8 +48,7 @@ export default function HomeScreen() {
       title: 'Daily Quotes',
       description: 'Discover wisdom through sacred teachings and spiritual insights',
       onPress: () => {
-        // Navigation will be handled by tab navigator
-        console.log('Navigate to quotes');
+        router.push('/(tabs)/quotes');
       },
     },
     {
@@ -56,7 +56,7 @@ export default function HomeScreen() {
       title: 'Sacred Calendar',
       description: 'Stay connected with spiritual events and celebrations',
       onPress: () => {
-        console.log('Navigate to calendar');
+        router.push('/(tabs)/calendar');
       },
     },
     {
@@ -64,7 +64,7 @@ export default function HomeScreen() {
       title: 'Divine Videos',
       description: 'Experience spiritual guidance through sacred video content',
       onPress: () => {
-        console.log('Navigate to videos');
+        router.push('/(tabs)/videos');
       },
     },
     {
@@ -72,7 +72,7 @@ export default function HomeScreen() {
       title: 'Gurudev Wisdom',
       description: 'Connect with the teachings of Sri Sidheshwar Tirth Brahmarshi Ji',
       onPress: () => {
-        console.log('Navigate to gurudev');
+        router.push('/(tabs)/gurudev');
       },
     },
   ];
