@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -76,9 +76,15 @@ const spiritualVideos: Video[] = [
 
 export function VideosScreen() {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const currentVideoIndexRef = useRef(0);
   const translateY = useRef(new Animated.Value(0)).current;
 
   const currentVideo = spiritualVideos[currentVideoIndex];
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    currentVideoIndexRef.current = currentVideoIndex;
+  }, [currentVideoIndex]);
 
   // Create embedded YouTube player HTML with autoplay
   const createYouTubeHTML = (videoId: string) => {
@@ -117,30 +123,32 @@ export function VideosScreen() {
     `;
   };
 
-  // Navigation functions
-  const goToNextVideo = () => {
-    console.log('goToNextVideo called, currentIndex:', currentVideoIndex, 'maxIndex:', spiritualVideos.length - 1);
-    if (currentVideoIndex < spiritualVideos.length - 1) {
-      const nextIndex = currentVideoIndex + 1;
+  // Navigation functions using useCallback to prevent stale closures
+  const goToNextVideo = useCallback(() => {
+    const current = currentVideoIndexRef.current;
+    console.log('goToNextVideo called, currentIndex:', current, 'maxIndex:', spiritualVideos.length - 1);
+    if (current < spiritualVideos.length - 1) {
+      const nextIndex = current + 1;
       setCurrentVideoIndex(nextIndex);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       console.log('Moving to next video, new index:', nextIndex);
     } else {
       console.log('Already at last video');
     }
-  };
+  }, []);
 
-  const goToPreviousVideo = () => {
-    console.log('goToPreviousVideo called, currentIndex:', currentVideoIndex);
-    if (currentVideoIndex > 0) {
-      const prevIndex = currentVideoIndex - 1;
+  const goToPreviousVideo = useCallback(() => {
+    const current = currentVideoIndexRef.current;
+    console.log('goToPreviousVideo called, currentIndex:', current);
+    if (current > 0) {
+      const prevIndex = current - 1;
       setCurrentVideoIndex(prevIndex);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       console.log('Moving to previous video, new index:', prevIndex);
     } else {
       console.log('Already at first video');
     }
-  };
+  }, []);
 
   // Enhanced PanResponder for better swipe detection
   const panResponder = useRef(
