@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   View,
@@ -194,7 +193,7 @@ export function CalendarScreen() {
 
   const shareEvent = async (event: Event) => {
     const shareText = `📅 ${event.title}\n📍 ${event.location}\n🕐 ${event.time}\n\n${event.description}\n\nFrom our Spiritual Wisdom calendar`;
-    
+
     try {
       await Share.share({
         message: shareText,
@@ -211,7 +210,7 @@ export function CalendarScreen() {
 
   const shareApp = async () => {
     const shareText = "🗓️ Stay connected with upcoming spiritual events and teachings through this beautiful app!";
-    
+
     try {
       await Share.share({
         message: shareText,
@@ -303,7 +302,7 @@ export function CalendarScreen() {
                 <View style={styles.monthCardContent}>
                   <Text style={styles.monthName}>{monthData.month}</Text>
                   <Text style={styles.yearText}>{monthData.year}</Text>
-                  
+
                   {monthData.events.length > 0 ? (
                     <View style={styles.eventInfo}>
                       <View style={styles.eventCountContainer}>
@@ -312,7 +311,7 @@ export function CalendarScreen() {
                           {monthData.events.length} event{monthData.events.length !== 1 ? 's' : ''}
                         </Text>
                       </View>
-                      
+
                       <View style={styles.eventDots}>
                         {monthData.events.slice(0, 3).map((event, eventIndex) => (
                           <View
@@ -367,7 +366,11 @@ export function CalendarScreen() {
           transparent={true}
           onRequestClose={() => setIsMonthModalOpen(false)}
         >
-          <View style={styles.modalOverlay}>
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPressOut={() => setIsMonthModalOpen(false)}
+          >
             <BlurView intensity={20} style={styles.blurOverlay}>
               <View style={styles.modalContainer}>
                 <View style={styles.modalHeader}>
@@ -381,7 +384,7 @@ export function CalendarScreen() {
                     <Ionicons name="close" size={24} color={SPIRITUAL_COLORS.foreground} />
                   </TouchableOpacity>
                 </View>
-                
+
                 <ScrollView style={styles.modalContent}>
                   {selectedMonth?.events.length ? (
                     selectedMonth.events.map((event) => (
@@ -400,7 +403,7 @@ export function CalendarScreen() {
                             <Text style={styles.eventBadgeText}>{event.type}</Text>
                           </View>
                         </View>
-                        
+
                         <View style={styles.eventDetails}>
                           <View style={styles.eventDetailRow}>
                             <Ionicons name="calendar" size={16} color={SPIRITUAL_COLORS.primary} />
@@ -427,7 +430,7 @@ export function CalendarScreen() {
                 </ScrollView>
               </View>
             </BlurView>
-          </View>
+          </TouchableOpacity>
         </Modal>
 
         {/* Event Detail Modal */}
@@ -437,7 +440,11 @@ export function CalendarScreen() {
           transparent={true}
           onRequestClose={() => setIsEventModalOpen(false)}
         >
-          <View style={styles.modalOverlay}>
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPressOut={() => setIsEventModalOpen(false)}
+          >
             <BlurView intensity={20} style={styles.blurOverlay}>
               <View style={styles.modalContainer}>
                 <View style={styles.modalHeader}>
@@ -459,14 +466,14 @@ export function CalendarScreen() {
                     </TouchableOpacity>
                   </View>
                 </View>
-                
+
                 <ScrollView style={styles.modalContent}>
                   {selectedEvent && (
                     <View style={styles.eventDetailContainer}>
                       <View style={[styles.eventBadge, getEventTypeBadgeStyle(selectedEvent.type), styles.eventBadgeLarge]}>
                         <Text style={styles.eventBadgeText}>{selectedEvent.type}</Text>
                       </View>
-                      
+
                       <View style={styles.eventDetailsSection}>
                         <View style={styles.eventDetailRow}>
                           <Ionicons name="calendar" size={20} color={SPIRITUAL_COLORS.primary} />
@@ -485,7 +492,7 @@ export function CalendarScreen() {
                           </View>
                         )}
                       </View>
-                      
+
                       <View style={styles.descriptionSection}>
                         <Text style={styles.descriptionTitle}>Description</Text>
                         <Text style={styles.descriptionText}>{selectedEvent.description}</Text>
@@ -495,7 +502,7 @@ export function CalendarScreen() {
                 </ScrollView>
               </View>
             </BlurView>
-          </View>
+          </TouchableOpacity>
         </Modal>
       </LinearGradient>
       <Toast />
@@ -636,6 +643,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 60,
     paddingHorizontal: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   blurOverlay: {
     flex: 1,
