@@ -1,17 +1,81 @@
-import { Image } from "expo-image";
-import { Platform, StyleSheet, Text, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 
-import { HelloWave } from "@/components/HelloWave";
-import ParallaxScrollView from "@/components/ParallaxScrollView";
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
-import { UserProfile } from "@/components/auth/UserProfile";
-import { useAuth } from "@/contexts/AuthContext";
-import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS } from "@/constants/SpiritualColors";
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Dimensions,
+  Image,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '@/contexts/AuthContext';
+import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
+
+const { width: screenWidth } = Dimensions.get('window');
+
+interface FeatureCardProps {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  description: string;
+  onPress: () => void;
+}
+
+const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, onPress }) => (
+  <TouchableOpacity style={styles.featureCard} onPress={onPress} activeOpacity={0.8}>
+    <LinearGradient
+      colors={[SPIRITUAL_COLORS.cardBackground, SPIRITUAL_COLORS.accent]}
+      style={styles.featureCardGradient}
+    >
+      <View style={styles.featureIconContainer}>
+        <Ionicons name={icon} size={32} color={SPIRITUAL_COLORS.primary} />
+      </View>
+      <Text style={styles.featureTitle}>{title}</Text>
+      <Text style={styles.featureDescription}>{description}</Text>
+    </LinearGradient>
+  </TouchableOpacity>
+);
 
 export default function HomeScreen() {
   const { user } = useAuth();
+
+  const features = [
+    {
+      icon: 'book-outline' as const,
+      title: 'Daily Quotes',
+      description: 'Discover wisdom through sacred teachings and spiritual insights',
+      onPress: () => {
+        // Navigation will be handled by tab navigator
+        console.log('Navigate to quotes');
+      },
+    },
+    {
+      icon: 'calendar-outline' as const,
+      title: 'Sacred Calendar',
+      description: 'Stay connected with spiritual events and celebrations',
+      onPress: () => {
+        console.log('Navigate to calendar');
+      },
+    },
+    {
+      icon: 'play-circle-outline' as const,
+      title: 'Divine Videos',
+      description: 'Experience spiritual guidance through sacred video content',
+      onPress: () => {
+        console.log('Navigate to videos');
+      },
+    },
+    {
+      icon: 'heart-outline' as const,
+      title: 'Gurudev Wisdom',
+      description: 'Connect with the teachings of Sri Sidheshwar Tirth Brahmarshi Ji',
+      onPress: () => {
+        console.log('Navigate to gurudev');
+      },
+    },
+  ];
 
   return (
     <View style={styles.container}>
@@ -19,54 +83,75 @@ export default function HomeScreen() {
         colors={SPIRITUAL_GRADIENTS.peace}
         style={styles.gradient}
       >
-        <ParallaxScrollView
-          headerBackgroundColor={{ light: SPIRITUAL_COLORS.background, dark: '#1D3D47' }}
-          headerImage={
-            <Image
-              source={require('@/assets/images/partial-react-logo.png')}
-              style={styles.reactLogo}
-            />
-          }>
-          <ThemedView style={styles.titleContainer}>
+        <ScrollView 
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Header Section */}
+          <View style={styles.header}>
+            <View style={styles.omContainer}>
+              <Text style={styles.omSymbol}>ॐ</Text>
+            </View>
             <Text style={styles.welcomeText}>
-              Welcome, {user?.name || 'Spiritual Seeker'}! <HelloWave />
+              Namaste, {user?.name || 'Spiritual Seeker'}
             </Text>
-          </ThemedView>
+            <Text style={styles.subtitle}>
+              May your path be illuminated with divine wisdom
+            </Text>
+          </View>
 
-          <UserProfile />
+          {/* Daily Blessing Card */}
+          <View style={styles.blessingCard}>
+            <LinearGradient
+              colors={SPIRITUAL_GRADIENTS.divine}
+              style={styles.blessingGradient}
+            >
+              <View style={styles.blessingContent}>
+                <Ionicons name="sunny-outline" size={24} color={SPIRITUAL_COLORS.primaryForeground} />
+                <Text style={styles.blessingText}>
+                  "सर्वे भवन्तु सुखिनः सर्वे सन्तु निरामयाः"
+                </Text>
+                <Text style={styles.blessingTranslation}>
+                  May all beings be happy, may all beings be healthy
+                </Text>
+              </View>
+            </LinearGradient>
+          </View>
 
-          <ThemedView style={styles.stepContainer}>
-            <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-            <ThemedText>
-              Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-              Press{' '}
-              <ThemedText type="defaultSemiBold">
-                {Platform.select({
-                  ios: 'cmd + d',
-                  android: 'cmd + m',
-                  web: 'F12'
-                })}
-              </ThemedText>{' '}
-              to open developer tools.
-            </ThemedText>
-          </ThemedView>
-          <ThemedView style={styles.stepContainer}>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-            <ThemedText>
-              Tap the Explore tab to learn more about what's included in this starter app.
-            </ThemedText>
-          </ThemedView>
-          <ThemedView style={styles.stepContainer}>
-            <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-            <ThemedText>
-              When you're ready, run{' '}
-              <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-              <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-              <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-              <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-            </ThemedText>
-          </ThemedView>
-        </ParallaxScrollView>
+          {/* Features Grid */}
+          <View style={styles.featuresSection}>
+            <Text style={styles.sectionTitle}>Explore Spiritual Path</Text>
+            <View style={styles.featuresGrid}>
+              {features.map((feature, index) => (
+                <FeatureCard
+                  key={index}
+                  icon={feature.icon}
+                  title={feature.title}
+                  description={feature.description}
+                  onPress={feature.onPress}
+                />
+              ))}
+            </View>
+          </View>
+
+          {/* Spiritual Quote Section */}
+          <View style={styles.quoteSection}>
+            <View style={styles.quoteCard}>
+              <Text style={styles.quoteText}>
+                "When you connect with the silence within you, that is when you can make sense of the disturbance going on around you."
+              </Text>
+              <Text style={styles.quoteAuthor}>- Ancient Wisdom</Text>
+            </View>
+          </View>
+
+          {/* Footer Blessing */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              🙏 हरे कृष्ण हरे राम 🙏
+            </Text>
+          </View>
+        </ScrollView>
       </LinearGradient>
     </View>
   );
@@ -79,26 +164,157 @@ const styles = StyleSheet.create({
   gradient: {
     flex: 1,
   },
-  titleContainer: {
-    flexDirection: 'row',
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 40,
+  },
+  header: {
     alignItems: 'center',
-    gap: 8,
+    paddingTop: 60,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+  },
+  omContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: SPIRITUAL_COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 20,
+    ...SPIRITUAL_SHADOWS.divine,
+  },
+  omSymbol: {
+    fontSize: 36,
+    color: SPIRITUAL_COLORS.primaryForeground,
+    fontWeight: 'bold',
   },
   welcomeText: {
-    fontSize: 20,
+    fontSize: 28,
     fontWeight: 'bold',
     color: SPIRITUAL_COLORS.foreground,
-  },
-  stepContainer: {
-    gap: 8,
+    textAlign: 'center',
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  subtitle: {
+    fontSize: 16,
+    color: SPIRITUAL_COLORS.textMuted,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  blessingCard: {
+    marginHorizontal: 20,
+    marginBottom: 30,
+    borderRadius: 16,
+    ...SPIRITUAL_SHADOWS.divine,
+  },
+  blessingGradient: {
+    borderRadius: 16,
+    padding: 20,
+  },
+  blessingContent: {
+    alignItems: 'center',
+  },
+  blessingText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: SPIRITUAL_COLORS.primaryForeground,
+    textAlign: 'center',
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  blessingTranslation: {
+    fontSize: 14,
+    color: SPIRITUAL_COLORS.primaryForeground,
+    textAlign: 'center',
+    fontStyle: 'italic',
+    opacity: 0.9,
+  },
+  featuresSection: {
+    paddingHorizontal: 20,
+    marginBottom: 30,
+  },
+  sectionTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: SPIRITUAL_COLORS.foreground,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  featuresGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  featureCard: {
+    width: (screenWidth - 60) / 2,
+    marginBottom: 16,
+    borderRadius: 16,
+    ...SPIRITUAL_SHADOWS.card,
+  },
+  featureCardGradient: {
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    minHeight: 140,
+  },
+  featureIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: SPIRITUAL_COLORS.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  featureTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: SPIRITUAL_COLORS.foreground,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  featureDescription: {
+    fontSize: 12,
+    color: SPIRITUAL_COLORS.textMuted,
+    textAlign: 'center',
+    lineHeight: 16,
+  },
+  quoteSection: {
+    paddingHorizontal: 20,
+    marginBottom: 30,
+  },
+  quoteCard: {
+    backgroundColor: SPIRITUAL_COLORS.cardBackground,
+    borderRadius: 16,
+    padding: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: SPIRITUAL_COLORS.secondary,
+    ...SPIRITUAL_SHADOWS.peaceful,
+  },
+  quoteText: {
+    fontSize: 16,
+    color: SPIRITUAL_COLORS.foreground,
+    fontStyle: 'italic',
+    lineHeight: 24,
+    marginBottom: 12,
+  },
+  quoteAuthor: {
+    fontSize: 14,
+    color: SPIRITUAL_COLORS.primary,
+    fontWeight: '600',
+    textAlign: 'right',
+  },
+  footer: {
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  footerText: {
+    fontSize: 18,
+    color: SPIRITUAL_COLORS.primary,
+    fontWeight: '600',
   },
 });
