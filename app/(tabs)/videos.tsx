@@ -1,23 +1,24 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
-  ScrollView,
-  Image,
+  Dimensions,
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
-  Dimensions,
-  Linking,
+  Animated,
+  StatusBar,
 } from 'react-native';
+import { PanGestureHandler } from 'react-native-gesture-handler';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { Share } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { WebView } from 'react-native-webview';
 
-import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS, SPIRITUAL_TYPOGRAPHY } from '@/constants/SpiritualColors';
+import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -74,7 +75,47 @@ const spiritualVideos: Video[] = [
 ];
 
 export function VideosScreen() {
-  const [currentVideo, setCurrentVideo] = useState<Video | null>(null);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const translateY = useRef(new Animated.Value(0)).current;
+  const panRef = useRef(null);
+
+  const currentVideo = spiritualVideos[currentVideoIndex];
+
+  // Create embedded YouTube player HTML
+  const createYouTubeHTML = (videoId: string) => {
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+          <style>
+            body {
+              margin: 0;
+              padding: 0;
+              background: #000;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              height: 100vh;
+            }
+            iframe {
+              border: none;
+            }
+          </style>
+        </head>
+        <body>
+          <iframe 
+            width="${screenWidth}" 
+            height="${screenHeight * 0.7}" 
+            src="https://www.youtube.com/embed/${videoId}?autoplay=1&controls=1&rel=0&showinfo=0&fs=0&modestbranding=1&iv_load_policy=3&cc_load_policy=0&disablekb=1"
+            frameborder="0" 
+            allowfullscreen>
+          </iframe>
+        </body>
+      </html>
+    `;
+  };
 
   const shareVideo = async (video: Video) => {
     try {
@@ -112,211 +153,217 @@ export function VideosScreen() {
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       
-      const youtubeAppUrl = `youtube://shorts/${video.youtubeId}`;
       const browserUrl = `https://www.youtube.com/shorts/${video.youtubeId}`;
       
       // Check if we're on web platform
       if (typeof window !== 'undefined' && window.open) {
-        // Web environment - use window.open
         window.open(browserUrl, '_blank');
         return;
       }
       
-      // Native environment - try app first, then fallback
-      const canOpenApp = await Linking.canOpenURL(youtubeAppUrl);
-      
-      if (canOpenApp) {
-        await Linking.openURL(youtubeAppUrl);
-      } else {
-        // Fallback to browser with Shorts URL
-        await Linking.openURL(browserUrl);
-      }
+      // Native environment - open in external browser
+      const { Linking } = require('react-native');
+      await Linking.openURL(browserUrl);
     } catch (error) {
       console.error('Error opening video:', error);
-      
-      // Final fallback for web - try direct window.open
-      if (typeof window !== 'undefined' && window.open) {
-        window.open(`https://www.youtube.com/shorts/${video.youtubeId}`, '_blank');
-      } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Error Opening Video',
-          text2: 'Please try again or check your internet connection',
-          visibilityTime: 3000,
-        });
-      }
+      Toast.show({
+        type: 'error',
+        text1: 'Error Opening Video',
+        text2: 'Please try again or check your internet connection',
+        visibilityTime: 3000,
+      });
     }
   };
 
-  const handlePlayVideo = async (video: Video) => {
+  const handlePlayVideo = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    setCurrentVideo(video);
-    openInYouTube(video);
+    setIsVideoPlaying(true);
   };
 
-  const shareApp = async () => {
-    try {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  const handleCloseVideo = () => {
+    setIsVideoPlaying(false);
+  };
 
-      const shareContent = {
-        title: 'Spiritual Wisdom App',
-        message: '🙏 Find peace in daily wisdom with this beautiful spiritual app. These videos have brought such tranquility to my life! Download now and start your journey to inner peace.',
-        url: 'https://your-app-link.com',
-      };
+  const onGestureEvent = Animated.event(
+    [{ nativeEvent: { translationY: translateY } }],
+    { useNativeDriver: true }
+  );
 
-      await Share.share({
-        message: shareContent.message,
-        url: shareContent.url,
-        title: shareContent.title,
-      });
-
-      Toast.show({
-        type: 'success',
-        text1: 'Shared Successfully',
-        text2: 'App link has been shared',
-        visibilityTime: 3000,
-      });
-    } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Share Failed',
-        text2: 'Unable to share app',
-        visibilityTime: 3000,
-      });
+  const onHandlerStateChange = (event: any) => {
+    if (event.nativeEvent.state === 5) { // END state
+      const { translationY, velocityY } = event.nativeEvent;
+      
+      if (translationY < -100 || velocityY < -500) {
+        // Swipe up - next video
+        if (currentVideoIndex < spiritualVideos.length - 1) {
+          setCurrentVideoIndex(currentVideoIndex + 1);
+          setIsVideoPlaying(false);
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
+      } else if (translationY > 100 || velocityY > 500) {
+        // Swipe down - previous video
+        if (currentVideoIndex > 0) {
+          setCurrentVideoIndex(currentVideoIndex - 1);
+          setIsVideoPlaying(false);
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
+      }
+      
+      // Reset animation
+      Animated.spring(translateY, {
+        toValue: 0,
+        useNativeDriver: true,
+      }).start();
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <LinearGradient
-        colors={SPIRITUAL_GRADIENTS.peace}
-        style={styles.gradient}
+      <StatusBar barStyle="light-content" backgroundColor="#000" />
+      
+      <PanGestureHandler
+        ref={panRef}
+        onGestureEvent={onGestureEvent}
+        onHandlerStateChange={onHandlerStateChange}
       >
-        <ScrollView
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
+        <Animated.View 
+          style={[
+            styles.videoContainer,
+            {
+              transform: [{ translateY }]
+            }
+          ]}
         >
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={[SPIRITUAL_TYPOGRAPHY.spiritualHeading, styles.headerTitle]}>
-              Spiritual Shorts
-            </Text>
-            <Text style={styles.headerSubtitle}>
-              Divine wisdom from Sri Sidheshwar Tirth Brahmrishi
-            </Text>
-          </View>
-
-          {/* Video Cards */}
-          {spiritualVideos.map((video, index) => (
-            <View
-              key={video.id}
-              style={[
-                styles.videoCard,
-                SPIRITUAL_SHADOWS.peaceful,
-                { opacity: 1 - (index * 0.02) } // Subtle fade effect
-              ]}
-            >
-              {/* Thumbnail Container */}
-              <View style={styles.thumbnailContainer}>
-                <Image
-                  source={{ uri: video.thumbnail }}
-                  style={styles.thumbnail}
-                  resizeMode="cover"
+          {/* Video Player Area */}
+          <View style={styles.videoPlayerContainer}>
+            {isVideoPlaying ? (
+              <View style={styles.webViewContainer}>
+                <WebView
+                  source={{ html: createYouTubeHTML(currentVideo.youtubeId) }}
+                  style={styles.webView}
+                  allowsInlineMediaPlayback
+                  mediaPlaybackRequiresUserAction={false}
+                  javaScriptEnabled
+                  domStorageEnabled
+                  startInLoadingState
+                  scalesPageToFit
                 />
                 
-                {/* Play Button Overlay */}
-                <View style={styles.playOverlay}>
-                  <TouchableOpacity
-                    style={[styles.playButton, SPIRITUAL_SHADOWS.divine]}
-                    onPress={() => handlePlayVideo(video)}
-                    activeOpacity={0.8}
-                  >
-                    <LinearGradient
-                      colors={SPIRITUAL_GRADIENTS.divine}
-                      style={styles.playButtonGradient}
-                    >
-                      <Ionicons
-                        name="play"
-                        size={32}
-                        color={SPIRITUAL_COLORS.primaryForeground}
-                        style={styles.playIcon}
-                      />
-                    </LinearGradient>
-                  </TouchableOpacity>
-                </View>
-
-                {/* Duration Badge */}
-                <View style={styles.durationBadge}>
-                  <Text style={styles.durationText}>{video.duration}</Text>
-                </View>
+                {/* Close button */}
+                <TouchableOpacity 
+                  style={styles.closeButton}
+                  onPress={handleCloseVideo}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="close" size={24} color="#fff" />
+                </TouchableOpacity>
               </View>
-
-              {/* Video Info */}
-              <View style={styles.videoInfo}>
-                <Text style={styles.videoTitle}>{video.title}</Text>
-                <Text style={styles.videoDescription}>{video.description}</Text>
-
-                {/* Action Buttons */}
-                <View style={styles.actionButtons}>
-                  <TouchableOpacity
-                    style={[styles.actionButton, SPIRITUAL_SHADOWS.card]}
-                    onPress={() => shareVideo(video)}
-                    activeOpacity={0.7}
+            ) : (
+              <View style={styles.thumbnailContainer}>
+                {/* Background with thumbnail blur effect */}
+                <LinearGradient
+                  colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.7)']}
+                  style={styles.thumbnailOverlay}
+                />
+                
+                {/* Play Button */}
+                <TouchableOpacity
+                  style={[styles.playButton, SPIRITUAL_SHADOWS.divine]}
+                  onPress={handlePlayVideo}
+                  activeOpacity={0.8}
+                >
+                  <LinearGradient
+                    colors={SPIRITUAL_GRADIENTS.divine}
+                    style={styles.playButtonGradient}
                   >
                     <Ionicons
-                      name="share-outline"
-                      size={20}
-                      color={SPIRITUAL_COLORS.primary}
+                      name="play"
+                      size={60}
+                      color={SPIRITUAL_COLORS.primaryForeground}
+                      style={styles.playIcon}
                     />
-                    <Text style={styles.actionButtonText}>Share</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.actionButton, SPIRITUAL_SHADOWS.card]}
-                    onPress={() => openInYouTube(video)}
-                    activeOpacity={0.7}
-                  >
-                    <Ionicons
-                      name="open-outline"
-                      size={20}
-                      color={SPIRITUAL_COLORS.primary}
-                    />
-                    <Text style={styles.actionButtonText}>YouTube</Text>
-                  </TouchableOpacity>
-                </View>
+                  </LinearGradient>
+                </TouchableOpacity>
               </View>
+            )}
+          </View>
+
+          {/* Video Info Overlay */}
+          <View style={styles.videoInfoOverlay}>
+            {/* Video Navigation Indicator */}
+            <View style={styles.navigationIndicator}>
+              <Text style={styles.navigationText}>
+                {currentVideoIndex + 1} / {spiritualVideos.length}
+              </Text>
             </View>
-          ))}
 
-          {/* Share App CTA */}
-          <LinearGradient
-            colors={SPIRITUAL_GRADIENTS.divine}
-            style={[styles.shareAppCard, SPIRITUAL_SHADOWS.divine]}
-          >
-            <Text style={styles.shareAppTitle}>Share Divine Wisdom</Text>
-            <Text style={styles.shareAppSubtitle}>
-              Share these sacred teachings with seekers on the spiritual path
-            </Text>
-            <TouchableOpacity
-              style={styles.shareAppButton}
-              onPress={shareApp}
-              activeOpacity={0.8}
-            >
-              <Ionicons
-                name="share"
-                size={20}
-                color={SPIRITUAL_COLORS.primary}
-                style={styles.shareAppIcon}
-              />
-              <Text style={styles.shareAppButtonText}>Share App</Text>
-            </TouchableOpacity>
-          </LinearGradient>
+            {/* Video Details */}
+            <View style={styles.videoDetails}>
+              <Text style={styles.videoTitle} numberOfLines={2}>
+                {currentVideo.title}
+              </Text>
+              <Text style={styles.videoDescription} numberOfLines={3}>
+                {currentVideo.description}
+              </Text>
+              <Text style={styles.videoDuration}>
+                Duration: {currentVideo.duration}
+              </Text>
+            </View>
 
-          {/* Bottom spacing for tab navigation */}
-          <View style={styles.bottomSpacing} />
-        </ScrollView>
-      </LinearGradient>
+            {/* Action Buttons */}
+            <View style={styles.actionButtonsContainer}>
+              <TouchableOpacity
+                style={[styles.actionButton, SPIRITUAL_SHADOWS.card]}
+                onPress={() => shareVideo(currentVideo)}
+                activeOpacity={0.7}
+              >
+                <LinearGradient
+                  colors={SPIRITUAL_GRADIENTS.peace}
+                  style={styles.actionButtonGradient}
+                >
+                  <Ionicons
+                    name="share-outline"
+                    size={24}
+                    color={SPIRITUAL_COLORS.primary}
+                  />
+                  <Text style={styles.actionButtonText}>Share</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionButton, SPIRITUAL_SHADOWS.card]}
+                onPress={() => openInYouTube(currentVideo)}
+                activeOpacity={0.7}
+              >
+                <LinearGradient
+                  colors={SPIRITUAL_GRADIENTS.divine}
+                  style={styles.actionButtonGradient}
+                >
+                  <Ionicons
+                    name="logo-youtube"
+                    size={24}
+                    color={SPIRITUAL_COLORS.primaryForeground}
+                  />
+                  <Text style={[styles.actionButtonText, { color: SPIRITUAL_COLORS.primaryForeground }]}>
+                    YouTube
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+
+            {/* Swipe Instructions */}
+            {!isVideoPlaying && (
+              <View style={styles.swipeInstructions}>
+                <Text style={styles.swipeText}>
+                  Swipe up for next video • Swipe down for previous
+                </Text>
+                <Ionicons name="chevron-up" size={20} color="rgba(255,255,255,0.6)" />
+              </View>
+            )}
+          </View>
+        </Animated.View>
+      </PanGestureHandler>
+      
       <Toast />
     </SafeAreaView>
   );
@@ -327,59 +374,51 @@ export default VideosScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#000',
   },
-  gradient: {
+  videoContainer: {
     flex: 1,
+    width: screenWidth,
+    height: screenHeight,
   },
-  scrollView: {
+  videoPlayerContainer: {
     flex: 1,
+    backgroundColor: '#000',
   },
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 20,
+  webViewContainer: {
+    flex: 1,
+    position: 'relative',
   },
-  header: {
-    alignItems: 'center',
-    marginBottom: 24,
+  webView: {
+    flex: 1,
+    backgroundColor: '#000',
   },
-  headerTitle: {
-    color: SPIRITUAL_COLORS.primary,
-    marginBottom: 8,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: SPIRITUAL_COLORS.textMuted,
-    textAlign: 'center',
-  },
-  videoCard: {
-    backgroundColor: SPIRITUAL_COLORS.cardBackground,
-    borderRadius: 16,
-    marginBottom: 20,
-    overflow: 'hidden',
+  closeButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: 20,
+    padding: 8,
+    zIndex: 999,
   },
   thumbnailContainer: {
-    position: 'relative',
-    width: '100%',
-    height: 200,
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#000',
   },
-  thumbnail: {
-    width: '100%',
-    height: '100%',
-  },
-  playOverlay: {
+  thumbnailOverlay: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   playButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     overflow: 'hidden',
   },
   playButtonGradient: {
@@ -388,96 +427,87 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   playIcon: {
-    marginLeft: 4, // Slight offset for visual centering
+    marginLeft: 8,
   },
-  durationBadge: {
+  videoInfoOverlay: {
     position: 'absolute',
-    top: 12,
-    right: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 20,
+    paddingBottom: 120, // Space for tab bar
+    paddingTop: 20,
   },
-  durationText: {
-    color: '#FFFFFF',
+  navigationIndicator: {
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginBottom: 20,
+  },
+  navigationText: {
+    color: '#fff',
     fontSize: 12,
     fontWeight: '600',
   },
-  videoInfo: {
-    padding: 16,
+  videoDetails: {
+    marginBottom: 20,
   },
   videoTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: SPIRITUAL_COLORS.foreground,
+    color: '#fff',
     marginBottom: 8,
+    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   videoDescription: {
     fontSize: 14,
-    color: SPIRITUAL_COLORS.textMuted,
+    color: 'rgba(255,255,255,0.9)',
     lineHeight: 20,
-    marginBottom: 16,
+    marginBottom: 8,
+    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
-  actionButtons: {
+  videoDuration: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.7)',
+    fontWeight: '600',
+  },
+  actionButtonsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
+    marginBottom: 20,
   },
   actionButton: {
+    flex: 0.48,
+    borderRadius: 25,
+    overflow: 'hidden',
+  },
+  actionButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SPIRITUAL_COLORS.accent,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 12,
-    flex: 0.4,
     justifyContent: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
   },
   actionButtonText: {
     color: SPIRITUAL_COLORS.primary,
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 6,
-  },
-  shareAppCard: {
-    borderRadius: 16,
-    padding: 24,
-    alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 20,
-  },
-  shareAppTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: SPIRITUAL_COLORS.primaryForeground,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  shareAppSubtitle: {
-    fontSize: 14,
-    color: SPIRITUAL_COLORS.primaryForeground,
-    textAlign: 'center',
-    opacity: 0.9,
-    marginBottom: 16,
-    lineHeight: 20,
-  },
-  shareAppButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: SPIRITUAL_COLORS.primaryForeground,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  shareAppIcon: {
-    marginRight: 8,
-  },
-  shareAppButtonText: {
-    color: SPIRITUAL_COLORS.primary,
     fontSize: 16,
     fontWeight: '600',
+    marginLeft: 8,
   },
-  bottomSpacing: {
-    height: 100, // Space for tab navigation
+  swipeInstructions: {
+    alignItems: 'center',
+    opacity: 0.7,
+  },
+  swipeText: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12,
+    textAlign: 'center',
+    marginBottom: 4,
   },
 });
