@@ -1,26 +1,29 @@
-import { initializeApp } from 'firebase/app';
-import { initializeAuth, getReactNativePersistence, GoogleAuthProvider } from 'firebase/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import { initializeApp, getApps } from 'firebase/app';
+import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 const firebaseConfig = {
-  // Your Firebase config goes here
-  // You can get this from your Firebase console
-  apiKey: "your-api-key",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "your-app-id"
+  apiKey: "AIzaSyBI8--3GhLYSWJo8hVeMbwg79zlZBu9qLI",
+  authDomain: "gurudarshan-app.firebaseapp.com",
+  projectId: "gurudarshan-app",
+  storageBucket: "gurudarshan-app.firebasestorage.app",
+  messagingSenderId: "802311568887",
+  appId: "1:802311568887:web:698f8c5a42cd81167842f2",
+  measurementId: "G-XWKB4PQPSE"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase only if it hasn't been initialized already
+let app;
+if (getApps().length === 0) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApps()[0];
+}
 
-// Initialize Firebase Auth with AsyncStorage persistence
-export const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(AsyncStorage)
-});
+// Initialize Firebase Auth
+export const auth = getAuth(app);
 
+// Initialize Google Auth Provider
 export const googleProvider = new GoogleAuthProvider();
 
 export default app;

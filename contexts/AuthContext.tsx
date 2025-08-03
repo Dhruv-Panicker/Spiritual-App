@@ -33,7 +33,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    // Provide a fallback context to prevent crashes
+    return {
+      user: null,
+      isAdmin: false,
+      isLoading: false,
+      signUp: async () => { throw new Error('Auth not initialized'); },
+      signIn: async () => { throw new Error('Auth not initialized'); },
+      signInWithGoogle: async () => { throw new Error('Auth not initialized'); },
+      logout: async () => { throw new Error('Auth not initialized'); },
+      resetPassword: async () => { throw new Error('Auth not initialized'); },
+      error: 'Authentication service not available',
+      clearError: () => {}
+    };
   }
   return context;
 };
@@ -46,33 +58,48 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<boolean>(false);
 
   // Check if current user is admin
   const isAdmin = isAdminUser(user?.email);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      try {
-        setUser(user);
-        if (user) {
-          // Store user data locally for persistence
-          await AsyncStorage.setItem('user', JSON.stringify({
-            uid: user.uid,
-            email: user.email,
-            displayName: user.displayName,
-            photoURL: user.photoURL
-          }));
-        } else {
-          await AsyncStorage.removeItem('user');
+    let unsubscribe: (() => void) | undefined;
+    
+    try {
+      unsubscribe = onAuthStateChanged(auth, async (user) => {
+        try {
+          setUser(user);
+          if (user) {
+            // Store user data locally for persistence
+            await AsyncStorage.setItem('user', JSON.stringify({
+              uid: user.uid,
+              email: user.email,
+              displayName: user.displayName,
+              photoURL: user.photoURL
+            }));
+          } else {
+            await AsyncStorage.removeItem('user');
+          }
+        } catch (error) {
+          console.error('Error handling auth state change:', error);
+          setError('Failed to sync user data');
+        } finally {
+          setIsLoading(false);
         }
-      } catch (error) {
-        console.error('Error handling auth state change:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    });
+      });
+    } catch (error) {
+      console.error('Error initializing Firebase auth:', error);
+      setAuthError(true);
+      setError('Firebase authentication service unavailable');
+      setIsLoading(false);
+    }
 
-    return unsubscribe;
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, []);
 
   const clearError = () => setError(null);
