@@ -19,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS, SPIRITUAL_TYPOGRAPHY } from '@/constants/SpiritualColors';
+import { UserProfile } from '@/components/auth/UserProfile';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -199,6 +200,11 @@ export function GurudevScreen() {
                 <Text style={styles.shareButtonText}>Share App</Text>
               </TouchableOpacity>
             </LinearGradient>
+          </View>
+
+          {/* User Profile Section */}
+          <View style={styles.section}>
+            <UserProfile />
           </View>
         </ScrollView>
       </LinearGradient>

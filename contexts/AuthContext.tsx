@@ -1,119 +1,129 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import {
+  User,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  signInWithPopup,
+  GoogleAuthProvider,
+  sendPasswordResetEmail,
+  updateProfile
+} from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Haptics from 'expo-haptics';
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  isAdmin: boolean;
-}
+import { auth, googleProvider } from '../config/firebase';
+import { isAdminUser } from '../config/adminConfig';
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
-  logout: () => void;
+  isAdmin: boolean;
   isLoading: boolean;
+  signUp: (email: string, password: string, displayName?: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  error: string | null;
+  clearError: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
 
 interface AuthProviderProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
-export const AuthProvider = ({ children }: AuthProviderProps) => {
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Check if current user is admin
+  const isAdmin = isAdminUser(user?.email);
 
   useEffect(() => {
-    checkExistingSession();
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      try {
+        setUser(user);
+        if (user) {
+          // Store user data locally for persistence
+          await AsyncStorage.setItem('user', JSON.stringify({
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName,
+            photoURL: user.photoURL
+          }));
+        } else {
+          await AsyncStorage.removeItem('user');
+        }
+      } catch (error) {
+        console.error('Error handling auth state change:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    });
+
+    return unsubscribe;
   }, []);
 
-  const checkExistingSession = async () => {
+  const clearError = () => setError(null);
+
+  const signUp = async (email: string, password: string, displayName?: string) => {
     try {
-      const savedUser = await AsyncStorage.getItem('spiritual-app-user');
-      if (savedUser) {
-        setUser(JSON.parse(savedUser));
+      setIsLoading(true);
+      setError(null);
+      
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // Update profile with display name if provided
+      if (displayName && userCredential.user) {
+        await updateProfile(userCredential.user, { displayName });
       }
-    } catch (error) {
-      console.error('Error checking existing session:', error);
+    } catch (error: any) {
+      setError(getErrorMessage(error));
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const login = async (email: string, password: string) => {
-    setIsLoading(true);
+  const signIn = async (email: string, password: string) => {
     try {
-      // Add haptic feedback
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      
-      // Simulate API call - replace with actual authentication
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Basic email validation
-      if (!email.includes('@') || password.length < 3) {
-        throw new Error('Invalid credentials');
-      }
-      
-      const mockUser: User = {
-        id: '1',
-        name: 'Spiritual Seeker',
-        email,
-        isAdmin: email === 'admin@example.com'
-      };
-      
-      setUser(mockUser);
-      await AsyncStorage.setItem('spiritual-app-user', JSON.stringify(mockUser));
-      
-      // Success haptic feedback
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch (error) {
-      // Error haptic feedback
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      throw new Error('Authentication failed');
+      setIsLoading(true);
+      setError(null);
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error: any) {
+      setError(getErrorMessage(error));
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const loginWithGoogle = async () => {
-    setIsLoading(true);
+  const signInWithGoogle = async () => {
     try {
-      // Add haptic feedback
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      setIsLoading(true);
+      setError(null);
       
-      // Simulate Google OAuth - replace with actual Google OAuth implementation
-      // You would integrate with expo-auth-session or @react-native-google-signin/google-signin
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const mockUser: User = {
-        id: '2',
-        name: 'Google User',
-        email: 'user@gmail.com',
-        isAdmin: false
-      };
-      
-      setUser(mockUser);
-      await AsyncStorage.setItem('spiritual-app-user', JSON.stringify(mockUser));
-      
-      // Success haptic feedback
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch (error) {
-      // Error haptic feedback
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      throw new Error('Google authentication failed');
+      // For web platform
+      if (typeof window !== 'undefined') {
+        await signInWithPopup(auth, googleProvider);
+      } else {
+        // For mobile platforms, you would use @react-native-google-signin/google-signin
+        throw new Error('Google Sign-In not implemented for mobile yet');
+      }
+    } catch (error: any) {
+      setError(getErrorMessage(error));
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -121,21 +131,65 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const logout = async () => {
     try {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      setUser(null);
-      await AsyncStorage.removeItem('spiritual-app-user');
-    } catch (error) {
-      console.error('Error during logout:', error);
+      setIsLoading(true);
+      setError(null);
+      await signOut(auth);
+      await AsyncStorage.removeItem('user');
+    } catch (error: any) {
+      setError(getErrorMessage(error));
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      setError(null);
+      await sendPasswordResetEmail(auth, email);
+    } catch (error: any) {
+      setError(getErrorMessage(error));
+      throw error;
+    }
+  };
+
+  const getErrorMessage = (error: any): string => {
+    switch (error.code) {
+      case 'auth/user-not-found':
+        return 'No account found with this email address.';
+      case 'auth/wrong-password':
+        return 'Incorrect password. Please try again.';
+      case 'auth/email-already-in-use':
+        return 'An account with this email already exists.';
+      case 'auth/weak-password':
+        return 'Password should be at least 6 characters long.';
+      case 'auth/invalid-email':
+        return 'Please enter a valid email address.';
+      case 'auth/too-many-requests':
+        return 'Too many failed attempts. Please try again later.';
+      case 'auth/network-request-failed':
+        return 'Network error. Please check your connection.';
+      default:
+        return error.message || 'An unexpected error occurred.';
     }
   };
 
   const value: AuthContextType = {
     user,
-    login,
-    loginWithGoogle,
+    isAdmin,
+    isLoading,
+    signUp,
+    signIn,
+    signInWithGoogle,
     logout,
-    isLoading
+    resetPassword,
+    error,
+    clearError
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };

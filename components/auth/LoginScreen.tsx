@@ -1,271 +1,327 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Image,
+  SafeAreaView,
+  ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Animated,
-  SafeAreaView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Toast from 'react-native-toast-message';
+import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import Toast from 'react-native-toast-message';
 
 import { useAuth } from '../../contexts/AuthContext';
-import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS } from '../../constants/SpiritualColors';
+import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS, SPIRITUAL_TYPOGRAPHY } from '../../constants/SpiritualColors';
 
-export const LoginScreen = () => {
+export const LoginScreen: React.FC = () => {
+  const { signIn, signUp, signInWithGoogle, resetPassword, error, clearError, isLoading } = useAuth();
+  const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [emailError, setEmailError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-  
-  const { login, loginWithGoogle, isLoading } = useAuth();
-  
-  // Animation references
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    // Fade in animation
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 1000,
-      useNativeDriver: true,
-    }).start();
-
-    // Sacred pulse animation for Om symbol
-    const pulseAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.1,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    pulseAnimation.start();
-
-    return () => pulseAnimation.stop();
-  }, []);
-
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const validateForm = () => {
-    let isValid = true;
-    
-    if (!email) {
-      setEmailError('Email is required');
-      isValid = false;
-    } else if (!validateEmail(email)) {
-      setEmailError('Please enter a valid email');
-      isValid = false;
-    } else {
-      setEmailError('');
-    }
-
-    if (!password) {
-      setPasswordError('Password is required');
-      isValid = false;
-    } else if (password.length < 6) {
-      setPasswordError('Password must be at least 6 characters');
-      isValid = false;
-    } else {
-      setPasswordError('');
-    }
-
-    return isValid;
-  };
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSubmit = async () => {
-    if (!validateForm()) {
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    if (!email.trim() || !password.trim()) {
+      Toast.show({
+        type: 'error',
+        text1: 'Missing Information',
+        text2: 'Please fill in all required fields',
+      });
+      return;
+    }
+
+    if (isSignUp) {
+      if (password !== confirmPassword) {
+        Toast.show({
+          type: 'error',
+          text1: 'Password Mismatch',
+          text2: 'Passwords do not match',
+        });
+        return;
+      }
+      
+      if (password.length < 6) {
+        Toast.show({
+          type: 'error',
+          text1: 'Weak Password',
+          text2: 'Password must be at least 6 characters',
+        });
+        return;
+      }
+    }
+
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      clearError();
+
+      if (isSignUp) {
+        await signUp(email.trim(), password, displayName.trim() || undefined);
+        Toast.show({
+          type: 'success',
+          text1: 'Account Created',
+          text2: 'Welcome to our spiritual community!',
+        });
+      } else {
+        await signIn(email.trim(), password);
+        Toast.show({
+          type: 'success',
+          text1: 'Welcome Back',
+          text2: 'You have successfully signed in',
+        });
+      }
+    } catch (error) {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Toast.show({
+        type: 'error',
+        text1: isSignUp ? 'Sign Up Failed' : 'Sign In Failed',
+        text2: error instanceof Error ? error.message : 'Please try again',
+      });
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      clearError();
+      await signInWithGoogle();
+      Toast.show({
+        type: 'success',
+        text1: 'Welcome',
+        text2: 'Signed in with Google successfully',
+      });
+    } catch (error) {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Toast.show({
+        type: 'error',
+        text1: 'Google Sign In Failed',
+        text2: error instanceof Error ? error.message : 'Please try again',
+      });
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      Toast.show({
+        type: 'error',
+        text1: 'Email Required',
+        text2: 'Please enter your email address first',
+      });
       return;
     }
 
     try {
-      await login(email, password);
+      await resetPassword(email.trim());
       Toast.show({
         type: 'success',
-        text1: 'Welcome',
-        text2: 'You have been successfully logged in.',
-        visibilityTime: 4000,
+        text1: 'Reset Email Sent',
+        text2: 'Check your email for password reset instructions',
       });
     } catch (error) {
       Toast.show({
         type: 'error',
-        text1: 'Login Failed',
-        text2: 'Please check your credentials and try again.',
-        visibilityTime: 4000,
+        text1: 'Reset Failed',
+        text2: error instanceof Error ? error.message : 'Please try again',
       });
     }
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      await loginWithGoogle();
-      Toast.show({
-        type: 'success',
-        text1: 'Welcome',
-        text2: 'Successfully logged in with Google.',
-        visibilityTime: 4000,
-      });
-    } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Google Login Failed',
-        text2: 'Please try again.',
-        visibilityTime: 4000,
-      });
-    }
-  };
-
-  const handleModeSwitch = async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  const toggleMode = () => {
     setIsSignUp(!isSignUp);
-    setEmailError('');
-    setPasswordError('');
+    clearError();
+    setPassword('');
+    setConfirmPassword('');
+    setDisplayName('');
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-      >
-        <LinearGradient
-          colors={SPIRITUAL_GRADIENTS.peace}
-          style={styles.gradient}
+      <LinearGradient colors={SPIRITUAL_GRADIENTS.peaceful} style={styles.gradient}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardAvoid}
         >
           <ScrollView
             contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
           >
-            <Animated.View style={[styles.logoContainer, { opacity: fadeAnim }]}>
-              <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-                <Image
-                  source={require('../../assets/images/om-symbol.png')}
-                  style={styles.omSymbol}
-                  resizeMode="contain"
-                />
-              </Animated.View>
-              <Text style={styles.title}>Spiritual Wisdom</Text>
-              <Text style={styles.subtitle}>Find peace in daily wisdom</Text>
-            </Animated.View>
-
-            <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
-              <Text style={styles.cardTitle}>
+            {/* Header */}
+            <View style={styles.header}>
+              <View style={styles.logoContainer}>
+                <Ionicons name="flower" size={60} color={SPIRITUAL_COLORS.primary} />
+              </View>
+              <Text style={[SPIRITUAL_TYPOGRAPHY.title, styles.title]}>
                 {isSignUp ? 'Join Our Community' : 'Welcome Back'}
               </Text>
-              
+              <Text style={styles.subtitle}>
+                {isSignUp
+                  ? 'Begin your spiritual journey with us'
+                  : 'Continue your spiritual journey'
+                }
+              </Text>
+            </View>
+
+            {/* Form */}
+            <View style={styles.form}>
+              {isSignUp && (
+                <View style={styles.inputContainer}>
+                  <Ionicons name="person" size={20} color={SPIRITUAL_COLORS.primary} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Full Name (Optional)"
+                    placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+                    value={displayName}
+                    onChangeText={setDisplayName}
+                    autoCapitalize="words"
+                    textContentType="name"
+                  />
+                </View>
+              )}
+
               <View style={styles.inputContainer}>
+                <Ionicons name="mail" size={20} color={SPIRITUAL_COLORS.primary} style={styles.inputIcon} />
                 <TextInput
-                  style={[
-                    styles.input,
-                    emailError ? styles.inputError : null
-                  ]}
-                  placeholder="Email"
+                  style={styles.input}
+                  placeholder="Email Address"
                   placeholderTextColor={SPIRITUAL_COLORS.textMuted}
                   value={email}
-                  onChangeText={(text) => {
-                    setEmail(text);
-                    if (emailError) setEmailError('');
-                  }}
+                  onChangeText={setEmail}
                   keyboardType="email-address"
                   autoCapitalize="none"
-                  autoCorrect={false}
-                  returnKeyType="next"
+                  textContentType="emailAddress"
                 />
-                {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
               </View>
-              
+
               <View style={styles.inputContainer}>
+                <Ionicons name="lock-closed" size={20} color={SPIRITUAL_COLORS.primary} style={styles.inputIcon} />
                 <TextInput
-                  style={[
-                    styles.input,
-                    passwordError ? styles.inputError : null
-                  ]}
+                  style={styles.input}
                   placeholder="Password"
                   placeholderTextColor={SPIRITUAL_COLORS.textMuted}
                   value={password}
-                  onChangeText={(text) => {
-                    setPassword(text);
-                    if (passwordError) setPasswordError('');
-                  }}
-                  secureTextEntry
-                  returnKeyType="done"
-                  onSubmitEditing={handleSubmit}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                  textContentType="password"
                 />
-                {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.eyeIcon}
+                >
+                  <Ionicons
+                    name={showPassword ? 'eye' : 'eye-off'}
+                    size={20}
+                    color={SPIRITUAL_COLORS.textMuted}
+                  />
+                </TouchableOpacity>
               </View>
 
+              {isSignUp && (
+                <View style={styles.inputContainer}>
+                  <Ionicons name="lock-closed" size={20} color={SPIRITUAL_COLORS.primary} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Confirm Password"
+                    placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry={!showConfirmPassword}
+                    textContentType="password"
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                    style={styles.eyeIcon}
+                  >
+                    <Ionicons
+                      name={showConfirmPassword ? 'eye' : 'eye-off'}
+                      size={20}
+                      color={SPIRITUAL_COLORS.textMuted}
+                    />
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {/* Error Message */}
+              {error && (
+                <View style={styles.errorContainer}>
+                  <Ionicons name="alert-circle" size={16} color={SPIRITUAL_COLORS.destructive} />
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
+              )}
+
+              {/* Submit Button */}
               <TouchableOpacity
-                style={[
-                  styles.button,
-                  styles.primaryButton,
-                  isLoading && styles.buttonDisabled
-                ]}
+                style={[styles.submitButton, isLoading && styles.buttonDisabled]}
                 onPress={handleSubmit}
                 disabled={isLoading}
                 activeOpacity={0.8}
               >
-                <Text style={styles.buttonText}>
-                  {isLoading ? 'Loading...' : (isSignUp ? 'Sign Up' : 'Sign In')}
-                </Text>
+                {isLoading ? (
+                  <ActivityIndicator color={SPIRITUAL_COLORS.primaryForeground} />
+                ) : (
+                  <>
+                    <Ionicons
+                      name={isSignUp ? 'person-add' : 'log-in'}
+                      size={20}
+                      color={SPIRITUAL_COLORS.primaryForeground}
+                    />
+                    <Text style={styles.submitButtonText}>
+                      {isSignUp ? 'Create Account' : 'Sign In'}
+                    </Text>
+                  </>
+                )}
               </TouchableOpacity>
 
+              {/* Forgot Password (Sign In only) */}
+              {!isSignUp && (
+                <TouchableOpacity onPress={handleForgotPassword} style={styles.forgotPassword}>
+                  <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                </TouchableOpacity>
+              )}
+
+              {/* Divider */}
               <View style={styles.divider}>
                 <View style={styles.dividerLine} />
                 <Text style={styles.dividerText}>or</Text>
                 <View style={styles.dividerLine} />
               </View>
 
+              {/* Google Sign In */}
               <TouchableOpacity
-                style={[
-                  styles.button,
-                  styles.googleButton,
-                  isLoading && styles.buttonDisabled
-                ]}
-                onPress={handleGoogleLogin}
+                style={styles.googleButton}
+                onPress={handleGoogleSignIn}
                 disabled={isLoading}
                 activeOpacity={0.8}
               >
+                <Ionicons name="logo-google" size={20} color={SPIRITUAL_COLORS.primary} />
                 <Text style={styles.googleButtonText}>Continue with Google</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.switchButton}
-                onPress={handleModeSwitch}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.switchText}>
-                  {isSignUp 
-                    ? 'Already have an account? Sign In' 
-                    : "Don't have an account? Sign Up"
-                  }
+              {/* Toggle Mode */}
+              <View style={styles.toggleContainer}>
+                <Text style={styles.toggleText}>
+                  {isSignUp ? 'Already have an account?' : "Don't have an account?"}
                 </Text>
-              </TouchableOpacity>
-            </Animated.View>
+                <TouchableOpacity onPress={toggleMode}>
+                  <Text style={styles.toggleLink}>
+                    {isSignUp ? 'Sign In' : 'Sign Up'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </ScrollView>
-        </LinearGradient>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </LinearGradient>
       <Toast />
     </SafeAreaView>
   );
@@ -278,26 +334,30 @@ const styles = StyleSheet.create({
   gradient: {
     flex: 1,
   },
+  keyboardAvoid: {
+    flex: 1,
+  },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 24,
-    paddingTop: 60,
+    padding: 20,
   },
-  logoContainer: {
+  header: {
     alignItems: 'center',
     marginBottom: 40,
   },
-  omSymbol: {
-    width: 80,
-    height: 80,
-    marginBottom: 16,
-    tintColor: SPIRITUAL_COLORS.omGold,
+  logoContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: SPIRITUAL_COLORS.cardBackground,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    ...SPIRITUAL_SHADOWS.peaceful,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: SPIRITUAL_COLORS.foreground,
+    color: SPIRITUAL_COLORS.primary,
     marginBottom: 8,
     textAlign: 'center',
   },
@@ -305,75 +365,75 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: SPIRITUAL_COLORS.textMuted,
     textAlign: 'center',
+    paddingHorizontal: 20,
   },
-  card: {
-    backgroundColor: SPIRITUAL_COLORS.cardBackground,
-    borderRadius: 16,
-    padding: 24,
-    ...SPIRITUAL_SHADOWS.divine,
-  },
-  cardTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: SPIRITUAL_COLORS.foreground,
-    textAlign: 'center',
-    marginBottom: 24,
+  form: {
+    gap: 16,
   },
   inputContainer: {
-    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SPIRITUAL_COLORS.cardBackground,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    ...SPIRITUAL_SHADOWS.card,
+  },
+  inputIcon: {
+    marginRight: 12,
   },
   input: {
-    backgroundColor: SPIRITUAL_COLORS.input,
-    borderRadius: 12,
-    padding: 16,
+    flex: 1,
     fontSize: 16,
     color: SPIRITUAL_COLORS.foreground,
-    borderWidth: 1,
-    borderColor: SPIRITUAL_COLORS.border,
   },
-  inputError: {
-    borderColor: SPIRITUAL_COLORS.spiritualRed,
-    borderWidth: 2,
+  eyeIcon: {
+    padding: 4,
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    padding: 12,
+    borderRadius: 8,
+    gap: 8,
   },
   errorText: {
-    color: SPIRITUAL_COLORS.spiritualRed,
-    fontSize: 12,
-    marginTop: 4,
-    marginLeft: 4,
+    color: SPIRITUAL_COLORS.destructive,
+    fontSize: 14,
+    flex: 1,
   },
-  button: {
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  primaryButton: {
+  submitButton: {
     backgroundColor: SPIRITUAL_COLORS.primary,
-    ...SPIRITUAL_SHADOWS.peaceful,
-  },
-  googleButton: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: SPIRITUAL_COLORS.border,
-    ...SPIRITUAL_SHADOWS.card,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 12,
+    gap: 8,
+    ...SPIRITUAL_SHADOWS.button,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
-  buttonText: {
+  submitButtonText: {
     color: SPIRITUAL_COLORS.primaryForeground,
     fontSize: 16,
     fontWeight: '600',
   },
-  googleButtonText: {
-    color: SPIRITUAL_COLORS.foreground,
-    fontSize: 16,
-    fontWeight: '600',
+  forgotPassword: {
+    alignSelf: 'center',
+    paddingVertical: 8,
+  },
+  forgotPasswordText: {
+    color: SPIRITUAL_COLORS.primary,
+    fontSize: 14,
+    fontWeight: '500',
   },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 20,
+    marginVertical: 8,
   },
   dividerLine: {
     flex: 1,
@@ -382,17 +442,40 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     color: SPIRITUAL_COLORS.textMuted,
+    fontSize: 14,
     paddingHorizontal: 16,
+  },
+  googleButton: {
+    backgroundColor: SPIRITUAL_COLORS.cardBackground,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 12,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: SPIRITUAL_COLORS.border,
+    ...SPIRITUAL_SHADOWS.card,
+  },
+  googleButtonText: {
+    color: SPIRITUAL_COLORS.foreground,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+    gap: 4,
+  },
+  toggleText: {
+    color: SPIRITUAL_COLORS.textMuted,
     fontSize: 14,
   },
-  switchButton: {
-    alignItems: 'center',
-    marginTop: 8,
-    paddingVertical: 8,
-  },
-  switchText: {
+  toggleLink: {
     color: SPIRITUAL_COLORS.primary,
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
   },
 });

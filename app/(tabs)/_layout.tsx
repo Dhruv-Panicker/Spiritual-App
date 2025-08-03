@@ -10,9 +10,11 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { SPIRITUAL_COLORS } from '@/constants/SpiritualColors';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const { isAdmin } = useAuth();
 
   return (
     <AuthGuard>
@@ -75,15 +77,17 @@ export default function TabLayout() {
             ),
           }}
         />
-        <Tabs.Screen
-          name="admin"
-          options={{
-            title: 'Admin',
-            tabBarIcon: ({ color, focused }) => (
-              <Ionicons name={focused ? 'settings' : 'settings-outline'} size={28} color={color} />
-            ),
-          }}
-        />
+        {isAdmin && (
+          <Tabs.Screen
+            name="admin"
+            options={{
+              title: 'Admin',
+              tabBarIcon: ({ color, focused }) => (
+                <Ionicons name={focused ? 'settings' : 'settings-outline'} size={28} color={color} />
+              ),
+            }}
+          />
+        )}
       </Tabs>
     </AuthGuard>
   );

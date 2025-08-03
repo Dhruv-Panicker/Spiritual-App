@@ -7,6 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import Toast from 'react-native-toast-message';
 
 import { AuthProvider } from './contexts/AuthContext';
+import { AuthGuard } from './components/auth/AuthGuard';
 import { MainAppNavigator } from './components/navigation/MainAppNavigator';
 import { SPIRITUAL_COLORS } from './constants/SpiritualColors';
 
@@ -21,17 +22,19 @@ export default function App() {
             style="dark" 
             backgroundColor={SPIRITUAL_COLORS.background}
           />
-          <Stack.Navigator 
-            screenOptions={{ 
-              headerShown: false,
-              cardStyle: { backgroundColor: SPIRITUAL_COLORS.background }
-            }}
-          >
-            <Stack.Screen 
-              name="Main" 
-              component={MainAppNavigator} 
-            />
-          </Stack.Navigator>
+          <AuthGuard>
+            <Stack.Navigator 
+              screenOptions={{ 
+                headerShown: false,
+                cardStyle: { backgroundColor: SPIRITUAL_COLORS.background }
+              }}
+            >
+              <Stack.Screen 
+                name="Main" 
+                component={MainAppNavigator} 
+              />
+            </Stack.Navigator>
+          </AuthGuard>
         </NavigationContainer>
         <Toast />
       </AuthProvider>
