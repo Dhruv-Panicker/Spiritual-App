@@ -1,22 +1,46 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import {
-  User,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  signInWithPopup,
-  GoogleAuthProvider,
-  sendPasswordResetEmail,
-  updateProfile
-} from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { auth, googleProvider } from '../config/firebase';
 import { isAdminUser } from '../config/adminConfig';
 
+// Dynamic Firebase imports
+let User: any;
+let signInWithEmailAndPassword: any;
+let createUserWithEmailAndPassword: any;
+let signOut: any;
+let onAuthStateChanged: any;
+let signInWithPopup: any;
+let GoogleAuthProvider: any;
+let sendPasswordResetEmail: any;
+let updateProfile: any;
+let auth: any;
+let googleProvider: any;
+
+// Initialize Firebase auth functions
+const initializeFirebaseAuth = async () => {
+  try {
+    const firebaseAuth = await import('firebase/auth');
+    const firebaseConfig = await import('../config/firebase');
+    
+    User = firebaseAuth.User;
+    signInWithEmailAndPassword = firebaseAuth.signInWithEmailAndPassword;
+    createUserWithEmailAndPassword = firebaseAuth.createUserWithEmailAndPassword;
+    signOut = firebaseAuth.signOut;
+    onAuthStateChanged = firebaseAuth.onAuthStateChanged;
+    signInWithPopup = firebaseAuth.signInWithPopup;
+    GoogleAuthProvider = firebaseAuth.GoogleAuthProvider;
+    sendPasswordResetEmail = firebaseAuth.sendPasswordResetEmail;
+    updateProfile = firebaseAuth.updateProfile;
+    
+    auth = firebaseConfig.auth;
+    googleProvider = firebaseConfig.googleProvider;
+  } catch (error) {
+    console.error('Firebase auth import error:', error);
+  }
+};
+
 interface AuthContextType {
-  user: User | null;
+  user: any;
   isAdmin: boolean;
   isLoading: boolean;
   signUp: (email: string, password: string, displayName?: string) => Promise<void>;
@@ -55,10 +79,10 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [authError, setAuthError] = useState<boolean>(false);
+  const [authInitialized, setAuthInitialized] = useState(false);
 
   // Check if current user is admin
   const isAdmin = isAdminUser(user?.email);
@@ -66,34 +90,45 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
     
-    try {
-      unsubscribe = onAuthStateChanged(auth, async (user) => {
-        try {
-          setUser(user);
-          if (user) {
-            // Store user data locally for persistence
-            await AsyncStorage.setItem('user', JSON.stringify({
-              uid: user.uid,
-              email: user.email,
-              displayName: user.displayName,
-              photoURL: user.photoURL
-            }));
-          } else {
-            await AsyncStorage.removeItem('user');
-          }
-        } catch (error) {
-          console.error('Error handling auth state change:', error);
-          setError('Failed to sync user data');
-        } finally {
+    const initAuth = async () => {
+      try {
+        await initializeFirebaseAuth();
+        setAuthInitialized(true);
+        
+        if (auth && onAuthStateChanged) {
+          unsubscribe = onAuthStateChanged(auth, async (user: any) => {
+            try {
+              setUser(user);
+              if (user) {
+                // Store user data locally for persistence
+                await AsyncStorage.setItem('user', JSON.stringify({
+                  uid: user.uid,
+                  email: user.email,
+                  displayName: user.displayName,
+                  photoURL: user.photoURL
+                }));
+              } else {
+                await AsyncStorage.removeItem('user');
+              }
+            } catch (error) {
+              console.error('Error handling auth state change:', error);
+              setError('Failed to sync user data');
+            } finally {
+              setIsLoading(false);
+            }
+          });
+        } else {
+          console.warn('Firebase auth not available, using fallback');
           setIsLoading(false);
         }
-      });
-    } catch (error) {
-      console.error('Error initializing Firebase auth:', error);
-      setAuthError(true);
-      setError('Firebase authentication service unavailable');
-      setIsLoading(false);
-    }
+      } catch (error) {
+        console.error('Error initializing Firebase auth:', error);
+        setError('Firebase authentication service unavailable');
+        setIsLoading(false);
+      }
+    };
+
+    initAuth();
 
     return () => {
       if (unsubscribe) {
@@ -105,6 +140,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const clearError = () => setError(null);
 
   const signUp = async (email: string, password: string, displayName?: string) => {
+    if (!authInitialized || !createUserWithEmailAndPassword) {
+      throw new Error('Authentication service not available');
+    }
+    
     try {
       setIsLoading(true);
       setError(null);
@@ -112,7 +151,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       
       // Update profile with display name if provided
-      if (displayName && userCredential.user) {
+      if (displayName && userCredential.user && updateProfile) {
         await updateProfile(userCredential.user, { displayName });
       }
     } catch (error: any) {
@@ -124,6 +163,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const signIn = async (email: string, password: string) => {
+    if (!authInitialized || !signInWithEmailAndPassword) {
+      throw new Error('Authentication service not available');
+    }
+    
     try {
       setIsLoading(true);
       setError(null);
@@ -137,6 +180,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const signInWithGoogle = async () => {
+    if (!authInitialized || !signInWithPopup) {
+      throw new Error('Google Sign-In not available');
+    }
+    
     try {
       setIsLoading(true);
       setError(null);
@@ -157,6 +204,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = async () => {
+    if (!authInitialized || !signOut) {
+      throw new Error('Authentication service not available');
+    }
+    
     try {
       setIsLoading(true);
       setError(null);
@@ -171,6 +222,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const resetPassword = async (email: string) => {
+    if (!authInitialized || !sendPasswordResetEmail) {
+      throw new Error('Password reset not available');
+    }
+    
     try {
       setError(null);
       await sendPasswordResetEmail(auth, email);

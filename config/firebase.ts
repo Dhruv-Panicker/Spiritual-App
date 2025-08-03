@@ -1,6 +1,9 @@
 
 import { initializeApp, getApps } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+
+// Platform-specific Firebase imports
+let auth: any;
+let googleProvider: any;
 
 const firebaseConfig = {
   apiKey: "AIzaSyBI8--3GhLYSWJo8hVeMbwg79zlZBu9qLI",
@@ -12,18 +15,52 @@ const firebaseConfig = {
   measurementId: "G-XWKB4PQPSE"
 };
 
-// Initialize Firebase only if it hasn't been initialized already
-let app;
-if (getApps().length === 0) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApps()[0];
+// Initialize Firebase app
+let app: any;
+try {
+  if (getApps().length === 0) {
+    app = initializeApp(firebaseConfig);
+  } else {
+    app = getApps()[0];
+  }
+} catch (error) {
+  console.error('Firebase initialization error:', error);
 }
 
-// Initialize Firebase Auth
-export const auth = getAuth(app);
+// Dynamic imports for better web compatibility
+const initializeAuth = async () => {
+  try {
+    if (typeof window !== 'undefined') {
+      // Web platform
+      const { getAuth, GoogleAuthProvider } = await import('firebase/auth');
+      auth = getAuth(app);
+      googleProvider = new GoogleAuthProvider();
+    } else {
+      // React Native platform
+      const { getAuth, GoogleAuthProvider } = await import('firebase/auth');
+      auth = getAuth(app);
+      googleProvider = new GoogleAuthProvider();
+    }
+  } catch (error) {
+    console.error('Firebase auth initialization error:', error);
+    // Provide fallback auth object
+    auth = {
+      currentUser: null,
+      onAuthStateChanged: () => () => {},
+      signInWithEmailAndPassword: () => Promise.reject(new Error('Auth not available')),
+      createUserWithEmailAndPassword: () => Promise.reject(new Error('Auth not available')),
+      signOut: () => Promise.reject(new Error('Auth not available')),
+      sendPasswordResetEmail: () => Promise.reject(new Error('Auth not available')),
+    };
+    googleProvider = {
+      addScope: () => {},
+      setCustomParameters: () => {},
+    };
+  }
+};
 
-// Initialize Google Auth Provider
-export const googleProvider = new GoogleAuthProvider();
+// Initialize auth immediately
+initializeAuth();
 
+export { auth, googleProvider };
 export default app;
