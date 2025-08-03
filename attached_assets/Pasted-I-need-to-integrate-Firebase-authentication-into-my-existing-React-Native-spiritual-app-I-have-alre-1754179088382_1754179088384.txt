@@ -1,0 +1,66 @@
+I need to integrate Firebase authentication into my existing React Native spiritual app. I have already completed the Firebase console setup and have my configuration ready.
+
+TASK: Add Firebase authentication with email/password and Google sign-in to my existing React Native app, including admin access control based on email addresses.
+
+REQUIREMENTS:
+1. Install all necessary Firebase dependencies
+2. Create Firebase configuration files
+3. Set up authentication context with login/logout functionality  
+4. Implement admin access control based on email addresses
+5. Update existing login screen to use Firebase auth
+6. Add user state management across the app
+7. Ensure authentication persists between app sessions
+
+EXISTING APP STRUCTURE:
+- Main app component: App.tsx or App.js
+- Login screen: LoginScreen.tsx or similar
+- Main app content: SpiritualApp.tsx or similar
+- Uses React Navigation for tab navigation
+- Has 5 main tabs: Quotes, Videos, Calendar, Gurudev, Admin
+
+FIREBASE CONFIGURATION (REPLACE WITH YOUR ACTUAL CONFIG):
+```javascript
+const firebaseConfig = {
+  apiKey: "YOUR_ACTUAL_API_KEY_HERE",
+  authDomain: "your-project-id.firebaseapp.com",
+  projectId: "your-project-id", 
+  storageBucket: "your-project-id.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_WEB_APP_ID"
+};
+```
+
+ADMIN EMAIL ADDRESSES (REPLACE WITH YOUR ACTUAL EMAILS):
+```javascript
+const ADMIN_EMAILS = [
+  'your-actual-email@gmail.com',
+  'guru-actual-email@gmail.com'
+];
+```
+
+AUTHENTICATION FEATURES NEEDED:
+- Email/password sign-in and sign-up
+- Google sign-in integration
+- Automatic login persistence
+- Admin access control (only admin emails see Admin tab)
+- Logout functionality
+- Loading states during authentication
+- Error handling for auth failures
+
+STYLING REQUIREMENTS:
+- Use spiritual theme colors: saffron orange (#FF6B35), warm ivory (#FDF8F3)
+- Match existing app design and typography
+- Responsive design for mobile screens
+- Loading indicators and error messages
+
+IMPLEMENTATION STEPS:
+1. Install Firebase dependencies: `npm install firebase @react-native-async-storage/async-storage`
+2. Create Firebase config file: `src/config/firebase.js`
+3. Create admin config file: `src/config/adminConfig.js`
+4. Create authentication context: `src/contexts/AuthContext.js`
+5. Update main App component to use auth context
+6. Update LoginScreen with Firebase authentication
+7. Add authentication checks to navigation
+8. Test email/password and Google sign-in
+9. Verify admin access control works
+10. Test authentication persistence

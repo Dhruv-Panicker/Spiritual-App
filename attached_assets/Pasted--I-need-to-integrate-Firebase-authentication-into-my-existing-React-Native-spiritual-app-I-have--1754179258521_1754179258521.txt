@@ -1,0 +1,86 @@
+```
+I need to integrate Firebase authentication into my existing React Native spiritual app. I have already completed the Firebase console setup and have my configuration ready.
+
+TASK: Add Firebase authentication with email/password and Google sign-in to my existing React Native app, including admin access control based on email addresses.
+
+REQUIREMENTS:
+1. Install all necessary Firebase dependencies
+2. Create Firebase configuration files
+3. Set up authentication context with login/logout functionality  
+4. Implement admin access control based on email addresses
+5. Update existing login screen to use Firebase auth
+6. Add user state management across the app
+7. Ensure authentication persists between app sessions
+
+EXISTING APP STRUCTURE:
+- Main app component: App.tsx or App.js
+- Login screen: LoginScreen.tsx or similar
+- Main app content: SpiritualApp.tsx or similar
+- Uses React Navigation for tab navigation
+- Has 5 main tabs: Quotes, Videos, Calendar, Gurudev, Admin
+
+FIREBASE CONFIGURATION:
+```javascript
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBI8--3GhLYSWJo8hVeMbwg79zlZBu9qLI",
+  authDomain: "gurudarshan-app.firebaseapp.com",
+  projectId: "gurudarshan-app",
+  storageBucket: "gurudarshan-app.firebasestorage.app",
+  messagingSenderId: "802311568887",
+  appId: "1:802311568887:web:698f8c5a42cd81167842f2",
+  measurementId: "G-XWKB4PQPSE"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const googleProvider = new GoogleAuthProvider();
+```
+
+ADMIN EMAIL ADDRESSES:
+```javascript
+const ADMIN_EMAILS = [
+  'dhru.panicker@gmail.com',
+  'dhruvandapaar@gmail.com'
+];
+```
+
+AUTHENTICATION FEATURES NEEDED:
+- Email/password sign-in and sign-up
+- Google sign-in integration
+- Automatic login persistence
+- Admin access control (only admin emails see Admin tab)
+- Logout functionality
+- Loading states during authentication
+- Error handling for auth failures
+
+STYLING REQUIREMENTS:
+- Use spiritual theme colors: saffron orange (#FF6B35), warm ivory (#FDF8F3)
+- Match existing app design and typography
+- Responsive design for mobile screens
+- Loading indicators and error messages
+
+IMPLEMENTATION STEPS:
+1. Install Firebase dependencies: `npm install firebase @react-native-async-storage/async-storage`
+2. Create Firebase config file: `src/config/firebase.js`
+3. Create admin config file: `src/config/adminConfig.js`
+4. Create authentication context: `src/contexts/AuthContext.js`
+5. Update main App component to use auth context
+6. Update LoginScreen with Firebase authentication
+7. Add authentication checks to navigation
+8. Test email/password and Google sign-in
+9. Verify admin access control works
+10. Test authentication persistence
+
+Please implement this step by step, showing me the code for each file and explaining what each part does. Make sure to include proper error handling and loading states.
+
+Replace the placeholder Firebase config and admin emails with my actual values, and ensure the authentication integrates seamlessly with my existing spiritual app structure.
+```
