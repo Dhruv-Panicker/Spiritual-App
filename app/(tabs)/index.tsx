@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   View,
@@ -203,6 +202,9 @@ export default function HomeScreen() {
     </View>
   );
 }
+
+export { HomeScreen };
+export default HomeScreen;
 
 const styles = StyleSheet.create({
   container: {

@@ -2,8 +2,21 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { googleSheetsService } from '../services/googleSheetsService';
+
+// Only import Google Sign-In on native platforms
+let GoogleSignin: any = null;
+let statusCodes: any = null;
+
+if (Platform.OS !== 'web') {
+  try {
+    const googleSignInModule = require('@react-native-google-signin/google-signin');
+    GoogleSignin = googleSignInModule.GoogleSignin;
+    statusCodes = googleSignInModule.statusCodes;
+  } catch (error) {
+    console.log('Google Sign-In not available on this platform');
+  }
+}
 
 export interface User {
   id: string;
@@ -40,7 +53,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   useEffect(() => {
     // Configure Google Sign-In only for native platforms
-    if (Platform.OS !== 'web') {
+    if (Platform.OS !== 'web' && GoogleSignin) {
       GoogleSignin.configure({
         webClientId: '461226051776-jtf6a28brt22mss5rjt6itanv740ne66.apps.googleusercontent.com', // From Google Cloud Console
         iosClientId: '461226051776-vuu052uiq6nno9k84ahkdjb9vr4v8qco.apps.googleusercontent.com', // From Google Cloud Console
@@ -125,7 +138,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       console.log('Starting Google Sign-In process...');
 
       // For web platform, show a message that Google Sign-In is only available on mobile
-      if (Platform.OS === 'web') {
+      if (Platform.OS === 'web' || !GoogleSignin) {
         throw new Error('Google Sign-In is only available on the mobile app. Please use email/password login on web.');
       }
 
@@ -192,7 +205,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       console.log('Signing out from Google');
       // Sign out from Google if user is signed in (only on native platforms)
-      if (Platform.OS !== 'web') {
+      if (Platform.OS !== 'web' && GoogleSignin) {
         try {
           const isSignedIn = await GoogleSignin.isSignedIn();
           if (isSignedIn) {
