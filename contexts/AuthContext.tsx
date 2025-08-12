@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { googleSheetsService } from '../services/googleSheetsService';
-import { backendService } from '../services/backendService'; // Assuming backendService is available
 
 export interface User {
   id: string;
@@ -78,14 +77,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUser(mockUser);
       await AsyncStorage.setItem('spiritual-app-user', JSON.stringify(mockUser));
 
-      // Log user login to backend (non-blocking)
-      backendService.logUserLogin({
+      // Log user login to Google Sheets (non-blocking)
+      googleSheetsService.logUserLogin({
         email: mockUser.email,
         name: mockUser.name,
         loginTime: new Date().toISOString(),
         isAdmin: mockUser.isAdmin
       }).catch(error => {
-        console.log('Failed to log to backend:', error);
+        console.log('Failed to log to Google Sheets:', error);
         // This is non-blocking - login continues regardless
       });
 
@@ -120,14 +119,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUser(mockUser);
       await AsyncStorage.setItem('spiritual-app-user', JSON.stringify(mockUser));
 
-      // Log user login to backend (non-blocking)
-      backendService.logUserLogin({
+      // Log user login to Google Sheets (non-blocking)
+      googleSheetsService.logUserLogin({
         email: mockUser.email,
         name: mockUser.name,
         loginTime: new Date().toISOString(),
         isAdmin: mockUser.isAdmin
       }).catch(error => {
-        console.log('Failed to log to backend:', error);
+        console.log('Failed to log to Google Sheets:', error);
         // This is non-blocking - login continues regardless
       });
 
