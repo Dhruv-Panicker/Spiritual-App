@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Image,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -48,7 +49,27 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, onP
 );
 
 export default function HomeScreen() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: () => {
+            logout();
+          },
+        },
+      ]
+    );
+  };
 
   const features = [
     {
@@ -98,8 +119,20 @@ export default function HomeScreen() {
         >
           {/* Header Section */}
           <View style={styles.header}>
-            <View style={styles.omContainer}>
-              <Text style={styles.omSymbol}>ॐ</Text>
+            <View style={styles.headerTop}>
+              <View style={styles.headerLeft}>
+                <View style={styles.omContainer}>
+                  <Text style={styles.omSymbol}>ॐ</Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={styles.logoutButton}
+                onPress={handleLogout}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="log-out-outline" size={24} color={SPIRITUAL_COLORS.primary} />
+                <Text style={styles.logoutText}>Logout</Text>
+              </TouchableOpacity>
             </View>
             <Text style={styles.welcomeText}>
               Namaste, {user?.name || 'Spiritual Seeker'}
@@ -184,6 +217,34 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
     paddingHorizontal: 20,
   },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 20,
+  },
+  headerLeft: {
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SPIRITUAL_COLORS.cardBackground,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: SPIRITUAL_COLORS.border,
+    ...SPIRITUAL_SHADOWS.card,
+  },
+  logoutText: {
+    marginLeft: 6,
+    fontSize: 14,
+    fontWeight: '600',
+    color: SPIRITUAL_COLORS.primary,
+  },
   omContainer: {
     width: 80,
     height: 80,
@@ -191,7 +252,6 @@ const styles = StyleSheet.create({
     backgroundColor: SPIRITUAL_COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
     ...SPIRITUAL_SHADOWS.divine,
   },
   omSymbol: {
