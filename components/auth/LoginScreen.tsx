@@ -125,11 +125,12 @@ export const LoginScreen = () => {
         text2: 'Successfully logged in with Google.',
         visibilityTime: 4000,
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Google login error in LoginScreen:', error);
       Toast.show({
         type: 'error',
         text1: 'Google Login Failed',
-        text2: 'Please try again.',
+        text2: error.message || 'Please try again.',
         visibilityTime: 4000,
       });
     }

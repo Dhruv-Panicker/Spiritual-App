@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
+import { Platform } from 'react-native';
+import { GoogleSignin, GoogleSigninButton, statusCodes } from '@react-native-google-signin/google-signin';
 import { googleSheetsService } from '../services/googleSheetsService';
 
 export interface User {
@@ -37,6 +39,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Configure Google Sign-In
+    GoogleSignin.configure({
+      webClientId: '280273015436-7v0b7kaqjjgl23q9iuqj0b01o5ck6qhc.apps.googleusercontent.com', // From Google Cloud Console
+      iosClientId: '280273015436-7v0b7kaqjjgl23q9iuqj0b01o5ck6qhc.apps.googleusercontent.com', // From Google Cloud Console
+      offlineAccess: false,
+      hostedDomain: '',
+      forceCodeForRefreshToken: true,
+      accountName: '',
+    });
+    
     checkExistingSession();
   }, []);
 
@@ -108,26 +120,42 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       // Add haptic feedback
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-      // Simulate Google OAuth - replace with actual Google OAuth implementation
-      // You would integrate with expo-auth-session or @react-native-google-signin/google-signin
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      console.log('Starting Google Sign-In process...');
 
-      const mockUser: User = {
-        id: '2',
-        name: 'Google User',
-        email: 'user@gmail.com',
-        isAdmin: false
+      // Check if Google Play Services are available (Android only)
+      if (Platform.OS === 'android') {
+        await GoogleSignin.hasPlayServices();
+      }
+
+      // Sign in with Google
+      const googleUser = await GoogleSignin.signIn();
+      console.log('Google Sign-In successful:', googleUser);
+
+      // Extract user information from Google response
+      const googleUserInfo = googleUser.data?.user || googleUser.user;
+      
+      if (!googleUserInfo) {
+        throw new Error('No user information received from Google');
+      }
+
+      const newUser: User = {
+        id: googleUserInfo.id,
+        name: googleUserInfo.name || 'Google User',
+        email: googleUserInfo.email,
+        isAdmin: false // You can add admin logic based on email domains or specific emails
       };
 
-      setUser(mockUser);
-      await AsyncStorage.setItem('spiritual-app-user', JSON.stringify(mockUser));
+      console.log('Creating user from Google data:', newUser);
+
+      setUser(newUser);
+      await AsyncStorage.setItem('spiritual-app-user', JSON.stringify(newUser));
 
       // Log user login to Google Sheets (non-blocking)
       googleSheetsService.logUserLogin({
-        email: mockUser.email,
-        name: mockUser.name,
+        email: newUser.email,
+        name: newUser.name,
         loginTime: new Date().toISOString(),
-        isAdmin: mockUser.isAdmin
+        isAdmin: newUser.isAdmin
       }).catch(error => {
         console.log('Failed to log to Google Sheets:', error);
         // This is non-blocking - login continues regardless
@@ -135,10 +163,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       // Success haptic feedback
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Google Sign-In error:', error);
+      
       // Error haptic feedback
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      throw new Error('Google authentication failed');
+      
+      // Handle specific Google Sign-In errors
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        throw new Error('Google sign-in was cancelled');
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        throw new Error('Google sign-in is in progress');
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        throw new Error('Google Play Services not available');
+      } else {
+        throw new Error('Google authentication failed: ' + (error.message || 'Unknown error'));
+      }
     } finally {
       setIsLoading(false);
     }
@@ -149,6 +189,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       console.log('Playing logout haptic feedback');
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      
+      console.log('Signing out from Google');
+      // Sign out from Google if user is signed in
+      try {
+        const isSignedIn = await GoogleSignin.isSignedIn();
+        if (isSignedIn) {
+          await GoogleSignin.signOut();
+          console.log('Google sign-out successful');
+        }
+      } catch (googleError) {
+        console.log('Google sign-out error (non-critical):', googleError);
+      }
       
       console.log('Setting user to null');
       // Clear user state immediately
