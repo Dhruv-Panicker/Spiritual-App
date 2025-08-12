@@ -14,7 +14,7 @@ class GoogleSheetsService {
 
   constructor() {
     // Using a webhook approach that works with React Native
-    this.webhookUrl = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+    this.webhookUrl = 'https://script.google.com/macros/s/AKfycbwWhzxce1cohv7smwNkBHGNgIwyt8G5KFkM21Xa9Zd24ZwrBFME9nYQ3y6rIkig3tWM/exec';
     this.apiKey = process.env.GOOGLE_API_KEY || '';
   }
 
