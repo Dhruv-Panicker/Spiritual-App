@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
+import { googleSheetsService } from '../services/googleSheetsService';
 
 export interface User {
   id: string;
@@ -77,6 +78,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUser(mockUser);
       await AsyncStorage.setItem('spiritual-app-user', JSON.stringify(mockUser));
       
+      // Log user login to Google Sheets
+      try {
+        await googleSheetsService.logUserLogin({
+          email: mockUser.email,
+          name: mockUser.name,
+          loginTime: new Date().toISOString(),
+          isAdmin: mockUser.isAdmin
+        });
+      } catch (error) {
+        console.log('Failed to log to Google Sheets:', error);
+        // Don't throw error - login should still work even if sheets logging fails
+      }
+      
       // Success haptic feedback
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
@@ -107,6 +121,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       setUser(mockUser);
       await AsyncStorage.setItem('spiritual-app-user', JSON.stringify(mockUser));
+      
+      // Log user login to Google Sheets
+      try {
+        await googleSheetsService.logUserLogin({
+          email: mockUser.email,
+          name: mockUser.name,
+          loginTime: new Date().toISOString(),
+          isAdmin: mockUser.isAdmin
+        });
+      } catch (error) {
+        console.log('Failed to log to Google Sheets:', error);
+        // Don't throw error - login should still work even if sheets logging fails
+      }
       
       // Success haptic feedback
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
