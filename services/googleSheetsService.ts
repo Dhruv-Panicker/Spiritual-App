@@ -12,7 +12,7 @@ class GoogleSheetsService {
 
   constructor() {
     // Your actual Google Apps Script Web App URL
-    this.webhookUrl = 'https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLiIaKh9qZNg_ie75cNdR_U-aeMKKRur6wJnOwCQe943-vCclnWzraEwSOznDMpwu2HA8RFAx7S2arpgDlEKIBYA6zZbMd_9Yzzt8SHFDNjyc6vQ6ViZwIbCaaJv4KKE3cGZ5zeHOQCBeR-sdTjNeSkoHt1DMrbFalTjmjkUn4G8IBTthMIcB6ToNOfZYZC5v0bATo-eKjgfYoz-kZd3fQoNTbNxJ0f1z7NU9ERLJPif8WPaKJnSDhy3c-pdEFhKzToO2suKUhX-svnMSvDQKknGfdCpIA&lib=MmQ1L22tbLzunDtfzK6_S4RCfFGFyyfyN';
+    this.webhookUrl = 'https://script.google.com/macros/s/AKfycbwWhzxce1cohv7smwNkBHGNgIwyt8G5KFkM21Xa9Zd24ZwrBFME9nYQ3y6rIkig3tWM/exec';
   }
 
   async logUserLogin(userData: UserLoginData): Promise<boolean> {
