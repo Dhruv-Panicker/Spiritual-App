@@ -1,66 +1,21 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { 
+  User,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  signInWithPopup,
+  GoogleAuthProvider,
+  sendPasswordResetEmail,
+  updateProfile
+} from 'firebase/auth';
+import { auth } from '../config/firebase';
 import { isAdminUser } from '../config/adminConfig';
 
-// Dynamic Firebase imports
-let User: any;
-let signInWithEmailAndPassword: any;
-let createUserWithEmailAndPassword: any;
-let signOut: any;
-let onAuthStateChanged: any;
-let signInWithPopup: any;
-let GoogleAuthProvider: any;
-let sendPasswordResetEmail: any;
-let updateProfile: any;
-let auth: any;
-let googleProvider: any;
-let authInitialized = false;
-
-// Initialize Firebase auth functions
-const initializeAuthFunctions = async () => {
-  if (authInitialized) return true;
-  
-  try {
-    console.log('Initializing Firebase auth functions...');
-    
-    // Import Firebase modules
-    const firebaseAuth = await import('firebase/auth');
-    const firebaseConfig = await import('../config/firebase');
-    
-    // Set Firebase functions
-    User = firebaseAuth.User;
-    signInWithEmailAndPassword = firebaseAuth.signInWithEmailAndPassword;
-    createUserWithEmailAndPassword = firebaseAuth.createUserWithEmailAndPassword;
-    signOut = firebaseAuth.signOut;
-    onAuthStateChanged = firebaseAuth.onAuthStateChanged;
-    signInWithPopup = firebaseAuth.signInWithPopup;
-    GoogleAuthProvider = firebaseAuth.GoogleAuthProvider;
-    sendPasswordResetEmail = firebaseAuth.sendPasswordResetEmail;
-    updateProfile = firebaseAuth.updateProfile;
-    
-    // Initialize Firebase auth
-    const initialized = await firebaseConfig.initializeFirebaseAuth();
-    
-    if (initialized) {
-      auth = firebaseConfig.auth;
-      googleProvider = firebaseConfig.googleProvider;
-      authInitialized = true;
-      console.log('Firebase auth functions initialized successfully');
-      return true;
-    } else {
-      console.warn('Firebase auth initialization failed');
-      return false;
-    }
-    
-  } catch (error) {
-    console.error('Firebase auth import error:', error);
-    return false;
-  }
-};
-
 interface AuthContextType {
-  user: any;
+  user: User | null;
   isAdmin: boolean;
   isLoading: boolean;
   signUp: (email: string, password: string, displayName?: string) => Promise<void>;
@@ -87,102 +42,59 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [initialized, setInitialized] = useState(false);
 
   // Check if current user is admin
-  const isAdmin = isAdminUser(user?.email);
+  const isAdmin = isAdminUser(user?.email || '');
 
   useEffect(() => {
-    let unsubscribe: (() => void) | undefined;
     let isMounted = true;
-    
-    const initAuth = async () => {
+
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (!isMounted) return;
+
       try {
-        console.log('Starting auth initialization...');
-        
-        // Initialize Firebase functions
-        const success = await initializeAuthFunctions();
-        
-        if (!isMounted) return;
-        
-        if (success && auth && onAuthStateChanged) {
-          console.log('Setting up auth state listener...');
-          setInitialized(true);
-          
-          unsubscribe = onAuthStateChanged(auth, async (firebaseUser: any) => {
-            if (!isMounted) return;
-            
-            try {
-              console.log('Auth state changed:', firebaseUser ? 'User logged in' : 'User logged out');
-              setUser(firebaseUser);
-              
-              // Store user data locally
-              if (firebaseUser) {
-                await AsyncStorage.setItem('user', JSON.stringify({
-                  uid: firebaseUser.uid,
-                  email: firebaseUser.email,
-                  displayName: firebaseUser.displayName,
-                  photoURL: firebaseUser.photoURL
-                }));
-              } else {
-                await AsyncStorage.removeItem('user');
-              }
-            } catch (storageError) {
-              console.error('Error handling auth state change:', storageError);
-            } finally {
-              if (isMounted) {
-                setIsLoading(false);
-              }
-            }
-          });
+        console.log('Auth state changed:', firebaseUser ? 'User logged in' : 'User logged out');
+        setUser(firebaseUser);
+
+        // Store user data locally
+        if (firebaseUser) {
+          await AsyncStorage.setItem('user', JSON.stringify({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            displayName: firebaseUser.displayName,
+            photoURL: firebaseUser.photoURL
+          }));
         } else {
-          console.log('Firebase auth not available, using fallback');
-          if (isMounted) {
-            setInitialized(false);
-            setIsLoading(false);
-          }
+          await AsyncStorage.removeItem('user');
         }
-      } catch (error) {
-        console.error('Auth initialization error:', error);
+      } catch (storageError) {
+        console.error('Error handling auth state change:', storageError);
+      } finally {
         if (isMounted) {
-          setError('Authentication service temporarily unavailable');
-          setInitialized(false);
           setIsLoading(false);
         }
       }
-    };
-
-    initAuth();
+    });
 
     return () => {
       isMounted = false;
-      if (unsubscribe) {
-        try {
-          unsubscribe();
-        } catch (error) {
-          console.error('Error unsubscribing from auth state:', error);
-        }
-      }
+      unsubscribe();
     };
   }, []);
 
   const clearError = () => setError(null);
 
   const signUp = async (email: string, password: string, displayName?: string) => {
-    if (!initialized || !createUserWithEmailAndPassword || !auth) {
-      throw new Error('Authentication service not available');
-    }
-    
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      
-      if (displayName && userCredential.user && updateProfile) {
+
+      if (displayName && userCredential.user) {
         await updateProfile(userCredential.user, { displayName });
       }
     } catch (error: any) {
@@ -194,10 +106,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const signIn = async (email: string, password: string) => {
-    if (!initialized || !signInWithEmailAndPassword || !auth) {
-      throw new Error('Authentication service not available');
-    }
-    
     try {
       setIsLoading(true);
       setError(null);
@@ -211,18 +119,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const signInWithGoogle = async () => {
-    if (!initialized || !signInWithPopup || !auth || !googleProvider) {
-      throw new Error('Google Sign-In not available');
-    }
-    
     try {
       setIsLoading(true);
       setError(null);
-      
+
       if (typeof window !== 'undefined') {
-        await signInWithPopup(auth, googleProvider);
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
       } else {
-        throw new Error('Google Sign-In not implemented for mobile yet');
+        throw new Error('Google Sign-In not available on mobile platform');
       }
     } catch (error: any) {
       setError(getErrorMessage(error));
@@ -236,12 +141,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       setError(null);
-      
-      if (initialized && signOut && auth) {
-        await signOut(auth);
-      }
-      
-      // Clear local state regardless
+
+      await signOut(auth);
       setUser(null);
       await AsyncStorage.removeItem('user');
     } catch (error: any) {
@@ -253,10 +154,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const resetPassword = async (email: string) => {
-    if (!initialized || !sendPasswordResetEmail || !auth) {
-      throw new Error('Password reset not available');
-    }
-    
     try {
       setError(null);
       await sendPasswordResetEmail(auth, email);
