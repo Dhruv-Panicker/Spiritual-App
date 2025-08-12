@@ -41,8 +41,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   useEffect(() => {
     // Configure Google Sign-In
     GoogleSignin.configure({
-      webClientId: '280273015436-7v0b7kaqjjgl23q9iuqj0b01o5ck6qhc.apps.googleusercontent.com', // From Google Cloud Console
-      iosClientId: '280273015436-7v0b7kaqjjgl23q9iuqj0b01o5ck6qhc.apps.googleusercontent.com', // From Google Cloud Console
+      webClientId: '461226051776-jtf6a28brt22mss5rjt6itanv740ne66.apps.googleusercontent.com', // From Google Cloud Console
+      iosClientId: '461226051776-vuu052uiq6nno9k84ahkdjb9vr4v8qco.apps.googleusercontent.com', // From Google Cloud Console
       offlineAccess: false,
       hostedDomain: '',
       forceCodeForRefreshToken: true,
