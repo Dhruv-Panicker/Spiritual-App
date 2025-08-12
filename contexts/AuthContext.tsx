@@ -42,10 +42,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const checkExistingSession = async () => {
     try {
-      const savedUser = await AsyncStorage.getItem('spiritual-app-user');
-      if (savedUser) {
-        setUser(JSON.parse(savedUser));
-      }
+      // For now, always start with login screen
+      // You can enable session persistence later by uncommenting below
+      // const savedUser = await AsyncStorage.getItem('spiritual-app-user');
+      // if (savedUser) {
+      //   setUser(JSON.parse(savedUser));
+      // }
+      setUser(null);
     } catch (error) {
       console.error('Error checking existing session:', error);
     } finally {
