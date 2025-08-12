@@ -184,10 +184,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       // Error haptic feedback
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       
-      // Handle specific Google Sign-In errors
-      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+      // Handle specific Google Sign-In errors (only if statusCodes is available)
+      if (statusCodes && error.code === statusCodes.SIGN_IN_CANCELLED) {
         throw new Error('Google sign-in was cancelled');
-      } else if (error.code === statusCodes.IN_PROGRESS) {
+      } else if (statusCodes && error.code === statusCodes.IN_PROGRESS) {
         throw new Error('Google sign-in is in progress');
       } else {
         throw new Error('Google authentication failed: ' + (error.message || 'Unknown error'));
