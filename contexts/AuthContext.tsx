@@ -15,13 +15,20 @@ let sendPasswordResetEmail: any;
 let updateProfile: any;
 let auth: any;
 let googleProvider: any;
+let authInitialized = false;
 
 // Initialize Firebase auth functions
 const initializeAuthFunctions = async () => {
+  if (authInitialized) return;
+  
   try {
+    console.log('Initializing Firebase auth functions...');
+    
+    // Import Firebase modules
     const firebaseAuth = await import('firebase/auth');
     const firebaseConfig = await import('../config/firebase');
     
+    // Set Firebase functions
     User = firebaseAuth.User;
     signInWithEmailAndPassword = firebaseAuth.signInWithEmailAndPassword;
     createUserWithEmailAndPassword = firebaseAuth.createUserWithEmailAndPassword;
@@ -33,12 +40,20 @@ const initializeAuthFunctions = async () => {
     updateProfile = firebaseAuth.updateProfile;
     
     // Initialize Firebase auth
-    await firebaseConfig.initializeFirebaseAuth();
+    const initialized = await firebaseConfig.initializeFirebaseAuth();
     
-    auth = firebaseConfig.auth;
-    googleProvider = firebaseConfig.googleProvider;
+    if (initialized) {
+      auth = firebaseConfig.auth;
+      googleProvider = firebaseConfig.googleProvider;
+      authInitialized = true;
+      console.log('Firebase auth functions initialized successfully');
+    } else {
+      console.warn('Firebase auth initialization failed, using fallback');
+    }
+    
   } catch (error) {
     console.error('Firebase auth import error:', error);
+    // Don't throw error, just continue with fallback
   }
 };
 
@@ -60,20 +75,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    // Provide a complete fallback context to prevent crashes
-    const fallbackContext: AuthContextType = {
-      user: null,
-      isAdmin: false,
-      isLoading: false,
-      signUp: async () => { throw new Error('Auth not initialized'); },
-      signIn: async () => { throw new Error('Auth not initialized'); },
-      signInWithGoogle: async () => { throw new Error('Auth not initialized'); },
-      logout: async () => { throw new Error('Auth not initialized'); },
-      resetPassword: async () => { throw new Error('Auth not initialized'); },
-      error: null,
-      clearError: () => {}
-    };
-    return fallbackContext;
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
@@ -86,65 +88,66 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [authInitialized, setAuthInitialized] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
   // Check if current user is admin
   const isAdmin = isAdminUser(user?.email);
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
-    let mounted = true;
+    let isMounted = true;
     
     const initAuth = async () => {
       try {
-        // Initialize Firebase functions first
+        console.log('Starting auth initialization...');
+        
+        // Initialize Firebase functions
         await initializeAuthFunctions();
         
-        // Wait a bit for Firebase to fully initialize
-        await new Promise(resolve => setTimeout(resolve, 200));
+        if (!isMounted) return;
         
-        if (!mounted) return;
+        setInitialized(true);
         
-        setAuthInitialized(true);
-        
-        if (auth && onAuthStateChanged) {
-          unsubscribe = onAuthStateChanged(auth, async (user: any) => {
-            if (!mounted) return;
+        // Set up auth state listener
+        if (auth && onAuthStateChanged && typeof onAuthStateChanged === 'function') {
+          console.log('Setting up auth state listener...');
+          
+          unsubscribe = onAuthStateChanged(auth, async (firebaseUser: any) => {
+            if (!isMounted) return;
             
             try {
-              setUser(user);
-              if (user) {
-                // Store user data locally for persistence
+              console.log('Auth state changed:', firebaseUser ? 'User logged in' : 'User logged out');
+              setUser(firebaseUser);
+              
+              // Store user data locally
+              if (firebaseUser) {
                 await AsyncStorage.setItem('user', JSON.stringify({
-                  uid: user.uid,
-                  email: user.email,
-                  displayName: user.displayName,
-                  photoURL: user.photoURL
+                  uid: firebaseUser.uid,
+                  email: firebaseUser.email,
+                  displayName: firebaseUser.displayName,
+                  photoURL: firebaseUser.photoURL
                 }));
               } else {
                 await AsyncStorage.removeItem('user');
               }
-            } catch (error) {
-              console.error('Error handling auth state change:', error);
-              if (mounted) {
-                setError('Failed to sync user data');
-              }
+            } catch (storageError) {
+              console.error('Error handling auth state change:', storageError);
             } finally {
-              if (mounted) {
+              if (isMounted) {
                 setIsLoading(false);
               }
             }
           });
         } else {
-          console.warn('Firebase auth not available, using fallback');
-          if (mounted) {
+          console.log('Auth state listener not available, using fallback');
+          if (isMounted) {
             setIsLoading(false);
           }
         }
       } catch (error) {
-        console.error('Error initializing Firebase auth:', error);
-        if (mounted) {
-          setError('Firebase authentication service unavailable');
+        console.error('Auth initialization error:', error);
+        if (isMounted) {
+          setError('Authentication service temporarily unavailable');
           setIsLoading(false);
         }
       }
@@ -153,9 +156,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initAuth();
 
     return () => {
-      mounted = false;
+      isMounted = false;
       if (unsubscribe) {
-        unsubscribe();
+        try {
+          unsubscribe();
+        } catch (error) {
+          console.error('Error unsubscribing from auth state:', error);
+        }
       }
     };
   }, []);
@@ -163,7 +170,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const clearError = () => setError(null);
 
   const signUp = async (email: string, password: string, displayName?: string) => {
-    if (!authInitialized || !createUserWithEmailAndPassword) {
+    if (!initialized || !createUserWithEmailAndPassword) {
       throw new Error('Authentication service not available');
     }
     
@@ -173,7 +180,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       
-      // Update profile with display name if provided
       if (displayName && userCredential.user && updateProfile) {
         await updateProfile(userCredential.user, { displayName });
       }
@@ -186,7 +192,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const signIn = async (email: string, password: string) => {
-    if (!authInitialized || !signInWithEmailAndPassword) {
+    if (!initialized || !signInWithEmailAndPassword) {
       throw new Error('Authentication service not available');
     }
     
@@ -203,7 +209,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const signInWithGoogle = async () => {
-    if (!authInitialized || !signInWithPopup) {
+    if (!initialized || !signInWithPopup) {
       throw new Error('Google Sign-In not available');
     }
     
@@ -211,11 +217,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoading(true);
       setError(null);
       
-      // For web platform
       if (typeof window !== 'undefined') {
         await signInWithPopup(auth, googleProvider);
       } else {
-        // For mobile platforms, you would use @react-native-google-signin/google-signin
         throw new Error('Google Sign-In not implemented for mobile yet');
       }
     } catch (error: any) {
@@ -227,8 +231,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = async () => {
-    if (!authInitialized || !signOut) {
-      throw new Error('Authentication service not available');
+    if (!initialized || !signOut) {
+      // Even if auth is not available, clear local state
+      setUser(null);
+      await AsyncStorage.removeItem('user');
+      return;
     }
     
     try {
@@ -245,7 +252,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const resetPassword = async (email: string) => {
-    if (!authInitialized || !sendPasswordResetEmail) {
+    if (!initialized || !sendPasswordResetEmail) {
       throw new Error('Password reset not available');
     }
     
