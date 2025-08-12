@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -26,9 +25,9 @@ export const LoginScreen = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  
+
   const { login, loginWithGoogle, isLoading } = useAuth();
-  
+
   // Animation references
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -68,7 +67,7 @@ export const LoginScreen = () => {
 
   const validateForm = () => {
     let isValid = true;
-    
+
     if (!email) {
       setEmailError('Email is required');
       isValid = false;
@@ -175,7 +174,7 @@ export const LoginScreen = () => {
               <Text style={styles.cardTitle}>
                 {isSignUp ? 'Join Our Community' : 'Welcome Back'}
               </Text>
-              
+
               <View style={styles.inputContainer}>
                 <TextInput
                   style={[
@@ -196,7 +195,7 @@ export const LoginScreen = () => {
                 />
                 {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
               </View>
-              
+
               <View style={styles.inputContainer}>
                 <TextInput
                   style={[
@@ -257,8 +256,8 @@ export const LoginScreen = () => {
                 activeOpacity={0.7}
               >
                 <Text style={styles.switchText}>
-                  {isSignUp 
-                    ? 'Already have an account? Sign In' 
+                  {isSignUp
+                    ? 'Already have an account? Sign In'
                     : "Don't have an account? Sign Up"
                   }
                 </Text>
@@ -395,5 +394,19 @@ const styles = StyleSheet.create({
     color: SPIRITUAL_COLORS.primary,
     fontSize: 14,
     fontWeight: '500',
+    textDecorationLine: 'underline',
+  },
+  webGoogleNotice: {
+    backgroundColor: SPIRITUAL_COLORS.surface,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: SPIRITUAL_COLORS.primary + '20',
+  },
+  webGoogleNoticeText: {
+    color: SPIRITUAL_COLORS.textSecondary,
+    fontSize: 14,
+    textAlign: 'center',
   },
 });

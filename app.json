@@ -15,14 +15,8 @@
     },
     "ios": {
       "supportsTablet": true,
-      "googleServicesFile": "./GoogleService-Info.plist"
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "bundleIdentifier": "com.spiritualapp.ios"
     },
     "web": {
       "bundler": "metro",

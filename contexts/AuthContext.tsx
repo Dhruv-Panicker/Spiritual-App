@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
-import { GoogleSignin, GoogleSigninButton, statusCodes } from '@react-native-google-signin/google-signin';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { googleSheetsService } from '../services/googleSheetsService';
 
 export interface User {
@@ -39,15 +39,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Configure Google Sign-In
-    GoogleSignin.configure({
-      webClientId: '461226051776-jtf6a28brt22mss5rjt6itanv740ne66.apps.googleusercontent.com', // From Google Cloud Console
-      iosClientId: '461226051776-vuu052uiq6nno9k84ahkdjb9vr4v8qco.apps.googleusercontent.com', // From Google Cloud Console
-      offlineAccess: false,
-      hostedDomain: '',
-      forceCodeForRefreshToken: true,
-      accountName: '',
-    });
+    // Configure Google Sign-In only for native platforms
+    if (Platform.OS !== 'web') {
+      GoogleSignin.configure({
+        webClientId: '461226051776-jtf6a28brt22mss5rjt6itanv740ne66.apps.googleusercontent.com', // From Google Cloud Console
+        iosClientId: '461226051776-vuu052uiq6nno9k84ahkdjb9vr4v8qco.apps.googleusercontent.com', // From Google Cloud Console
+        offlineAccess: false,
+        hostedDomain: '',
+        forceCodeForRefreshToken: true,
+        accountName: '',
+      });
+    }
     
     checkExistingSession();
   }, []);
@@ -122,12 +124,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       console.log('Starting Google Sign-In process...');
 
-      // Check if Google Play Services are available (Android only)
-      if (Platform.OS === 'android') {
-        await GoogleSignin.hasPlayServices();
+      // For web platform, show a message that Google Sign-In is only available on mobile
+      if (Platform.OS === 'web') {
+        throw new Error('Google Sign-In is only available on the mobile app. Please use email/password login on web.');
       }
 
-      // Sign in with Google
+      // Sign in with Google (iOS only now)
       const googleUser = await GoogleSignin.signIn();
       console.log('Google Sign-In successful:', googleUser);
 
@@ -174,8 +176,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         throw new Error('Google sign-in was cancelled');
       } else if (error.code === statusCodes.IN_PROGRESS) {
         throw new Error('Google sign-in is in progress');
-      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        throw new Error('Google Play Services not available');
       } else {
         throw new Error('Google authentication failed: ' + (error.message || 'Unknown error'));
       }
@@ -191,15 +191,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       
       console.log('Signing out from Google');
-      // Sign out from Google if user is signed in
-      try {
-        const isSignedIn = await GoogleSignin.isSignedIn();
-        if (isSignedIn) {
-          await GoogleSignin.signOut();
-          console.log('Google sign-out successful');
+      // Sign out from Google if user is signed in (only on native platforms)
+      if (Platform.OS !== 'web') {
+        try {
+          const isSignedIn = await GoogleSignin.isSignedIn();
+          if (isSignedIn) {
+            await GoogleSignin.signOut();
+            console.log('Google sign-out successful');
+          }
+        } catch (googleError) {
+          console.log('Google sign-out error (non-critical):', googleError);
         }
-      } catch (googleError) {
-        console.log('Google sign-out error (non-critical):', googleError);
       }
       
       console.log('Setting user to null');
