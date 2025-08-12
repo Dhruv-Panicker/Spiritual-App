@@ -11,9 +11,8 @@ class GoogleSheetsService {
   private webhookUrl: string;
 
   constructor() {
-    // TODO: Replace with your actual Google Apps Script Web App URL after deployment
-    // Format: https://script.google.com/macros/s/YOUR_ACTUAL_SCRIPT_ID/exec
-    this.webhookUrl = 'REPLACE_WITH_YOUR_WEBHOOK_URL';
+    // Your actual Google Apps Script Web App URL
+    this.webhookUrl = 'https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLiIaKh9qZNg_ie75cNdR_U-aeMKKRur6wJnOwCQe943-vCclnWzraEwSOznDMpwu2HA8RFAx7S2arpgDlEKIBYA6zZbMd_9Yzzt8SHFDNjyc6vQ6ViZwIbCaaJv4KKE3cGZ5zeHOQCBeR-sdTjNeSkoHt1DMrbFalTjmjkUn4G8IBTthMIcB6ToNOfZYZC5v0bATo-eKjgfYoz-kZd3fQoNTbNxJ0f1z7NU9ERLJPif8WPaKJnSDhy3c-pdEFhKzToO2suKUhX-svnMSvDQKknGfdCpIA&lib=MmQ1L22tbLzunDtfzK6_S4RCfFGFyyfyN';
   }
 
   async logUserLogin(userData: UserLoginData): Promise<boolean> {
