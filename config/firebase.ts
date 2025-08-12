@@ -4,6 +4,7 @@ import { initializeApp, getApps } from 'firebase/app';
 // Platform-specific Firebase imports
 let auth: any;
 let googleProvider: any;
+let authInitialized = false;
 
 const firebaseConfig = {
   apiKey: "AIzaSyBI8--3GhLYSWJo8hVeMbwg79zlZBu9qLI",
@@ -33,6 +34,11 @@ try {
 
 // Dynamic imports for better web compatibility
 const initializeFirebaseAuth = async () => {
+  // Prevent multiple initializations
+  if (authInitialized) {
+    return;
+  }
+
   try {
     if (!app) {
       console.warn('Firebase app not initialized, using fallback auth');
@@ -48,25 +54,16 @@ const initializeFirebaseAuth = async () => {
     } else {
       // React Native platform
       try {
-        const { initializeAuth: initAuth, getReactNativePersistence, GoogleAuthProvider } = await import('firebase/auth');
+        const { initializeAuth: initAuth, getReactNativePersistence, GoogleAuthProvider, getAuth } = await import('firebase/auth');
         const AsyncStorage = await import('@react-native-async-storage/async-storage');
         
-        // Check if auth is already initialized
-        const { getApps } = await import('firebase/app');
-        const existingApps = getApps();
-        
-        if (existingApps.length > 0 && existingApps[0]) {
-          // Try to get existing auth first
-          try {
-            const { getAuth } = await import('firebase/auth');
-            auth = getAuth(existingApps[0]);
-          } catch (authError) {
-            // If getting auth fails, initialize new one
-            auth = initAuth(app, {
-              persistence: getReactNativePersistence(AsyncStorage.default)
-            });
-          }
-        } else {
+        // Check if auth is already initialized for this app
+        try {
+          auth = getAuth(app);
+          console.log('Using existing Firebase auth instance');
+        } catch (authError) {
+          // Auth not initialized yet, create new one
+          console.log('Initializing new Firebase auth instance');
           auth = initAuth(app, {
             persistence: getReactNativePersistence(AsyncStorage.default)
           });
@@ -78,6 +75,8 @@ const initializeFirebaseAuth = async () => {
         createFallbackAuth();
       }
     }
+    
+    authInitialized = true;
   } catch (error) {
     console.error('Firebase auth initialization error:', error);
     createFallbackAuth();
@@ -98,10 +97,8 @@ const createFallbackAuth = () => {
     addScope: () => {},
     setCustomParameters: () => {},
   };
+  authInitialized = true;
 };
-
-// Initialize auth immediately
-initializeFirebaseAuth();
 
 export { auth, googleProvider, initializeFirebaseAuth };
 export default app;

@@ -93,18 +93,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
+    let mounted = true;
     
     const initAuth = async () => {
       try {
+        // Initialize Firebase functions first
         await initializeAuthFunctions();
         
         // Wait a bit for Firebase to fully initialize
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        if (!mounted) return;
         
         setAuthInitialized(true);
         
         if (auth && onAuthStateChanged) {
           unsubscribe = onAuthStateChanged(auth, async (user: any) => {
+            if (!mounted) return;
+            
             try {
               setUser(user);
               if (user) {
@@ -120,25 +126,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               }
             } catch (error) {
               console.error('Error handling auth state change:', error);
-              setError('Failed to sync user data');
+              if (mounted) {
+                setError('Failed to sync user data');
+              }
             } finally {
-              setIsLoading(false);
+              if (mounted) {
+                setIsLoading(false);
+              }
             }
           });
         } else {
           console.warn('Firebase auth not available, using fallback');
-          setIsLoading(false);
+          if (mounted) {
+            setIsLoading(false);
+          }
         }
       } catch (error) {
         console.error('Error initializing Firebase auth:', error);
-        setError('Firebase authentication service unavailable');
-        setIsLoading(false);
+        if (mounted) {
+          setError('Firebase authentication service unavailable');
+          setIsLoading(false);
+        }
       }
     };
 
     initAuth();
 
     return () => {
+      mounted = false;
       if (unsubscribe) {
         unsubscribe();
       }

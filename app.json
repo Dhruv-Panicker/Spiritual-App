@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.gurudarshan.expo-on-replit"
+      "bundleIdentifier": "com.gurudarshan.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +18,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.gurudarshan.expo_on_replit"
+      "package": "com.gurudarshan.app"
     },
     "web": {
       "bundler": "metro",
