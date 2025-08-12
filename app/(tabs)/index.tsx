@@ -1,176 +1,249 @@
+
 import React from 'react';
 import {
   View,
   Text,
+  StyleSheet,
   ScrollView,
   TouchableOpacity,
-  StyleSheet,
   Dimensions,
-  SafeAreaView,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
-
+import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
-
-// Safe gradient helper
-const getSafeGradient = (gradientKey: keyof typeof SPIRITUAL_GRADIENTS) => {
-  const gradient = SPIRITUAL_GRADIENTS[gradientKey];
-  return gradient && Array.isArray(gradient) && gradient.length > 0 
-    ? gradient 
-    : ['#FFFFFF', '#F5F5F5'];
-};
 
 const { width: screenWidth } = Dimensions.get('window');
 
 interface FeatureCardProps {
+  icon: keyof typeof Ionicons.glyphMap;
   title: string;
   description: string;
-  icon: string;
   onPress: () => void;
-  gradient: string[];
 }
 
-const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon, onPress, gradient }) => {
-  return (
-    <TouchableOpacity style={styles.featureCard} onPress={onPress}>
-      <LinearGradient colors={gradient} style={styles.featureGradient}>
-        <View style={styles.featureIconContainer}>
-          <Ionicons name={icon as any} size={32} color={SPIRITUAL_COLORS.white} />
-        </View>
-        <Text style={styles.featureTitle}>{title}</Text>
-        <Text style={styles.featureDescription}>{description}</Text>
-      </LinearGradient>
-    </TouchableOpacity>
-  );
-};
+const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, onPress }) => (
+  <TouchableOpacity style={styles.featureCard} onPress={onPress} activeOpacity={0.8}>
+    <LinearGradient
+      colors={[SPIRITUAL_COLORS.cardBackground, SPIRITUAL_COLORS.accent]}
+      style={styles.featureCardGradient}
+    >
+      <View style={styles.featureIconContainer}>
+        <Ionicons name={icon} size={32} color={SPIRITUAL_COLORS.primary} />
+      </View>
+      <Text style={styles.featureTitle}>{title}</Text>
+      <Text style={styles.featureDescription}>{description}</Text>
+    </LinearGradient>
+  </TouchableOpacity>
+);
 
 export default function HomeScreen() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
-  const handleFeaturePress = (feature: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    console.log(`Navigate to ${feature}`);
-  };
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
+  const features = [
+    {
+      icon: 'book-outline' as const,
+      title: 'Daily Quotes',
+      description: 'Discover wisdom through sacred teachings and spiritual insights',
+      onPress: () => {
+        router.push('/(tabs)/quotes');
+      },
+    },
+    {
+      icon: 'calendar-outline' as const,
+      title: 'Sacred Calendar',
+      description: 'Stay connected with spiritual events and celebrations',
+      onPress: () => {
+        router.push('/(tabs)/calendar');
+      },
+    },
+    {
+      icon: 'play-circle-outline' as const,
+      title: 'Divine Videos',
+      description: 'Experience spiritual guidance through sacred video content',
+      onPress: () => {
+        router.push('/(tabs)/videos');
+      },
+    },
+    {
+      icon: 'heart-outline' as const,
+      title: 'Gurudev Wisdom',
+      description: 'Connect with the teachings of Sri Sidheshwar Tirth Brahmarshi Ji',
+      onPress: () => {
+        router.push('/(tabs)/gurudev');
+      },
+    },
+  ];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <LinearGradient
-        colors={getSafeGradient('divine')}
-        style={styles.headerGradient}
+        colors={SPIRITUAL_GRADIENTS.peace}
+        style={styles.gradient}
       >
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>🙏 नमस्ते</Text>
-            <Text style={styles.welcome}>
-              Welcome, {user?.displayName || user?.email || 'Devotee'}
+        <ScrollView 
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Header Section */}
+          <View style={styles.header}>
+            <View style={styles.omContainer}>
+              <Text style={styles.omSymbol}>ॐ</Text>
+            </View>
+            <Text style={styles.welcomeText}>
+              Namaste, {user?.name || 'Spiritual Seeker'}
+            </Text>
+            <Text style={styles.subtitle}>
+              May your path be illuminated with divine wisdom
             </Text>
           </View>
-          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-            <Ionicons name="log-out-outline" size={24} color={SPIRITUAL_COLORS.white} />
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.featuresContainer}>
-          <FeatureCard
-            title="Daily Quotes"
-            description="Spiritual wisdom for daily reflection"
-            icon="book-outline"
-            gradient={getSafeGradient('wisdom')}
-            onPress={() => handleFeaturePress('quotes')}
-          />
-
-          <FeatureCard
-            title="Sacred Videos"
-            description="Divine teachings and satsangs"
-            icon="play-circle-outline"
-            gradient={getSafeGradient('devotion')}
-            onPress={() => handleFeaturePress('videos')}
-          />
-
-          <FeatureCard
-            title="Calendar"
-            description="Sacred dates and festivals"
-            icon="calendar-outline"
-            gradient={getSafeGradient('peace')}
-            onPress={() => handleFeaturePress('calendar')}
-          />
-
-          <FeatureCard
-            title="About Gurudev"
-            description="Life and teachings of our beloved master"
-            icon="person-outline"
-            gradient={getSafeGradient('blessing')}
-            onPress={() => handleFeaturePress('gurudev')}
-          />
-        </View>
-
-        <View style={styles.todaySection}>
-          <Text style={styles.sectionTitle}>Today's Blessing</Text>
+          {/* Daily Blessing Card */}
           <View style={styles.blessingCard}>
-            <Text style={styles.blessingText}>
-              "The purpose of life is to realize God. All other activities are secondary."
-            </Text>
-            <Text style={styles.blessingAuthor}>- Sri Siddheshwar Tirth Brahmarshi Ji</Text>
+            <LinearGradient
+              colors={SPIRITUAL_GRADIENTS.divine}
+              style={styles.blessingGradient}
+            >
+              <View style={styles.blessingContent}>
+                <Ionicons name="sunny-outline" size={24} color={SPIRITUAL_COLORS.primaryForeground} />
+                <Text style={styles.blessingText}>
+                  "सर्वे भवन्तु सुखिनः सर्वे सन्तु निरामयाः"
+                </Text>
+                <Text style={styles.blessingTranslation}>
+                  May all beings be happy, may all beings be healthy
+                </Text>
+              </View>
+            </LinearGradient>
           </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+
+          {/* Features Grid */}
+          <View style={styles.featuresSection}>
+            <Text style={styles.sectionTitle}>Explore Spiritual Path</Text>
+            <View style={styles.featuresGrid}>
+              {features.map((feature, index) => (
+                <FeatureCard
+                  key={index}
+                  icon={feature.icon}
+                  title={feature.title}
+                  description={feature.description}
+                  onPress={feature.onPress}
+                />
+              ))}
+            </View>
+          </View>
+
+          {/* Spiritual Quote Section */}
+          <View style={styles.quoteSection}>
+            <View style={styles.quoteCard}>
+              <Text style={styles.quoteText}>
+                "When you connect with the silence within you, that is when you can make sense of the disturbance going on around you."
+              </Text>
+              <Text style={styles.quoteAuthor}>- Ancient Wisdom</Text>
+            </View>
+          </View>
+
+          {/* Footer Blessing */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              🙏 हरे कृष्ण हरे राम 🙏
+            </Text>
+          </View>
+        </ScrollView>
+      </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SPIRITUAL_COLORS.background,
   },
-  headerGradient: {
-    paddingTop: 20,
-    paddingBottom: 30,
+  gradient: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 40,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    paddingTop: 60,
+    paddingBottom: 30,
     paddingHorizontal: 20,
   },
-  greeting: {
-    fontSize: 24,
-    color: SPIRITUAL_COLORS.white,
+  omContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: SPIRITUAL_COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    ...SPIRITUAL_SHADOWS.divine,
+  },
+  omSymbol: {
+    fontSize: 36,
+    color: SPIRITUAL_COLORS.primaryForeground,
     fontWeight: 'bold',
   },
-  welcome: {
+  welcomeText: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: SPIRITUAL_COLORS.foreground,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  subtitle: {
     fontSize: 16,
-    color: SPIRITUAL_COLORS.white,
-    opacity: 0.9,
-    marginTop: 4,
+    color: SPIRITUAL_COLORS.textMuted,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
-  logoutButton: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  blessingCard: {
+    marginHorizontal: 20,
+    marginBottom: 30,
+    borderRadius: 16,
+    ...SPIRITUAL_SHADOWS.divine,
   },
-  content: {
-    flex: 1,
-    marginTop: -20,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    backgroundColor: SPIRITUAL_COLORS.background,
-  },
-  featuresContainer: {
+  blessingGradient: {
+    borderRadius: 16,
     padding: 20,
+  },
+  blessingContent: {
+    alignItems: 'center',
+  },
+  blessingText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: SPIRITUAL_COLORS.primaryForeground,
+    textAlign: 'center',
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  blessingTranslation: {
+    fontSize: 14,
+    color: SPIRITUAL_COLORS.primaryForeground,
+    textAlign: 'center',
+    fontStyle: 'italic',
+    opacity: 0.9,
+  },
+  featuresSection: {
+    paddingHorizontal: 20,
+    marginBottom: 30,
+  },
+  sectionTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: SPIRITUAL_COLORS.foreground,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  featuresGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
@@ -179,57 +252,69 @@ const styles = StyleSheet.create({
     width: (screenWidth - 60) / 2,
     marginBottom: 16,
     borderRadius: 16,
-    overflow: 'hidden',
-    ...SPIRITUAL_SHADOWS.medium,
+    ...SPIRITUAL_SHADOWS.card,
   },
-  featureGradient: {
-    padding: 20,
-    height: 140,
-    justifyContent: 'center',
+  featureCardGradient: {
+    borderRadius: 16,
+    padding: 16,
     alignItems: 'center',
+    minHeight: 140,
   },
   featureIconContainer: {
-    marginBottom: 8,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: SPIRITUAL_COLORS.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   featureTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: SPIRITUAL_COLORS.white,
+    color: SPIRITUAL_COLORS.foreground,
     textAlign: 'center',
-    marginBottom: 4,
+    marginBottom: 8,
   },
   featureDescription: {
     fontSize: 12,
-    color: SPIRITUAL_COLORS.white,
+    color: SPIRITUAL_COLORS.textMuted,
     textAlign: 'center',
-    opacity: 0.9,
+    lineHeight: 16,
   },
-  todaySection: {
-    padding: 20,
+  quoteSection: {
+    paddingHorizontal: 20,
+    marginBottom: 30,
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: SPIRITUAL_COLORS.text,
-    marginBottom: 16,
-  },
-  blessingCard: {
-    backgroundColor: SPIRITUAL_COLORS.white,
-    padding: 20,
+  quoteCard: {
+    backgroundColor: SPIRITUAL_COLORS.cardBackground,
     borderRadius: 16,
-    ...SPIRITUAL_SHADOWS.light,
+    padding: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: SPIRITUAL_COLORS.secondary,
+    ...SPIRITUAL_SHADOWS.peaceful,
   },
-  blessingText: {
+  quoteText: {
     fontSize: 16,
-    color: SPIRITUAL_COLORS.text,
+    color: SPIRITUAL_COLORS.foreground,
     fontStyle: 'italic',
     lineHeight: 24,
     marginBottom: 12,
   },
-  blessingAuthor: {
+  quoteAuthor: {
     fontSize: 14,
     color: SPIRITUAL_COLORS.primary,
     fontWeight: '600',
     textAlign: 'right',
+  },
+  footer: {
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  footerText: {
+    fontSize: 18,
+    color: SPIRITUAL_COLORS.primary,
+    fontWeight: '600',
   },
 });

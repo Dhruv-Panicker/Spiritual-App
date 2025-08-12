@@ -1,158 +1,94 @@
 
 import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
-import Toast from 'react-native-toast-message';
-
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { SPIRITUAL_COLORS, SPIRITUAL_SHADOWS } from '../../constants/SpiritualColors';
 
-interface UserProfileProps {
-  style?: any;
-}
-
-export const UserProfile: React.FC<UserProfileProps> = ({ style }) => {
-  const { user, logout, isAdmin } = useAuth();
-
-  const handleLogout = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              await logout();
-              Toast.show({
-                type: 'success',
-                text1: 'Signed Out',
-                text2: 'You have been successfully signed out',
-              });
-            } catch (error) {
-              Toast.show({
-                type: 'error',
-                text1: 'Sign Out Failed',
-                text2: 'Please try again',
-              });
-            }
-          },
-        },
-      ]
-    );
-  };
+export const UserProfile: React.FC = () => {
+  const { user, logout } = useAuth();
 
   if (!user) return null;
 
   return (
-    <View style={[styles.container, style]}>
-      <View style={styles.userInfo}>
-        <View style={styles.avatar}>
-          <Ionicons 
-            name="person" 
-            size={24} 
-            color={SPIRITUAL_COLORS.primary} 
-          />
-        </View>
-        <View style={styles.userDetails}>
-          <Text style={styles.userName}>
-            {user.displayName || 'Spiritual Seeker'}
-          </Text>
-          <Text style={styles.userEmail}>{user.email}</Text>
-          {isAdmin && (
-            <View style={styles.adminBadge}>
-              <Text style={styles.adminBadgeText}>Admin</Text>
-            </View>
-          )}
-        </View>
+    <View style={styles.container}>
+      <View style={styles.card}>
+        <Text style={styles.title}>Profile</Text>
+        <Text style={styles.label}>Name:</Text>
+        <Text style={styles.value}>{user.name}</Text>
+        
+        <Text style={styles.label}>Email:</Text>
+        <Text style={styles.value}>{user.email}</Text>
+        
+        {user.isAdmin && (
+          <View style={styles.adminBadge}>
+            <Text style={styles.adminText}>Admin User</Text>
+          </View>
+        )}
+        
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={logout}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
       </View>
-      
-      <TouchableOpacity
-        style={styles.logoutButton}
-        onPress={handleLogout}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="log-out" size={20} color={SPIRITUAL_COLORS.destructive} />
-        <Text style={styles.logoutText}>Sign Out</Text>
-      </TouchableOpacity>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    padding: 20,
+  },
+  card: {
     backgroundColor: SPIRITUAL_COLORS.cardBackground,
     borderRadius: 16,
-    padding: 16,
+    padding: 24,
     ...SPIRITUAL_SHADOWS.card,
   },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: SPIRITUAL_COLORS.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-    ...SPIRITUAL_SHADOWS.peaceful,
-  },
-  userDetails: {
-    flex: 1,
-  },
-  userName: {
-    fontSize: 16,
-    fontWeight: '600',
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
     color: SPIRITUAL_COLORS.foreground,
-    marginBottom: 4,
+    marginBottom: 20,
+    textAlign: 'center',
   },
-  userEmail: {
+  label: {
     fontSize: 14,
     color: SPIRITUAL_COLORS.textMuted,
+    marginTop: 12,
     marginBottom: 4,
   },
-  adminBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: SPIRITUAL_COLORS.primary,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
+  value: {
+    fontSize: 16,
+    color: SPIRITUAL_COLORS.foreground,
+    fontWeight: '500',
   },
-  adminBadgeText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: SPIRITUAL_COLORS.primaryForeground,
+  adminBadge: {
+    backgroundColor: SPIRITUAL_COLORS.secondary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginTop: 12,
+  },
+  adminText: {
+    color: SPIRITUAL_COLORS.secondaryForeground,
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    backgroundColor: SPIRITUAL_COLORS.spiritualRed,
     borderRadius: 12,
-    gap: 8,
+    padding: 16,
+    alignItems: 'center',
+    marginTop: 24,
+    ...SPIRITUAL_SHADOWS.peaceful,
   },
   logoutText: {
-    color: SPIRITUAL_COLORS.destructive,
-    fontSize: 14,
-    fontWeight: '500',
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
