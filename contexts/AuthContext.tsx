@@ -17,7 +17,7 @@ let auth: any;
 let googleProvider: any;
 
 // Initialize Firebase auth functions
-const initializeFirebaseAuth = async () => {
+const initializeAuthFunctions = async () => {
   try {
     const firebaseAuth = await import('firebase/auth');
     const firebaseConfig = await import('../config/firebase');
@@ -31,6 +31,9 @@ const initializeFirebaseAuth = async () => {
     GoogleAuthProvider = firebaseAuth.GoogleAuthProvider;
     sendPasswordResetEmail = firebaseAuth.sendPasswordResetEmail;
     updateProfile = firebaseAuth.updateProfile;
+    
+    // Initialize Firebase auth
+    await firebaseConfig.initializeFirebaseAuth();
     
     auth = firebaseConfig.auth;
     googleProvider = firebaseConfig.googleProvider;
@@ -93,7 +96,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     const initAuth = async () => {
       try {
-        await initializeFirebaseAuth();
+        await initializeAuthFunctions();
         
         // Wait a bit for Firebase to fully initialize
         await new Promise(resolve => setTimeout(resolve, 100));
