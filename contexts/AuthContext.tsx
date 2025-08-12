@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
@@ -59,38 +58,36 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       // Add haptic feedback
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      
+
       // Simulate API call - replace with actual authentication
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // Basic email validation
       if (!email.includes('@') || password.length < 3) {
         throw new Error('Invalid credentials');
       }
-      
+
       const mockUser: User = {
         id: '1',
         name: 'Spiritual Seeker',
         email,
         isAdmin: email === 'admin@example.com'
       };
-      
+
       setUser(mockUser);
       await AsyncStorage.setItem('spiritual-app-user', JSON.stringify(mockUser));
-      
-      // Log user login to Google Sheets
-      try {
-        await googleSheetsService.logUserLogin({
-          email: mockUser.email,
-          name: mockUser.name,
-          loginTime: new Date().toISOString(),
-          isAdmin: mockUser.isAdmin
-        });
-      } catch (error) {
+
+      // Log user login to Google Sheets (non-blocking)
+      googleSheetsService.logUserLogin({
+        email: mockUser.email,
+        name: mockUser.name,
+        loginTime: new Date().toISOString(),
+        isAdmin: mockUser.isAdmin
+      }).catch(error => {
         console.log('Failed to log to Google Sheets:', error);
-        // Don't throw error - login should still work even if sheets logging fails
-      }
-      
+        // This is non-blocking - login continues regardless
+      });
+
       // Success haptic feedback
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
@@ -107,34 +104,32 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       // Add haptic feedback
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      
+
       // Simulate Google OAuth - replace with actual Google OAuth implementation
       // You would integrate with expo-auth-session or @react-native-google-signin/google-signin
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
+
       const mockUser: User = {
         id: '2',
         name: 'Google User',
         email: 'user@gmail.com',
         isAdmin: false
       };
-      
+
       setUser(mockUser);
       await AsyncStorage.setItem('spiritual-app-user', JSON.stringify(mockUser));
-      
-      // Log user login to Google Sheets
-      try {
-        await googleSheetsService.logUserLogin({
-          email: mockUser.email,
-          name: mockUser.name,
-          loginTime: new Date().toISOString(),
-          isAdmin: mockUser.isAdmin
-        });
-      } catch (error) {
+
+      // Log user login to Google Sheets (non-blocking)
+      googleSheetsService.logUserLogin({
+        email: mockUser.email,
+        name: mockUser.name,
+        loginTime: new Date().toISOString(),
+        isAdmin: mockUser.isAdmin
+      }).catch(error => {
         console.log('Failed to log to Google Sheets:', error);
-        // Don't throw error - login should still work even if sheets logging fails
-      }
-      
+        // This is non-blocking - login continues regardless
+      });
+
       // Success haptic feedback
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
