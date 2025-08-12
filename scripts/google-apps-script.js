@@ -24,7 +24,7 @@ function doPost(e) {
 function logUserLogin(userData) {
   try {
     // Replace with your actual Google Sheet ID
-    const SHEET_ID = 'YOUR_GOOGLE_SHEET_ID_HERE';
+    const SHEET_ID = process.env.GOOGLE_SHEET_ID;
     const sheet = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
     
     // Check if headers exist
