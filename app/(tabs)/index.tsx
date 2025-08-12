@@ -52,6 +52,7 @@ export default function HomeScreen() {
   const { user, logout } = useAuth();
 
   const handleLogout = () => {
+    console.log('Logout button clicked');
     Alert.alert(
       'Logout',
       'Are you sure you want to logout?',
@@ -59,11 +60,13 @@ export default function HomeScreen() {
         {
           text: 'Cancel',
           style: 'cancel',
+          onPress: () => console.log('Logout cancelled'),
         },
         {
           text: 'Logout',
           style: 'destructive',
           onPress: () => {
+            console.log('Logout confirmed, calling logout function');
             logout();
           },
         },
@@ -127,7 +130,10 @@ export default function HomeScreen() {
               </View>
               <TouchableOpacity
                 style={styles.logoutButton}
-                onPress={handleLogout}
+                onPress={() => {
+                  console.log('TouchableOpacity pressed');
+                  handleLogout();
+                }}
                 activeOpacity={0.7}
               >
                 <Ionicons name="log-out-outline" size={24} color={SPIRITUAL_COLORS.primary} />

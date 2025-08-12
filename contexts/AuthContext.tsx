@@ -145,12 +145,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const logout = async () => {
+    console.log('=== LOGOUT FUNCTION CALLED ===');
     try {
+      console.log('Playing logout haptic feedback');
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       
+      console.log('Setting user to null');
       // Clear user state immediately
       setUser(null);
       
+      console.log('Removing user from AsyncStorage');
       // Clear stored session
       await AsyncStorage.removeItem('spiritual-app-user');
       
@@ -158,6 +162,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } catch (error) {
       console.error('Error during logout:', error);
       // Even if storage removal fails, still logout the user
+      console.log('Setting user to null despite error');
       setUser(null);
     }
   };
