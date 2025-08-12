@@ -94,6 +94,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const initAuth = async () => {
       try {
         await initializeFirebaseAuth();
+        
+        // Wait a bit for Firebase to fully initialize
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         setAuthInitialized(true);
         
         if (auth && onAuthStateChanged) {

@@ -47,8 +47,12 @@ const initializeAuth = async () => {
       googleProvider = new GoogleAuthProvider();
     } else {
       // React Native platform
-      const { getAuth, GoogleAuthProvider } = await import('firebase/auth');
-      auth = getAuth(app);
+      const { initializeAuth, getReactNativePersistence, GoogleAuthProvider } = await import('firebase/auth');
+      const AsyncStorage = await import('@react-native-async-storage/async-storage');
+      
+      auth = initializeAuth(app, {
+        persistence: getReactNativePersistence(AsyncStorage.default)
+      });
       googleProvider = new GoogleAuthProvider();
     }
   } catch (error) {
