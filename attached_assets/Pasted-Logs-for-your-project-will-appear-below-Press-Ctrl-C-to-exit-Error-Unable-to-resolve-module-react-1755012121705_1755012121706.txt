@@ -1,0 +1,39 @@
+Logs for your project will appear below. Press Ctrl+C to exit.
+Error: Unable to resolve module react-native-reanimated/lib/reanimated2/js-reanimated from /home/runner/workspace/app/_layout.tsx: react-native-reanimated/lib/reanimated2/js-reanimated could not be found within the project or in these directories:
+  node_modules
+   5 | import { StatusBar } from 'expo-status-bar';
+   6 | import React, { useEffect } from 'react';
+>  7 | import 'react-native-reanimated/lib/reanimated2/js-reanimated';
+     |         ^
+   8 | import { GestureHandlerRootView } from 'react-native-gesture-handler';
+   9 |
+  10 | import { useColorScheme } from '@/hooks/useColorScheme';
+    at ModuleResolver.resolveDependency (/home/runner/workspace/node_modules/metro/src/node-haste/DependencyGraph/ModuleResolution.js:150:15)
+    at DependencyGraph.resolveDependency (/home/runner/workspace/node_modules/metro/src/node-haste/DependencyGraph.js:239:43)
+    at /home/runner/workspace/node_modules/metro/src/lib/transformHelpers.js:165:21
+    at resolveDependencies (/home/runner/workspace/node_modules/metro/src/DeltaBundler/buildSubgraph.js:42:25)
+    at visit (/home/runner/workspace/node_modules/metro/src/DeltaBundler/buildSubgraph.js:83:30)
+    at async Promise.all (index 8)
+    at visit (/home/runner/workspace/node_modules/metro/src/DeltaBundler/buildSubgraph.js:92:5)
+    at async Promise.all (index 0)
+    at visit (/home/runner/workspace/node_modules/metro/src/DeltaBundler/buildSubgraph.js:92:5)
+    at async Promise.all (index 1)
+Error: Unable to resolve module react-native-reanimated/lib/reanimated2/js-reanimated from /home/runner/workspace/app/_layout.tsx: react-native-reanimated/lib/reanimated2/js-reanimated could not be found within the project or in these directories:
+  node_modules
+   5 | import { StatusBar } from 'expo-status-bar';
+   6 | import React, { useEffect } from 'react';
+>  7 | import 'react-native-reanimated/lib/reanimated2/js-reanimated';
+     |         ^
+   8 | import { GestureHandlerRootView } from 'react-native-gesture-handler';
+   9 |
+  10 | import { useColorScheme } from '@/hooks/useColorScheme';
+    at ModuleResolver.resolveDependency (/home/runner/workspace/node_modules/metro/src/node-haste/DependencyGraph/ModuleResolution.js:150:15)
+    at DependencyGraph.resolveDependency (/home/runner/workspace/node_modules/metro/src/node-haste/DependencyGraph.js:239:43)
+    at /home/runner/workspace/node_modules/metro/src/lib/transformHelpers.js:165:21
+    at resolveDependencies (/home/runner/workspace/node_modules/metro/src/DeltaBundler/buildSubgraph.js:42:25)
+    at visit (/home/runner/workspace/node_modules/metro/src/DeltaBundler/buildSubgraph.js:83:30)
+    at async Promise.all (index 8)
+    at visit (/home/runner/workspace/node_modules/metro/src/DeltaBundler/buildSubgraph.js:92:5)
+    at async Promise.all (index 0)
+    at visit (/home/runner/workspace/node_modules/metro/src/DeltaBundler/buildSubgraph.js:92:5)
+    at async Promise.all (index 1)
