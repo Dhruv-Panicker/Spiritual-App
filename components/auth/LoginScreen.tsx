@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   View,
@@ -20,6 +19,14 @@ import Toast from 'react-native-toast-message';
 
 import { useAuth } from '../../contexts/AuthContext';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS, SPIRITUAL_TYPOGRAPHY } from '../../constants/SpiritualColors';
+
+// Safe gradient helper
+const getSafeGradient = (gradientKey: keyof typeof SPIRITUAL_GRADIENTS) => {
+  const gradient = SPIRITUAL_GRADIENTS[gradientKey];
+  return gradient && Array.isArray(gradient) && gradient.length > 0
+    ? gradient
+    : SPIRITUAL_GRADIENTS.safe;
+};
 
 export const LoginScreen: React.FC = () => {
   const { signIn, signUp, signInWithGoogle, resetPassword, error, clearError, isLoading } = useAuth();
@@ -50,7 +57,7 @@ export const LoginScreen: React.FC = () => {
         });
         return;
       }
-      
+
       if (password.length < 6) {
         Toast.show({
           type: 'error',
@@ -146,7 +153,7 @@ export const LoginScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <LinearGradient colors={SPIRITUAL_GRADIENTS.peaceful} style={styles.gradient}>
+      <LinearGradient colors={getSafeGradient('peaceful')} style={styles.gradient}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardAvoid}

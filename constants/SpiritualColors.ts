@@ -1,4 +1,3 @@
-
 // SPIRITUAL COLOR PALETTE - Extract these exact colors for React Native
 // Use these hex values in your React Native StyleSheet
 
@@ -7,44 +6,49 @@ export const SPIRITUAL_COLORS = {
   primary: '#FF6B35',           // Rich saffron orange
   primaryGlow: '#FFA366',       // Lighter saffron for glows
   primaryForeground: '#FDF8F3', // Light cream for text on primary
-  
+
   // Background Colors  
   background: '#FDF8F3',        // Warm ivory white
   cardBackground: '#FEFCF8',    // Cream white with subtle warmth
-  
+
   // Text Colors
   foreground: '#2D1810',        // Deep earth brown
   textMuted: '#8E6A5B',         // Warm gray
-  
+
   // Secondary Colors
   secondary: '#D4AF37',         // Deep ceremonial gold
   secondaryForeground: '#2D1810',
-  
+
   // Accent Colors
   accent: '#F4E4C1',           // Light saffron accent
   accentForeground: '#2D1810',
-  
+
   // Spiritual Elements
   spiritualRed: '#D32F2F',     // Temple red
   omGold: '#DAA520',           // Om symbol gold
-  
+
   // Border and Input
   border: '#E8D5B7',           // Subtle warm border
   input: '#F9F3E9',            // Input background
-  
+
   // Tab Navigation
   tabBackground: '#FDF8F3',
-  tabForeground: '#2D1810', 
+  tabForeground: '#2D1810',
   tabActive: '#FF6B35',
   tabActiveForeground: '#FEFCF8',
 };
 
 // GRADIENTS for LinearGradient component
 export const SPIRITUAL_GRADIENTS = {
-  divine: ['#FF6B35', '#D4AF37'],      // Primary to secondary
-  peace: ['#FDF8F3', '#F4E4C1'],       // Background to accent  
-  meditation: ['#FFA366', '#FF6B35'],   // Light to primary
-  sunset: ['#FF6B35', '#FFE5D9'],       // Primary to very light
+  primary: ['#8B4513', '#D2691E', '#CD853F'],
+  secondary: ['#4682B4', '#87CEEB', '#E0F6FF'],
+  accent: ['#FF6347', '#FF7F50', '#FFA07A'],
+  background: ['#FFF8DC', '#FFFACD', '#FFFFFF'],
+  divine: ['#9370DB', '#DDA0DD', '#E6E6FA'],
+  golden: ['#DAA520', '#FFD700', '#FFF8DC'],
+  // Add safe fallback gradients
+  safe: ['#FFFFFF', '#F5F5F5'],
+  darkSafe: ['#333333', '#666666']
 };
 
 // SHADOWS for React Native
@@ -57,7 +61,7 @@ export const SPIRITUAL_SHADOWS = {
     elevation: 4,
   },
   divine: {
-    shadowColor: '#D4AF37', 
+    shadowColor: '#D4AF37',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.25,
     shadowRadius: 20,
