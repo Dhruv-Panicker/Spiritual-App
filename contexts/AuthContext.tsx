@@ -57,8 +57,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    // Provide a fallback context to prevent crashes
-    return {
+    // Provide a complete fallback context to prevent crashes
+    const fallbackContext: AuthContextType = {
       user: null,
       isAdmin: false,
       isLoading: false,
@@ -67,9 +67,10 @@ export const useAuth = () => {
       signInWithGoogle: async () => { throw new Error('Auth not initialized'); },
       logout: async () => { throw new Error('Auth not initialized'); },
       resetPassword: async () => { throw new Error('Auth not initialized'); },
-      error: 'Authentication service not available',
+      error: null,
       clearError: () => {}
     };
+    return fallbackContext;
   }
   return context;
 };

@@ -18,18 +18,28 @@ const firebaseConfig = {
 // Initialize Firebase app
 let app: any;
 try {
-  if (getApps().length === 0) {
+  // Check if app already exists, if not create new one
+  const existingApps = getApps();
+  if (existingApps.length === 0) {
     app = initializeApp(firebaseConfig);
   } else {
-    app = getApps()[0];
+    app = existingApps[0];
   }
 } catch (error) {
   console.error('Firebase initialization error:', error);
+  // Set app to null if initialization fails
+  app = null;
 }
 
 // Dynamic imports for better web compatibility
 const initializeAuth = async () => {
   try {
+    if (!app) {
+      console.warn('Firebase app not initialized, using fallback auth');
+      createFallbackAuth();
+      return;
+    }
+
     if (typeof window !== 'undefined') {
       // Web platform
       const { getAuth, GoogleAuthProvider } = await import('firebase/auth');
@@ -43,20 +53,24 @@ const initializeAuth = async () => {
     }
   } catch (error) {
     console.error('Firebase auth initialization error:', error);
-    // Provide fallback auth object
-    auth = {
-      currentUser: null,
-      onAuthStateChanged: () => () => {},
-      signInWithEmailAndPassword: () => Promise.reject(new Error('Auth not available')),
-      createUserWithEmailAndPassword: () => Promise.reject(new Error('Auth not available')),
-      signOut: () => Promise.reject(new Error('Auth not available')),
-      sendPasswordResetEmail: () => Promise.reject(new Error('Auth not available')),
-    };
-    googleProvider = {
-      addScope: () => {},
-      setCustomParameters: () => {},
-    };
+    createFallbackAuth();
   }
+};
+
+const createFallbackAuth = () => {
+  // Provide fallback auth object
+  auth = {
+    currentUser: null,
+    onAuthStateChanged: () => () => {},
+    signInWithEmailAndPassword: () => Promise.reject(new Error('Auth not available')),
+    createUserWithEmailAndPassword: () => Promise.reject(new Error('Auth not available')),
+    signOut: () => Promise.reject(new Error('Auth not available')),
+    sendPasswordResetEmail: () => Promise.reject(new Error('Auth not available')),
+  };
+  googleProvider = {
+    addScope: () => {},
+    setCustomParameters: () => {},
+  };
 };
 
 // Initialize auth immediately
