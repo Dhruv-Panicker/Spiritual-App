@@ -15,6 +15,14 @@ import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
 
+// Safe gradient helper
+const getSafeGradient = (gradientKey: keyof typeof SPIRITUAL_GRADIENTS) => {
+  const gradient = SPIRITUAL_GRADIENTS[gradientKey];
+  return gradient && Array.isArray(gradient) && gradient.length > 0 
+    ? gradient 
+    : ['#FFFFFF', '#F5F5F5'];
+};
+
 const { width: screenWidth } = Dimensions.get('window');
 
 interface FeatureCardProps {
