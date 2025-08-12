@@ -1,6 +1,13 @@
+
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
+
+// Import AsyncStorage only when needed
+let AsyncStorage: any = null;
+if (Platform.OS !== 'web') {
+  AsyncStorage = require('@react-native-async-storage/async-storage').default;
+}
 
 const firebaseConfig = {
   apiKey: "AIzaSyBI8--3GhLYSWJo8hVeMbwg79zlZBu9qLI",
@@ -18,17 +25,17 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 // Initialize auth based on platform
 let auth;
 try {
-  // For React Native, use initializeAuth with AsyncStorage persistence
-  if (typeof window === 'undefined') {
+  if (Platform.OS === 'web') {
+    // For web, use regular getAuth
+    auth = getAuth(app);
+  } else {
+    // For React Native, use initializeAuth with AsyncStorage persistence
     auth = initializeAuth(app, {
       persistence: getReactNativePersistence(AsyncStorage)
     });
-  } else {
-    // For web, use regular getAuth
-    auth = getAuth(app);
   }
 } catch (error) {
-  // If auth is already initialized, get existing instance
+  console.log('Auth already initialized, getting existing instance');
   auth = getAuth(app);
 }
 

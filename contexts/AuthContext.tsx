@@ -52,36 +52,71 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     let isMounted = true;
 
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (!isMounted) return;
-
+    // Add delay to ensure Firebase is fully initialized
+    const initializeAuth = async () => {
       try {
-        console.log('Auth state changed:', firebaseUser ? 'User logged in' : 'User logged out');
-        setUser(firebaseUser);
+        console.log('Starting auth initialization...');
+        
+        // Small delay to ensure Firebase is ready
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        console.log('Setting up auth state listener...');
+        
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+          if (!isMounted) return;
 
-        // Store user data locally
-        if (firebaseUser) {
-          await AsyncStorage.setItem('user', JSON.stringify({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-            photoURL: firebaseUser.photoURL
-          }));
-        } else {
-          await AsyncStorage.removeItem('user');
-        }
-      } catch (storageError) {
-        console.error('Error handling auth state change:', storageError);
-      } finally {
+          try {
+            console.log('Auth state changed:', firebaseUser ? 'User logged in' : 'User logged out');
+            setUser(firebaseUser);
+
+            // Store user data locally
+            if (firebaseUser) {
+              try {
+                await AsyncStorage.setItem('user', JSON.stringify({
+                  uid: firebaseUser.uid,
+                  email: firebaseUser.email,
+                  displayName: firebaseUser.displayName,
+                  photoURL: firebaseUser.photoURL
+                }));
+              } catch (storageError) {
+                console.warn('Error storing user data:', storageError);
+              }
+            } else {
+              try {
+                await AsyncStorage.removeItem('user');
+              } catch (storageError) {
+                console.warn('Error removing user data:', storageError);
+              }
+            }
+          } catch (authError) {
+            console.error('Error handling auth state change:', authError);
+          } finally {
+            if (isMounted) {
+              setIsLoading(false);
+            }
+          }
+        });
+
+        return unsubscribe;
+      } catch (initError) {
+        console.error('Firebase auth initialization error:', initError);
+        console.warn('Firebase auth not available, using fallback');
         if (isMounted) {
           setIsLoading(false);
         }
+        return () => {};
       }
-    });
+    };
+
+    let unsubscribePromise = initializeAuth();
 
     return () => {
       isMounted = false;
-      unsubscribe();
+      unsubscribePromise.then(unsubscribe => {
+        if (typeof unsubscribe === 'function') {
+          unsubscribe();
+        }
+      });
     };
   }, []);
 
