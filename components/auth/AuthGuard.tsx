@@ -12,6 +12,8 @@ interface AuthGuardProps {
 export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const { user, isLoading } = useAuth();
 
+  console.log('AuthGuard - User:', user, 'Loading:', isLoading);
+
   if (isLoading) {
     return (
       <View style={{
@@ -29,8 +31,10 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   }
 
   if (!user) {
+    console.log('AuthGuard - No user, showing login screen');
     return <LoginScreen />;
   }
 
+  console.log('AuthGuard - User authenticated, showing main app');
   return <>{children}</>;
 };
