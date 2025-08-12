@@ -19,7 +19,7 @@ let authInitialized = false;
 
 // Initialize Firebase auth functions
 const initializeAuthFunctions = async () => {
-  if (authInitialized) return;
+  if (authInitialized) return true;
   
   try {
     console.log('Initializing Firebase auth functions...');
@@ -47,13 +47,15 @@ const initializeAuthFunctions = async () => {
       googleProvider = firebaseConfig.googleProvider;
       authInitialized = true;
       console.log('Firebase auth functions initialized successfully');
+      return true;
     } else {
-      console.warn('Firebase auth initialization failed, using fallback');
+      console.warn('Firebase auth initialization failed');
+      return false;
     }
     
   } catch (error) {
     console.error('Firebase auth import error:', error);
-    // Don't throw error, just continue with fallback
+    return false;
   }
 };
 
@@ -102,15 +104,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log('Starting auth initialization...');
         
         // Initialize Firebase functions
-        await initializeAuthFunctions();
+        const success = await initializeAuthFunctions();
         
         if (!isMounted) return;
         
-        setInitialized(true);
-        
-        // Set up auth state listener
-        if (auth && onAuthStateChanged && typeof onAuthStateChanged === 'function') {
+        if (success && auth && onAuthStateChanged) {
           console.log('Setting up auth state listener...');
+          setInitialized(true);
           
           unsubscribe = onAuthStateChanged(auth, async (firebaseUser: any) => {
             if (!isMounted) return;
@@ -139,8 +139,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             }
           });
         } else {
-          console.log('Auth state listener not available, using fallback');
+          console.log('Firebase auth not available, using fallback');
           if (isMounted) {
+            setInitialized(false);
             setIsLoading(false);
           }
         }
@@ -148,6 +149,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.error('Auth initialization error:', error);
         if (isMounted) {
           setError('Authentication service temporarily unavailable');
+          setInitialized(false);
           setIsLoading(false);
         }
       }
@@ -170,7 +172,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const clearError = () => setError(null);
 
   const signUp = async (email: string, password: string, displayName?: string) => {
-    if (!initialized || !createUserWithEmailAndPassword) {
+    if (!initialized || !createUserWithEmailAndPassword || !auth) {
       throw new Error('Authentication service not available');
     }
     
@@ -192,7 +194,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const signIn = async (email: string, password: string) => {
-    if (!initialized || !signInWithEmailAndPassword) {
+    if (!initialized || !signInWithEmailAndPassword || !auth) {
       throw new Error('Authentication service not available');
     }
     
@@ -209,7 +211,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const signInWithGoogle = async () => {
-    if (!initialized || !signInWithPopup) {
+    if (!initialized || !signInWithPopup || !auth || !googleProvider) {
       throw new Error('Google Sign-In not available');
     }
     
@@ -231,17 +233,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = async () => {
-    if (!initialized || !signOut) {
-      // Even if auth is not available, clear local state
-      setUser(null);
-      await AsyncStorage.removeItem('user');
-      return;
-    }
-    
     try {
       setIsLoading(true);
       setError(null);
-      await signOut(auth);
+      
+      if (initialized && signOut && auth) {
+        await signOut(auth);
+      }
+      
+      // Clear local state regardless
+      setUser(null);
       await AsyncStorage.removeItem('user');
     } catch (error: any) {
       setError(getErrorMessage(error));
@@ -252,7 +253,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const resetPassword = async (email: string) => {
-    if (!initialized || !sendPasswordResetEmail) {
+    if (!initialized || !sendPasswordResetEmail || !auth) {
       throw new Error('Password reset not available');
     }
     

@@ -1,4 +1,3 @@
-
 import { initializeApp, getApps, getApp } from 'firebase/app';
 
 const firebaseConfig = {
@@ -17,7 +16,6 @@ let auth: any = null;
 let googleProvider: any = null;
 
 try {
-  // Check if app already exists
   app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 } catch (error) {
   console.error('Firebase app initialization error:', error);
@@ -27,71 +25,49 @@ try {
 const initializeFirebaseAuth = async () => {
   if (!app) {
     console.warn('Firebase app not available');
-    return createFallbackAuth();
+    return false;
   }
 
   try {
     // Check platform
     const isWeb = typeof window !== 'undefined';
-    
+
     if (isWeb) {
       // Web platform
       const { getAuth, GoogleAuthProvider } = await import('firebase/auth');
       auth = getAuth(app);
       googleProvider = new GoogleAuthProvider();
+      console.log('Firebase auth initialized for web');
     } else {
       // React Native platform
-      const { initializeAuth, getReactNativePersistence, GoogleAuthProvider, getAuth } = await import('firebase/auth');
-      
+      console.log('Initializing Firebase auth for React Native...');
+
+      // Import required modules
+      const { initializeAuth, getReactNativePersistence, GoogleAuthProvider } = await import('firebase/auth');
+      const AsyncStorage = await import('@react-native-async-storage/async-storage');
+
+      // Check if auth instance already exists
       try {
-        // Try to get existing auth first
+        const { getAuth } = await import('firebase/auth');
         auth = getAuth(app);
+        console.log('Using existing auth instance');
       } catch {
-        // If no auth exists, create one with persistence
-        try {
-          const AsyncStorage = await import('@react-native-async-storage/async-storage');
-          auth = initializeAuth(app, {
-            persistence: getReactNativePersistence(AsyncStorage.default)
-          });
-        } catch (persistenceError) {
-          // Fallback to auth without persistence
-          console.warn('AsyncStorage not available, using memory persistence');
-          const { initializeAuth: initAuth } = await import('firebase/auth');
-          auth = initAuth(app);
-        }
+        // Create new auth instance with AsyncStorage persistence
+        console.log('Creating new auth instance with AsyncStorage persistence');
+        auth = initializeAuth(app, {
+          persistence: getReactNativePersistence(AsyncStorage.default)
+        });
       }
-      
+
       googleProvider = new GoogleAuthProvider();
+      console.log('Firebase auth initialized for React Native with AsyncStorage');
     }
-    
-    console.log('Firebase auth initialized successfully');
+
     return true;
   } catch (error) {
     console.error('Firebase auth initialization failed:', error);
-    createFallbackAuth();
     return false;
   }
-};
-
-const createFallbackAuth = () => {
-  console.log('Creating fallback auth');
-  auth = {
-    currentUser: null,
-    onAuthStateChanged: (callback: any) => {
-      // Call callback with null user
-      setTimeout(() => callback(null), 0);
-      return () => {}; // Unsubscribe function
-    },
-    signInWithEmailAndPassword: () => Promise.reject(new Error('Auth service unavailable')),
-    createUserWithEmailAndPassword: () => Promise.reject(new Error('Auth service unavailable')),
-    signOut: () => Promise.resolve(),
-    sendPasswordResetEmail: () => Promise.reject(new Error('Auth service unavailable')),
-  };
-  
-  googleProvider = {
-    addScope: () => {},
-    setCustomParameters: () => {},
-  };
 };
 
 // Export auth objects and initialization function
