@@ -30,11 +30,7 @@ export default function GurudevScreen() {
           colors={getSafeGradient('divine')}
           style={styles.heroSection}
         >
-          <Image
-            source={require('@/assets/images/gurudev-hero.jpg')}
-            style={styles.heroImage}
-            resizeMode="cover"
-          />
+          <View style={styles.heroPlaceholder} />
           <View style={styles.heroOverlay}>
             <Text style={styles.heroTitle}>श्री सिधेश्वर तीर्थ ब्रह्मर्षि जी</Text>
             <Text style={styles.heroSubtitle}>Our Beloved Gurudev</Text>
@@ -90,10 +86,11 @@ const styles = StyleSheet.create({
     height: 300,
     position: 'relative',
   },
-  heroImage: {
+  heroPlaceholder: {
     width: '100%',
     height: '100%',
     position: 'absolute',
+    backgroundColor: 'rgba(138, 43, 226, 0.3)',
   },
   heroOverlay: {
     ...StyleSheet.absoluteFillObject,
