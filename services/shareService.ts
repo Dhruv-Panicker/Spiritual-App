@@ -22,13 +22,12 @@ class ShareService {
   private playStoreLink = 'https://play.google.com/store/apps/details?id=com.spiritualwisdom';
   private webAppLink = 'https://spiritualwisdom.app';
 
-  // Mock quote images - you can replace these with your actual images
+  // Spiritual guru images for quote sharing
   private quoteImages = [
-    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1080&h=1080&fit=crop',
-    'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=1080&h=1080&fit=crop',
-    'https://images.unsplash.com/photo-1528715471579-d1bcf0ba5e83?w=1080&h=1080&fit=crop',
-    'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=1080&h=1080&fit=crop',
-    'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1080&h=1080&fit=crop'
+    require('../assets/images/guru-image-1.jpg'),
+    require('../assets/images/guru-image-2.jpg'),
+    require('../assets/images/guru-image-3.jpg'),
+    require('../assets/images/guru-image-4.jpg')
   ];
 
   async shareQuote(quote: Quote, includeImage = true): Promise<void> {
@@ -61,14 +60,15 @@ class ShareService {
     }
   }
 
-  private getMockImageForQuote(quoteId: string): string {
+  private getMockImageForQuote(quoteId: string): any {
     // Use quote ID to consistently pick the same image for the same quote
     const index = parseInt(quoteId) % this.quoteImages.length;
     return this.quoteImages[index];
   }
 
-  private async shareWebQuoteWithImage(quote: Quote, imageUrl: string): Promise<void> {
-    // For web, open image in new tab and copy text to clipboard
+  private async shareWebQuoteWithImage(quote: Quote, imageSource: any): Promise<void> {
+    // For web, we'll need to handle local images differently
+    const imageUrl = typeof imageSource === 'string' ? imageSource : imageSource.default || imageSource;
     window.open(imageUrl, '_blank');
     
     const shareText = this.buildQuoteShareText(quote);
@@ -86,17 +86,28 @@ class ShareService {
     }
   }
 
-  private async shareMobileQuoteWithImage(quote: Quote, imageUrl: string): Promise<void> {
+  private async shareMobileQuoteWithImage(quote: Quote, imageSource: any): Promise<void> {
     try {
-      // Download image to device temporarily
-      const fileName = `spiritual-quote-${quote.id}-${Date.now()}.jpg`;
-      const fileUri = `${FileSystem.documentDirectory}${fileName}`;
+      // For local images, we need to get the resolved URI
+      let imageUri: string;
       
-      // Download the image
-      const downloadResult = await FileSystem.downloadAsync(imageUrl, fileUri);
-      
-      if (downloadResult.status !== 200) {
-        throw new Error('Failed to download image');
+      if (typeof imageSource === 'string') {
+        // External URL - download it
+        const fileName = `spiritual-quote-${quote.id}-${Date.now()}.jpg`;
+        const fileUri = `${FileSystem.documentDirectory}${fileName}`;
+        const downloadResult = await FileSystem.downloadAsync(imageSource, fileUri);
+        
+        if (downloadResult.status !== 200) {
+          throw new Error('Failed to download image');
+        }
+        imageUri = downloadResult.uri;
+      } else {
+        // Local asset - resolve the URI
+        const asset = await FileSystem.getInfoAsync(imageSource);
+        if (!asset.exists) {
+          throw new Error('Local image asset not found');
+        }
+        imageUri = imageSource;
       }
 
       // Create the message text (reflection + app download) - this will appear under the image
@@ -106,18 +117,20 @@ class ShareService {
       await Share.share({
         title: 'Spiritual Wisdom Quote',
         message: messageText,
-        url: Platform.OS === 'ios' ? downloadResult.uri : undefined, // iOS handles URL better
-        urls: Platform.OS === 'android' ? [downloadResult.uri] : undefined, // Android uses urls array
+        url: Platform.OS === 'ios' ? imageUri : undefined, // iOS handles URL better
+        urls: Platform.OS === 'android' ? [imageUri] : undefined, // Android uses urls array
       });
 
-      // Clean up temporary file after 10 seconds
-      setTimeout(async () => {
-        try {
-          await FileSystem.deleteAsync(downloadResult.uri, { idempotent: true });
-        } catch (e) {
-          console.log('Could not delete temp file:', e);
-        }
-      }, 10000);
+      // Clean up temporary file after 10 seconds (only for downloaded images)
+      if (typeof imageSource === 'string') {
+        setTimeout(async () => {
+          try {
+            await FileSystem.deleteAsync(imageUri, { idempotent: true });
+          } catch (e) {
+            console.log('Could not delete temp file:', e);
+          }
+        }, 10000);
+      }
 
     } catch (error) {
       console.error('Error sharing mobile quote with image:', error);
