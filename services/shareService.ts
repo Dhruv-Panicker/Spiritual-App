@@ -22,12 +22,12 @@ class ShareService {
   private playStoreLink = 'https://play.google.com/store/apps/details?id=com.spiritualwisdom';
   private webAppLink = 'https://spiritualwisdom.app';
 
-  // Spiritual guru images for quote sharing (using local uploaded images)
-  private quoteImages = [
-    require('../assets/images/guru-image-1.jpg'),
-    require('../assets/images/guru-image-2.jpg'),
-    require('../assets/images/guru-image-3.jpg'),
-    require('../assets/images/guru-image-4.jpg')
+  // Use remote spiritual guru images for quote sharing
+  private quoteImageUrls = [
+    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop&crop=face',
+    'https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=800&h=600&fit=crop&crop=face',
+    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop&crop=face',
+    'https://images.unsplash.com/photo-1494790108755-2616c727e48b?w=800&h=600&fit=crop&crop=face'
   ];
 
   async shareQuote(quote: Quote, includeImage = true): Promise<void> {
@@ -46,8 +46,8 @@ class ShareService {
 
   private async shareQuoteWithImage(quote: Quote): Promise<void> {
     try {
-      // Get mock image for the quote
-      const imageUrl = this.getMockImageForQuote(quote.id);
+      // Get image URL for the quote
+      const imageUrl = this.getImageUrlForQuote(quote.id);
       
       if (Platform.OS === 'web') {
         await this.shareWebQuoteWithImage(quote, imageUrl);
@@ -60,14 +60,14 @@ class ShareService {
     }
   }
 
-  private getMockImageForQuote(quoteId: string): any {
+  private getImageUrlForQuote(quoteId: string): string {
     // Use quote ID to consistently pick the same image for the same quote
-    const index = parseInt(quoteId) % this.quoteImages.length;
-    return this.quoteImages[index];
+    const index = parseInt(quoteId) % this.quoteImageUrls.length;
+    return this.quoteImageUrls[index];
   }
 
-  private async shareWebQuoteWithImage(quote: Quote, localImage: any): Promise<void> {
-    // For web, we'll share just the text since local images are harder to handle
+  private async shareWebQuoteWithImage(quote: Quote, imageUrl: string): Promise<void> {
+    // For web, we'll share just the text since remote images are harder to handle
     const shareText = this.buildQuoteShareText(quote);
     
     if (navigator.share) {
@@ -82,11 +82,8 @@ class ShareService {
     }
   }
 
-  private async shareMobileQuoteWithImage(quote: Quote, localImage: any): Promise<void> {
+  private async shareMobileQuoteWithImage(quote: Quote, imageUrl: string): Promise<void> {
     try {
-      // For local images, we need to get the resolved asset URI
-      const asset = localImage;
-      
       // Create the message text (reflection + app download) - this will appear under the image
       const messageText = this.buildQuoteShareText(quote);
 
@@ -94,8 +91,7 @@ class ShareService {
       await Share.share({
         title: 'Spiritual Wisdom Quote',
         message: messageText,
-        url: Platform.OS === 'ios' ? asset : undefined, // iOS handles URL better
-        urls: Platform.OS === 'android' ? [asset] : undefined, // Android uses urls array
+        url: imageUrl, // Use the remote image URL directly
       });
 
     } catch (error) {
