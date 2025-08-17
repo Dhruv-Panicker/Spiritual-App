@@ -69,6 +69,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         throw new Error('Invalid credentials');
       }
 
+      // For demo purposes, we'll skip email verification check for existing users
+      // In a real app, you'd check if the email was verified during sign up
+
       const mockUser: User = {
         id: '1',
         name: 'Spiritual Seeker',

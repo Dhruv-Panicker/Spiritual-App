@@ -19,6 +19,8 @@ import * as Haptics from 'expo-haptics';
 
 import { useAuth } from '../../contexts/AuthContext';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS } from '../../constants/SpiritualColors';
+import { OTPVerificationScreen } from './OTPVerificationScreen';
+import { emailVerificationService } from '../../services/emailService';
 
 export const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -26,6 +28,8 @@ export const LoginScreen = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [showOTPScreen, setShowOTPScreen] = useState(false);
+  const [pendingSignUpData, setPendingSignUpData] = useState<{email: string; password: string} | null>(null);
   
   const { login, isLoading } = useAuth();
   
@@ -63,7 +67,20 @@ export const LoginScreen = () => {
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    if (!emailRegex.test(email)) return false;
+    
+    // Additional validation to prevent obviously fake emails
+    const disposableEmailDomains = [
+      '10minutemail.com', 'tempmail.org', 'guerrillamail.com', 
+      'mailinator.com', 'throwaway.email', 'temp-mail.org'
+    ];
+    
+    const domain = email.split('@')[1]?.toLowerCase();
+    if (disposableEmailDomains.includes(domain)) {
+      return false;
+    }
+    
+    return true;
   };
 
   const validateForm = () => {
@@ -73,7 +90,12 @@ export const LoginScreen = () => {
       setEmailError('Email is required');
       isValid = false;
     } else if (!validateEmail(email)) {
-      setEmailError('Please enter a valid email');
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        setEmailError('Please enter a valid email');
+      } else {
+        setEmailError('Please use a real email address, not a disposable one');
+      }
       isValid = false;
     } else {
       setEmailError('');
@@ -99,18 +121,38 @@ export const LoginScreen = () => {
     }
 
     try {
-      await login(email, password);
-      Toast.show({
-        type: 'success',
-        text1: 'Welcome',
-        text2: 'You have been successfully logged in.',
-        visibilityTime: 4000,
-      });
+      if (isSignUp) {
+        // For sign up, verify email first
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        
+        const otpSent = await emailVerificationService.sendOTP(email);
+        if (otpSent) {
+          setPendingSignUpData({ email, password });
+          setShowOTPScreen(true);
+          Toast.show({
+            type: 'success',
+            text1: 'Verification Code Sent',
+            text2: 'Please check your email for the verification code.',
+            visibilityTime: 4000,
+          });
+        } else {
+          throw new Error('Failed to send verification code');
+        }
+      } else {
+        // For login, proceed directly (assuming email was verified during sign up)
+        await login(email, password);
+        Toast.show({
+          type: 'success',
+          text1: 'Welcome',
+          text2: 'You have been successfully logged in.',
+          visibilityTime: 4000,
+        });
+      }
     } catch (error) {
       Toast.show({
         type: 'error',
-        text1: 'Login Failed',
-        text2: 'Please check your credentials and try again.',
+        text1: isSignUp ? 'Sign Up Failed' : 'Login Failed',
+        text2: isSignUp ? 'Please try again.' : 'Please check your credentials and try again.',
         visibilityTime: 4000,
       });
     }
@@ -118,12 +160,56 @@ export const LoginScreen = () => {
 
   
 
+  const handleOTPVerificationSuccess = async () => {
+    if (!pendingSignUpData) return;
+    
+    try {
+      await login(pendingSignUpData.email, pendingSignUpData.password);
+      Toast.show({
+        type: 'success',
+        text1: 'Account Created Successfully',
+        text2: 'Welcome to Spiritual Wisdom!',
+        visibilityTime: 4000,
+      });
+      
+      // Reset state
+      setShowOTPScreen(false);
+      setPendingSignUpData(null);
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Account Creation Failed',
+        text2: 'Please try again.',
+        visibilityTime: 4000,
+      });
+    }
+  };
+
+  const handleBackToLogin = () => {
+    setShowOTPScreen(false);
+    setPendingSignUpData(null);
+  };
+
   const handleModeSwitch = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setIsSignUp(!isSignUp);
     setEmailError('');
     setPasswordError('');
   };
+
+  // Show OTP verification screen if needed
+  if (showOTPScreen && pendingSignUpData) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <OTPVerificationScreen
+          email={pendingSignUpData.email}
+          onVerificationSuccess={handleOTPVerificationSuccess}
+          onBackToLogin={handleBackToLogin}
+        />
+        <Toast />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
