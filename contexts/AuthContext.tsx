@@ -4,18 +4,17 @@ import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 import { googleSheetsService } from '../services/googleSheetsService';
 
-// Only import Google Sign-In on native platforms
+// Import Google Sign-In - let it fail gracefully if not available
 let GoogleSignin: any = null;
 let statusCodes: any = null;
 
-if (Platform.OS !== 'web') {
-  try {
-    const googleSignInModule = require('@react-native-google-signin/google-signin');
-    GoogleSignin = googleSignInModule.GoogleSignin;
-    statusCodes = googleSignInModule.statusCodes;
-  } catch (error) {
-    console.log('Google Sign-In not available on this platform');
-  }
+try {
+  const googleSignInModule = require('@react-native-google-signin/google-signin');
+  GoogleSignin = googleSignInModule.GoogleSignin;
+  statusCodes = googleSignInModule.statusCodes;
+  console.log('Google Sign-In module loaded successfully');
+} catch (error) {
+  console.log('Google Sign-In not available on this platform:', error);
 }
 
 export interface User {
@@ -52,16 +51,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Configure Google Sign-In only for native platforms
-    if (Platform.OS !== 'web' && GoogleSignin) {
-      GoogleSignin.configure({
-        webClientId: '461226051776-jtf6a28brt22mss5rjt6itanv740ne66.apps.googleusercontent.com', // From Google Cloud Console
-        iosClientId: '461226051776-vuu052uiq6nno9k84ahkdjb9vr4v8qco.apps.googleusercontent.com', // From Google Cloud Console
-        offlineAccess: false,
-        hostedDomain: '',
-        forceCodeForRefreshToken: true,
-        accountName: '',
-      });
+    // Configure Google Sign-In if module is available
+    if (GoogleSignin) {
+      try {
+        GoogleSignin.configure({
+          webClientId: '461226051776-jtf6a28brt22mss5rjt6itanv740ne66.apps.googleusercontent.com', // From Google Cloud Console
+          iosClientId: '461226051776-vuu052uiq6nno9k84ahkdjb9vr4v8qco.apps.googleusercontent.com', // From Google Cloud Console
+          offlineAccess: false,
+          hostedDomain: '',
+          forceCodeForRefreshToken: true,
+          accountName: '',
+        });
+        console.log('Google Sign-In configured successfully');
+      } catch (error) {
+        console.log('Error configuring Google Sign-In:', error);
+      }
     }
     
     checkExistingSession();
@@ -136,10 +140,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
       console.log('Starting Google Sign-In process...');
+      console.log('Platform:', Platform.OS);
+      console.log('GoogleSignin available:', !!GoogleSignin);
+      console.log('statusCodes available:', !!statusCodes);
 
       // Check if Google Sign-In is available
       if (!GoogleSignin) {
-        throw new Error('Google Sign-In is only available on the mobile app. Please use email/password login on web.');
+        // Check if we're in Expo Go
+        const isExpoGo = typeof navigator !== 'undefined' && navigator.product === 'ReactNative';
+        if (isExpoGo) {
+          throw new Error('Google Sign-In requires a development build. Please use email/password login or create a development build for full Google Sign-In support.');
+        } else {
+          throw new Error('Google Sign-In is only available on the mobile app. Please use email/password login on web.');
+        }
       }
 
       // Sign in with Google (iOS only now)
