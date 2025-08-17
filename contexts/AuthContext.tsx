@@ -137,8 +137,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       console.log('Starting Google Sign-In process...');
 
-      // For web platform, show a message that Google Sign-In is only available on mobile
-      if (Platform.OS === 'web' || !GoogleSignin) {
+      // Check if Google Sign-In is available
+      if (!GoogleSignin) {
         throw new Error('Google Sign-In is only available on the mobile app. Please use email/password login on web.');
       }
 
