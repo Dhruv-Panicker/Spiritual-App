@@ -27,7 +27,7 @@ export const LoginScreen = () => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   
-  const { login, loginWithGoogle, isLoading } = useAuth();
+  const { login, isLoading } = useAuth();
   
   // Animation references
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -116,25 +116,7 @@ export const LoginScreen = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      await loginWithGoogle();
-      Toast.show({
-        type: 'success',
-        text1: 'Welcome',
-        text2: 'Successfully logged in with Google.',
-        visibilityTime: 4000,
-      });
-    } catch (error: any) {
-      console.error('Google login error in LoginScreen:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Google Login Failed',
-        text2: error.message || 'Please try again.',
-        visibilityTime: 4000,
-      });
-    }
-  };
+  
 
   const handleModeSwitch = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -230,25 +212,6 @@ export const LoginScreen = () => {
                 <Text style={styles.buttonText}>
                   {isLoading ? 'Loading...' : (isSignUp ? 'Sign Up' : 'Sign In')}
                 </Text>
-              </TouchableOpacity>
-
-              <View style={styles.divider}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>or</Text>
-                <View style={styles.dividerLine} />
-              </View>
-
-              <TouchableOpacity
-                style={[
-                  styles.button,
-                  styles.googleButton,
-                  isLoading && styles.buttonDisabled
-                ]}
-                onPress={handleGoogleLogin}
-                disabled={isLoading}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.googleButtonText}>Continue with Google</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -352,12 +315,6 @@ const styles = StyleSheet.create({
     backgroundColor: SPIRITUAL_COLORS.primary,
     ...SPIRITUAL_SHADOWS.peaceful,
   },
-  googleButton: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: SPIRITUAL_COLORS.border,
-    ...SPIRITUAL_SHADOWS.card,
-  },
   buttonDisabled: {
     opacity: 0.6,
   },
@@ -365,26 +322,6 @@ const styles = StyleSheet.create({
     color: SPIRITUAL_COLORS.primaryForeground,
     fontSize: 16,
     fontWeight: '600',
-  },
-  googleButtonText: {
-    color: SPIRITUAL_COLORS.foreground,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 20,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: SPIRITUAL_COLORS.border,
-  },
-  dividerText: {
-    color: SPIRITUAL_COLORS.textMuted,
-    paddingHorizontal: 16,
-    fontSize: 14,
   },
   switchButton: {
     alignItems: 'center',

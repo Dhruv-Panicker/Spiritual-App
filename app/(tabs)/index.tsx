@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   View,
@@ -19,8 +18,8 @@ import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS } from '@/cons
 // Safe gradient helper
 const getSafeGradient = (gradientKey: keyof typeof SPIRITUAL_GRADIENTS) => {
   const gradient = SPIRITUAL_GRADIENTS[gradientKey];
-  return gradient && Array.isArray(gradient) && gradient.length > 0 
-    ? gradient 
+  return gradient && Array.isArray(gradient) && gradient.length > 0
+    ? gradient
     : ['#FFFFFF', '#F5F5F5'];
 };
 
@@ -115,7 +114,7 @@ export default function HomeScreen() {
         colors={SPIRITUAL_GRADIENTS.peace}
         style={styles.gradient}
       >
-        <ScrollView 
+        <ScrollView
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
