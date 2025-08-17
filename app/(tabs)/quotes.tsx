@@ -64,14 +64,17 @@ export default function QuotesScreen() {
   };
 
   const handleShare = async (quote: Quote) => {
-    const shareText = `"${quote.text}" - ${quote.author}\n\nShared from our Spiritual Wisdom app`;
-
     try {
-      await Share.share({
-        message: shareText,
-        title: 'Daily Wisdom',
+      const { shareService } = await import('../../services/shareService');
+      await shareService.shareQuote(quote, true); // true = include image
+      
+      Toast.show({
+        type: 'success',
+        text1: 'Quote Shared! 🙏',
+        text2: 'Beautiful quote image created and shared',
       });
     } catch (error) {
+      console.error('Share error:', error);
       Toast.show({
         type: 'error',
         text1: 'Share Failed',
@@ -81,12 +84,14 @@ export default function QuotesScreen() {
   };
 
   const shareApp = async () => {
-    const shareText = "🙏 I found this beautiful spiritual app that shares daily wisdom and inspiration. Thought you might find it meaningful too!";
-
     try {
-      await Share.share({
-        message: shareText,
-        title: 'Spiritual Wisdom App',
+      const { shareService } = await import('../../services/shareService');
+      await shareService.shareApp();
+      
+      Toast.show({
+        type: 'success',
+        text1: 'App Shared! 🙏',
+        text2: 'Help spread the spiritual wisdom',
       });
     } catch (error) {
       Toast.show({

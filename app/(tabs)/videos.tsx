@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
@@ -120,13 +119,13 @@ export function VideosScreen() {
       },
       onPanResponderRelease: (evt, gestureState) => {
         console.log('Pan released - dy:', gestureState.dy, 'vy:', gestureState.vy);
-        
+
         // Reset transform
         translateY.setValue(0);
-        
+
         const swipeThreshold = 50;
         const velocityThreshold = 0.3;
-        
+
         // Check for swipe up (next video)
         if (gestureState.dy < -swipeThreshold || gestureState.vy < -velocityThreshold) {
           console.log('Detected swipe up');
@@ -145,32 +144,19 @@ export function VideosScreen() {
 
   const shareVideo = async (video: Video) => {
     try {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-      const shareContent = {
-        title: 'Check out this spiritual video',
-        message: `🕉️ ${video.title}\n\n${video.description}\n\nWatch: https://youtube.com/shorts/${video.youtubeId}`,
-        url: `https://youtube.com/shorts/${video.youtubeId}`,
-      };
-
-      await Share.share({
-        message: shareContent.message,
-        url: shareContent.url,
-        title: shareContent.title,
-      });
+      const { shareService } = await import('../../services/shareService');
+      await shareService.shareVideo(video);
 
       Toast.show({
         type: 'success',
-        text1: 'Shared Successfully',
-        text2: 'Video link has been shared',
-        visibilityTime: 3000,
+        text1: 'Video Shared! 🙏',
+        text2: 'Spread the spiritual wisdom',
       });
     } catch (error) {
       Toast.show({
         type: 'error',
         text1: 'Share Failed',
-        text2: 'Unable to share video',
-        visibilityTime: 3000,
+        text2: 'Unable to share video at this time.',
       });
     }
   };
@@ -366,7 +352,7 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
-  
+
   swipeHint: {
     position: 'absolute',
     top: '50%',
