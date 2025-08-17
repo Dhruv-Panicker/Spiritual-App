@@ -22,12 +22,12 @@ class ShareService {
   private playStoreLink = 'https://play.google.com/store/apps/details?id=com.spiritualwisdom';
   private webAppLink = 'https://spiritualwisdom.app';
 
-  // Spiritual guru images for quote sharing (using proper asset URIs)
+  // Spiritual guru images for quote sharing (using local uploaded images)
   private quoteImages = [
-    'https://images.unsplash.com/photo-1593104547216-9a631d0d4eff?w=800&h=600&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1544006659-f0b21884ce1d?w=800&h=600&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1584464491033-06628f3a6b7b?w=800&h=600&fit=crop&crop=center'
+    require('../assets/images/guru-image-1.jpg'),
+    require('../assets/images/guru-image-2.jpg'),
+    require('../assets/images/guru-image-3.jpg'),
+    require('../assets/images/guru-image-4.jpg')
   ];
 
   async shareQuote(quote: Quote, includeImage = true): Promise<void> {
@@ -60,42 +60,33 @@ class ShareService {
     }
   }
 
-  private getMockImageForQuote(quoteId: string): string {
+  private getMockImageForQuote(quoteId: string): any {
     // Use quote ID to consistently pick the same image for the same quote
     const index = parseInt(quoteId) % this.quoteImages.length;
     return this.quoteImages[index];
   }
 
-  private async shareWebQuoteWithImage(quote: Quote, imageUrl: string): Promise<void> {
-    // For web, open the image in a new tab and share the text
-    window.open(imageUrl, '_blank');
-    
+  private async shareWebQuoteWithImage(quote: Quote, localImage: any): Promise<void> {
+    // For web, we'll share just the text since local images are harder to handle
     const shareText = this.buildQuoteShareText(quote);
     
     if (navigator.share) {
       await navigator.share({
         title: 'Spiritual Wisdom Quote',
         text: shareText,
-        url: imageUrl,
       });
     } else {
       // Fallback to clipboard
       await navigator.clipboard.writeText(shareText);
-      alert('Quote text copied to clipboard! Image opened in new tab.');
+      alert('Quote text copied to clipboard!');
     }
   }
 
-  private async shareMobileQuoteWithImage(quote: Quote, imageUrl: string): Promise<void> {
+  private async shareMobileQuoteWithImage(quote: Quote, localImage: any): Promise<void> {
     try {
-      // Download the image to local storage
-      const fileName = `spiritual-quote-${quote.id}-${Date.now()}.jpg`;
-      const fileUri = `${FileSystem.documentDirectory}${fileName}`;
-      const downloadResult = await FileSystem.downloadAsync(imageUrl, fileUri);
+      // For local images, we need to get the resolved asset URI
+      const asset = localImage;
       
-      if (downloadResult.status !== 200) {
-        throw new Error('Failed to download image');
-      }
-
       // Create the message text (reflection + app download) - this will appear under the image
       const messageText = this.buildQuoteShareText(quote);
 
@@ -103,18 +94,9 @@ class ShareService {
       await Share.share({
         title: 'Spiritual Wisdom Quote',
         message: messageText,
-        url: Platform.OS === 'ios' ? downloadResult.uri : undefined, // iOS handles URL better
-        urls: Platform.OS === 'android' ? [downloadResult.uri] : undefined, // Android uses urls array
+        url: Platform.OS === 'ios' ? asset : undefined, // iOS handles URL better
+        urls: Platform.OS === 'android' ? [asset] : undefined, // Android uses urls array
       });
-
-      // Clean up temporary file after 10 seconds
-      setTimeout(async () => {
-        try {
-          await FileSystem.deleteAsync(downloadResult.uri, { idempotent: true });
-        } catch (e) {
-          console.log('Could not delete temp file:', e);
-        }
-      }, 10000);
 
     } catch (error) {
       console.error('Error sharing mobile quote with image:', error);
