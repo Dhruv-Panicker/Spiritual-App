@@ -88,6 +88,3 @@ export default function TabLayout() {
     </AuthGuard>
   );
 }
-
-export { TabLayout };
-export default TabLayout;

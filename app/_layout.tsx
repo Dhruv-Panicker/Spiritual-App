@@ -42,6 +42,3 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
-
-export { RootLayout };
-export default RootLayout;
