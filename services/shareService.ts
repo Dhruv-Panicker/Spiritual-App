@@ -2,7 +2,6 @@
 import { Share, Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
-import { imageGenerationService } from './imageGenerationService';
 
 interface Quote {
   id: string;
@@ -19,9 +18,18 @@ interface Video {
 
 class ShareService {
   private appName = 'Spiritual Wisdom';
-  private appStoreLink = 'https://apps.apple.com/app/spiritual-wisdom'; // Replace with actual link
-  private playStoreLink = 'https://play.google.com/store/apps/details?id=com.spiritualwisdom'; // Replace with actual link
-  private webAppLink = 'https://spiritualwisdom.app'; // Replace with your actual web app link
+  private appStoreLink = 'https://apps.apple.com/app/spiritual-wisdom';
+  private playStoreLink = 'https://play.google.com/store/apps/details?id=com.spiritualwisdom';
+  private webAppLink = 'https://spiritualwisdom.app';
+
+  // Mock quote images - you can replace these with your actual images
+  private quoteImages = [
+    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1080&h=1080&fit=crop',
+    'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=1080&h=1080&fit=crop',
+    'https://images.unsplash.com/photo-1528715471579-d1bcf0ba5e83?w=1080&h=1080&fit=crop',
+    'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=1080&h=1080&fit=crop',
+    'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1080&h=1080&fit=crop'
+  ];
 
   async shareQuote(quote: Quote, includeImage = true): Promise<void> {
     try {
@@ -39,17 +47,13 @@ class ShareService {
 
   private async shareQuoteWithImage(quote: Quote): Promise<void> {
     try {
-      // Generate quote image
-      const imageDataUrl = await imageGenerationService.generateQuoteImage({
-        quote,
-        includeReflection: !!quote.reflection,
-        theme: 'gradient'
-      });
-
+      // Get mock image for the quote
+      const imageUrl = this.getMockImageForQuote(quote.id);
+      
       if (Platform.OS === 'web') {
-        await this.shareWebQuoteWithImage(quote, imageDataUrl);
+        await this.shareWebQuoteWithImage(quote, imageUrl);
       } else {
-        await this.shareMobileQuoteWithImage(quote, imageDataUrl);
+        await this.shareMobileQuoteWithImage(quote, imageUrl);
       }
     } catch (error) {
       console.error('Error sharing quote with image:', error);
@@ -57,68 +61,75 @@ class ShareService {
     }
   }
 
-  private async shareWebQuoteWithImage(quote: Quote, imageDataUrl: string): Promise<void> {
-    // For web, we'll create a downloadable image and share text
-    const link = document.createElement('a');
-    link.download = `spiritual-quote-${quote.id}.png`;
-    link.href = imageDataUrl;
-    link.click();
+  private getMockImageForQuote(quoteId: string): string {
+    // Use quote ID to consistently pick the same image for the same quote
+    const index = parseInt(quoteId) % this.quoteImages.length;
+    return this.quoteImages[index];
+  }
 
-    // Also share text
+  private async shareWebQuoteWithImage(quote: Quote, imageUrl: string): Promise<void> {
+    // For web, open image in new tab and copy text to clipboard
+    window.open(imageUrl, '_blank');
+    
     const shareText = this.buildQuoteShareText(quote);
     
     if (navigator.share) {
       await navigator.share({
         title: 'Spiritual Wisdom Quote',
         text: shareText,
+        url: imageUrl,
       });
     } else {
       // Fallback to clipboard
       await navigator.clipboard.writeText(shareText);
-      alert('Quote text copied to clipboard! Image downloaded separately.');
+      alert('Quote text copied to clipboard! Image opened in new tab.');
     }
   }
 
-  private async shareMobileQuoteWithImage(quote: Quote, imageDataUrl: string): Promise<void> {
+  private async shareMobileQuoteWithImage(quote: Quote, imageUrl: string): Promise<void> {
     try {
-      // Save image to device temporarily
-      const fileName = `spiritual-quote-${quote.id}-${Date.now()}.png`;
+      // Download image to device temporarily
+      const fileName = `spiritual-quote-${quote.id}-${Date.now()}.jpg`;
       const fileUri = `${FileSystem.documentDirectory}${fileName}`;
       
-      // Convert data URL to file
-      await FileSystem.writeAsStringAsync(fileUri, imageDataUrl.split(',')[1], {
-        encoding: FileSystem.EncodingType.Base64,
-      });
+      // Download the image
+      const downloadResult = await FileSystem.downloadAsync(imageUrl, fileUri);
+      
+      if (downloadResult.status !== 200) {
+        throw new Error('Failed to download image');
+      }
 
-      const shareText = this.buildQuoteShareText(quote);
+      // Create the message text (reflection + app download)
+      const messageText = this.buildQuoteShareText(quote);
 
-      // Use Expo Sharing for better image + text sharing
+      // Share image with text for WhatsApp/iMessage style display
       if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(fileUri, {
-          mimeType: 'image/png',
-          dialogTitle: shareText,
+        await Sharing.shareAsync(downloadResult.uri, {
+          mimeType: 'image/jpeg',
+          dialogTitle: messageText,
         });
       } else {
         // Fallback to React Native Share
         await Share.share({
           title: 'Spiritual Wisdom Quote',
-          message: shareText,
-          url: fileUri,
+          message: messageText,
+          url: downloadResult.uri,
         });
       }
 
-      // Clean up temporary file
+      // Clean up temporary file after 10 seconds
       setTimeout(async () => {
         try {
-          await FileSystem.deleteAsync(fileUri, { idempotent: true });
+          await FileSystem.deleteAsync(downloadResult.uri, { idempotent: true });
         } catch (e) {
           console.log('Could not delete temp file:', e);
         }
-      }, 5000);
+      }, 10000);
 
     } catch (error) {
       console.error('Error sharing mobile quote with image:', error);
-      throw error;
+      // Fallback to text only
+      await this.shareQuoteText(quote);
     }
   }
 
@@ -132,14 +143,16 @@ class ShareService {
   }
 
   private buildQuoteShareText(quote: Quote): string {
-    let text = `"${quote.text}" - ${quote.author}\n\n`;
+    let text = '';
     
+    // Add reflection if available (this will appear under the image)
     if (quote.reflection) {
-      text += `💭 ${quote.reflection}\n\n`;
+      text += `💭 Reflection: ${quote.reflection}\n\n`;
     }
     
-    text += `🙏 Find more wisdom & inspiration in the ${this.appName} app\n`;
-    text += `📱 Download: ${this.getDownloadLink()}`;
+    // Add app download message (separate message feel)
+    text += `🙏 Discover more spiritual wisdom and daily inspiration in the ${this.appName} app\n`;
+    text += `📱 Download now: ${this.getDownloadLink()}`;
     
     return text;
   }

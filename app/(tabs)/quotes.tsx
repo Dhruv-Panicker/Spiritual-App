@@ -71,7 +71,7 @@ export default function QuotesScreen() {
       Toast.show({
         type: 'success',
         text1: 'Quote Shared! 🙏',
-        text2: 'Beautiful quote image created and shared',
+        text2: 'Image with reflection and app link shared',
       });
     } catch (error) {
       console.error('Share error:', error);
