@@ -99,23 +99,16 @@ class ShareService {
         throw new Error('Failed to download image');
       }
 
-      // Create the message text (reflection + app download)
+      // Create the message text (reflection + app download) - this will appear under the image
       const messageText = this.buildQuoteShareText(quote);
 
-      // Share image with text for WhatsApp/iMessage style display
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(downloadResult.uri, {
-          mimeType: 'image/jpeg',
-          dialogTitle: messageText,
-        });
-      } else {
-        // Fallback to React Native Share
-        await Share.share({
-          title: 'Spiritual Wisdom Quote',
-          message: messageText,
-          url: downloadResult.uri,
-        });
-      }
+      // Use React Native Share with both URL and message for proper iMessage/WhatsApp display
+      await Share.share({
+        title: 'Spiritual Wisdom Quote',
+        message: messageText,
+        url: Platform.OS === 'ios' ? downloadResult.uri : undefined, // iOS handles URL better
+        urls: Platform.OS === 'android' ? [downloadResult.uri] : undefined, // Android uses urls array
+      });
 
       // Clean up temporary file after 10 seconds
       setTimeout(async () => {
@@ -145,12 +138,12 @@ class ShareService {
   private buildQuoteShareText(quote: Quote): string {
     let text = '';
     
-    // Add reflection if available (this will appear under the image)
+    // Add reflection if available (this will appear under the image in messaging apps)
     if (quote.reflection) {
-      text += `💭 Reflection: ${quote.reflection}\n\n`;
+      text += `💭 ${quote.reflection}\n\n`;
     }
     
-    // Add app download message (separate message feel)
+    // Add app download message 
     text += `🙏 Discover more spiritual wisdom and daily inspiration in the ${this.appName} app\n`;
     text += `📱 Download now: ${this.getDownloadLink()}`;
     
