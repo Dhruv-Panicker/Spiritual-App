@@ -194,6 +194,15 @@ export const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({
             We've sent a 6-digit verification code to
           </Text>
           <Text style={styles.email}>{email}</Text>
+          
+          {/* Development helper - shows OTP in UI for testing */}
+          {__DEV__ && (
+            <View style={styles.devHelper}>
+              <Text style={styles.devHelperText}>
+                Development Mode: Check console for OTP or use: {emailVerificationService.getCurrentOTP(email) || 'N/A'}
+              </Text>
+            </View>
+          )}
         </Animated.View>
 
         <View style={styles.otpContainer}>
@@ -363,6 +372,19 @@ const styles = StyleSheet.create({
   backButtonText: {
     fontSize: 14,
     color: SPIRITUAL_COLORS.textMuted,
+    fontWeight: '500',
+  },
+  devHelper: {
+    backgroundColor: SPIRITUAL_COLORS.primary,
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 16,
+    opacity: 0.8,
+  },
+  devHelperText: {
+    color: SPIRITUAL_COLORS.primaryForeground,
+    fontSize: 12,
+    textAlign: 'center',
     fontWeight: '500',
   },
 });
