@@ -23,18 +23,9 @@ class ShareService {
 
   // Array of spiritual guru images - using bundled local assets and Object Storage URLs
   private guruImages = {
-    'quote-1': require('../assets/images/om-symbol.png'), // Placeholder for the first quote
-    'quote-2': 'https://storage.googleapis.com/replit-objstore-74e3c4b0-bc72-4d55-9558-dc44b7baae09/guru-images/guru-image-2.jpg', // Corresponds to quote-2
-    'quote-3': 'https://storage.googleapis.com/replit-objstore-74e3c4b0-bc72-4d55-9558-dc44b7baae09/guru-images/guru-image-3.jpg', // Corresponds to quote-3
-    'quote-4': 'https://storage.googleapis.com/replit-objstore-74e3c4b0-bc72-4d55-9558-dc44b7baae09/guru-images/guru-image-4.jpg', // Corresponds to quote-4 (assuming quote-4 exists)
-  };
-
-  // Mapping of quote IDs to specific guru image keys
-  private quoteImageMap: { [key: string]: string } = {
-    'quote-1': 'quote-1', // First quote uses the first image
-    'quote-2': 'quote-2', // Second quote uses the second image
-    'quote-3': 'quote-3', // Third quote uses the third image
-    'quote-4': 'quote-4', // Fourth quote uses the fourth image
+    '1': 'https://storage.googleapis.com/replit-objstore-74e3c4b0-bc72-4d55-9558-dc44b7baae09/guru-images/guru-image-2.jpg', // First quote uses guru-image-2
+    '2': 'https://storage.googleapis.com/replit-objstore-74e3c4b0-bc72-4d55-9558-dc44b7baae09/guru-images/guru-image-4.jpg', // Second quote uses guru-image-4  
+    '3': 'https://storage.googleapis.com/replit-objstore-74e3c4b0-bc72-4d55-9558-dc44b7baae09/guru-images/guru-image3.jpg', // Third quote uses guru-image3 (note: no dash)
   };
 
   async shareQuote(quote: Quote, includeImage = true): Promise<void> {
@@ -65,8 +56,9 @@ class ShareService {
   }
 
   private getGuruImageForQuote(quoteId: string): any {
-    const imageKey = this.quoteImageMap[quoteId];
-    return imageKey ? this.guruImages[imageKey] : require('../assets/images/om-symbol.png'); // Default to om-symbol if no mapping
+    // Use the quote ID directly to get the corresponding guru image
+    const guruImage = this.guruImages[quoteId];
+    return guruImage || require('../assets/images/om-symbol.png'); // Default to om-symbol if no mapping
   }
 
   private async shareWebQuoteWithImage(quote: Quote): Promise<void> {
@@ -93,12 +85,35 @@ class ShareService {
       let imageUri: string;
 
       if (typeof imageAsset === 'string') {
-        // It's a URL from Object Storage
-        imageUri = imageAsset;
+        // It's a URL from Object Storage - download it first
+        try {
+          const response = await fetch(imageAsset);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch image: ${response.status}`);
+          }
+          
+          const blob = await response.blob();
+          const base64 = await this.blobToBase64(blob);
+          
+          // Save to temporary file
+          const fileName = `spiritual_image_${Date.now()}.jpg`;
+          const fileUri = FileSystem.documentDirectory + fileName;
+          
+          await FileSystem.writeAsStringAsync(fileUri, base64, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          
+          imageUri = fileUri;
+        } catch (downloadError) {
+          console.warn('Failed to download remote image, falling back to text sharing:', downloadError);
+          await this.shareQuoteText(quote);
+          return;
+        }
       } else {
         // It's a local asset, resolve it using Image.resolveAssetSource
         try {
-          imageUri = Image.resolveAssetSource(imageAsset).uri;
+          const resolvedAsset = Image.resolveAssetSource(imageAsset);
+          imageUri = resolvedAsset.uri;
         } catch (resolveError) {
           console.warn('Could not resolve asset source, falling back to text sharing:', resolveError);
           await this.shareQuoteText(quote);
@@ -109,17 +124,40 @@ class ShareService {
       // Create the message text (reflection + app download)
       const messageText = this.buildQuoteShareText(quote);
 
-      await Share.share({
-        title: 'Spiritual Wisdom Quote',
-        message: messageText,
-        url: imageUri,
-      });
+      // Use Expo Sharing for better image sharing support
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(imageUri, {
+          mimeType: 'image/jpeg',
+          dialogTitle: 'Share Spiritual Wisdom',
+          UTI: 'public.jpeg',
+        });
+      } else {
+        // Fallback to basic sharing without image
+        await Share.share({
+          title: 'Spiritual Wisdom Quote',
+          message: messageText,
+        });
+      }
 
     } catch (error) {
       console.error('Error sharing mobile quote with image:', error);
       // Fallback to text only
       await this.shareQuoteText(quote);
     }
+  }
+
+  private blobToBase64(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        // Remove the data:image/jpeg;base64, prefix
+        const base64Data = base64String.split(',')[1];
+        resolve(base64Data);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
   }
 
   private async shareQuoteText(quote: Quote): Promise<void> {
