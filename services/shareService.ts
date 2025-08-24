@@ -21,11 +21,10 @@ class ShareService {
   private playStoreLink = 'https://play.google.com/store/apps/details?id=com.spiritualwisdom';
   private webAppLink = 'https://spiritualwisdom.app';
 
-  // Array of spiritual guru images - using Replit Object Storage URLs
-  // Only using successfully uploaded images
-  private guruImageUrls = [
-    'https://storage.googleapis.com/replit-objstore-74e3c4b0-bc72-4d55-9558-dc44b7baae09/guru-images/guru-image-2.jpg',
-    'https://storage.googleapis.com/replit-objstore-74e3c4b0-bc72-4d55-9558-dc44b7baae09/guru-images/guru-image-4.jpg',
+  // Array of spiritual guru images - using bundled local assets
+  private guruImages = [
+    require('../assets/images/om-symbol.png'),
+    require('../assets/images/gurudev-hero.jpg'),
   ];
 
   async shareQuote(quote: Quote, includeImage = true): Promise<void> {
@@ -55,9 +54,9 @@ class ShareService {
     }
   }
 
-  private getRandomGuruImageUrl(): string {
-    const randomIndex = Math.floor(Math.random() * this.guruImageUrls.length);
-    return this.guruImageUrls[randomIndex];
+  private getRandomGuruImage(): any {
+    const randomIndex = Math.floor(Math.random() * this.guruImages.length);
+    return this.guruImages[randomIndex];
   }
 
   private async shareWebQuoteWithImage(quote: Quote): Promise<void> {
@@ -78,18 +77,13 @@ class ShareService {
 
   private async shareMobileQuoteWithImage(quote: Quote): Promise<void> {
     try {
-      // Get a random guru image URL
-      const imageUrl = this.getRandomGuruImageUrl();
+      // Get a random guru image asset
+      const imageAsset = this.getRandomGuruImage();
 
-      // Download the image to device storage for proper inline sharing
-      const downloadResult = await FileSystem.downloadAsync(
-        imageUrl,
-        FileSystem.documentDirectory + 'spiritual_quote_image.jpg'
-      );
-
-      if (!downloadResult.uri) {
-        throw new Error('Failed to download image');
-      }
+      // For React Native, we need to resolve the asset to get its URI
+      const imageUri = typeof imageAsset === 'number' 
+        ? require('react-native/Libraries/Image/resolveAssetSource')(imageAsset).uri
+        : imageAsset;
 
       // Create the message text (reflection + app download)
       const messageText = this.buildQuoteShareText(quote);
@@ -98,17 +92,8 @@ class ShareService {
       await Share.share({
         title: 'Spiritual Wisdom Quote',
         message: messageText,
-        url: downloadResult.uri,
+        url: imageUri,
       });
-
-      // Clean up temporary file after 5 seconds
-      setTimeout(async () => {
-        try {
-          await FileSystem.deleteAsync(downloadResult.uri, { idempotent: true });
-        } catch (cleanupError) {
-          console.log('Cleanup error (non-critical):', cleanupError);
-        }
-      }, 5000);
 
     } catch (error) {
       console.error('Error sharing mobile quote with image:', error);
