@@ -1,6 +1,8 @@
+
 import { Share, Platform, Image } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import { Asset } from 'expo-asset';
 
 interface Quote {
   id: string;
@@ -21,15 +23,63 @@ class ShareService {
   private playStoreLink = 'https://play.google.com/store/apps/details?id=com.spiritualwisdom';
   private webAppLink = 'https://spiritualwisdom.app';
 
-  // Array of spiritual guru images - using bundled local assets and Object Storage URLs
-  private guruImages = {
-    '1': 'https://storage.googleapis.com/replit-objstore-74e3c4b0-bc72-4d55-9558-dc44b7baae09/guru-images/guru-image-2.jpg', // First quote uses guru-image-2
-    '2': 'https://storage.googleapis.com/replit-objstore-74e3c4b0-bc72-4d55-9558-dc44b7baae09/guru-images/guru-image-4.jpg', // Second quote uses guru-image-4  
-    '3': 'https://storage.googleapis.com/replit-objstore-74e3c4b0-bc72-4d55-9558-dc44b7baae09/guru-images/guru-image3.jpg', // Third quote uses guru-image3 (note: no dash)
+  // Local asset mappings - these will be copied to file system on init
+  private localAssets = {
+    '1': require('../guru-images/guru-image-2.jpg'),
+    '2': require('../guru-images/guru-image-4.jpg'), 
+    '3': require('../guru-images/guru-image3.jpg'),
+    'default': require('../assets/images/om-symbol.png')
   };
+
+  // File URIs after copying to document directory
+  private shareableImagePaths: { [key: string]: string } = {};
+  private initialized = false;
+
+  async initializeShareableAssets(): Promise<void> {
+    if (this.initialized) return;
+    
+    try {
+      console.log('Initializing shareable assets...');
+      
+      // Copy each asset to document directory
+      for (const [key, assetRequire] of Object.entries(this.localAssets)) {
+        try {
+          // Load the asset
+          const asset = Asset.fromModule(assetRequire);
+          await asset.downloadAsync();
+          
+          // Define target path in document directory
+          const fileName = `guru_image_${key}.jpg`;
+          const targetPath = FileSystem.documentDirectory + fileName;
+          
+          // Copy asset to document directory
+          await FileSystem.copyAsync({
+            from: asset.localUri || asset.uri,
+            to: targetPath,
+          });
+          
+          // Store the shareable path
+          this.shareableImagePaths[key] = targetPath;
+          console.log(`✓ Copied ${key} to ${targetPath}`);
+          
+        } catch (assetError) {
+          console.warn(`Failed to copy asset ${key}:`, assetError);
+        }
+      }
+      
+      this.initialized = true;
+      console.log('✓ All shareable assets initialized');
+      
+    } catch (error) {
+      console.error('Failed to initialize shareable assets:', error);
+    }
+  }
 
   async shareQuote(quote: Quote, includeImage = true): Promise<void> {
     try {
+      // Ensure assets are initialized
+      await this.initializeShareableAssets();
+      
       if (includeImage) {
         await this.shareQuoteWithImage(quote);
       } else {
@@ -55,10 +105,10 @@ class ShareService {
     }
   }
 
-  private getGuruImageForQuote(quoteId: string): any {
-    // Use the quote ID directly to get the corresponding guru image
-    const guruImage = this.guruImages[quoteId];
-    return guruImage || require('../assets/images/om-symbol.png'); // Default to om-symbol if no mapping
+  private getGuruImagePath(quoteId: string): string {
+    // Get the shareable file path for this quote
+    const imagePath = this.shareableImagePaths[quoteId] || this.shareableImagePaths['default'];
+    return imagePath;
   }
 
   private async shareWebQuoteWithImage(quote: Quote): Promise<void> {
@@ -79,64 +129,46 @@ class ShareService {
 
   private async shareMobileQuoteWithImage(quote: Quote): Promise<void> {
     try {
-      // Get guru image for this specific quote
-      const imageAsset = this.getGuruImageForQuote(quote.id);
-
-      let imageUri: string;
-
-      if (typeof imageAsset === 'string') {
-        // It's a URL from Object Storage - download it first
-        try {
-          const response = await fetch(imageAsset);
-          if (!response.ok) {
-            throw new Error(`Failed to fetch image: ${response.status}`);
-          }
-          
-          const blob = await response.blob();
-          const base64 = await this.blobToBase64(blob);
-          
-          // Save to temporary file
-          const fileName = `spiritual_image_${Date.now()}.jpg`;
-          const fileUri = FileSystem.documentDirectory + fileName;
-          
-          await FileSystem.writeAsStringAsync(fileUri, base64, {
-            encoding: FileSystem.EncodingType.Base64,
-          });
-          
-          imageUri = fileUri;
-        } catch (downloadError) {
-          console.warn('Failed to download remote image, falling back to text sharing:', downloadError);
-          await this.shareQuoteText(quote);
-          return;
-        }
-      } else {
-        // It's a local asset, resolve it using Image.resolveAssetSource
-        try {
-          const resolvedAsset = Image.resolveAssetSource(imageAsset);
-          imageUri = resolvedAsset.uri;
-        } catch (resolveError) {
-          console.warn('Could not resolve asset source, falling back to text sharing:', resolveError);
-          await this.shareQuoteText(quote);
-          return;
-        }
+      // Get the pre-copied image path
+      const imagePath = this.getGuruImagePath(quote.id);
+      
+      if (!imagePath) {
+        console.warn('No image path found, falling back to text sharing');
+        await this.shareQuoteText(quote);
+        return;
       }
+
+      // Verify the file exists
+      const fileInfo = await FileSystem.getInfoAsync(imagePath);
+      if (!fileInfo.exists) {
+        console.warn('Image file does not exist, falling back to text sharing');
+        await this.shareQuoteText(quote);
+        return;
+      }
+
+      console.log(`Sharing image from: ${imagePath}`);
 
       // Create the message text (reflection + app download)
       const messageText = this.buildQuoteShareText(quote);
 
       // Use Expo Sharing for better image sharing support
       if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(imageUri, {
+        await Sharing.shareAsync(imagePath, {
           mimeType: 'image/jpeg',
           dialogTitle: 'Share Spiritual Wisdom',
           UTI: 'public.jpeg',
         });
+        
+        console.log('✓ Successfully shared image with Expo Sharing');
       } else {
-        // Fallback to basic sharing without image
+        // Fallback to basic sharing with the image file
         await Share.share({
           title: 'Spiritual Wisdom Quote',
           message: messageText,
+          url: `file://${imagePath}`,
         });
+        
+        console.log('✓ Successfully shared with basic Share API');
       }
 
     } catch (error) {
@@ -144,20 +176,6 @@ class ShareService {
       // Fallback to text only
       await this.shareQuoteText(quote);
     }
-  }
-
-  private blobToBase64(blob: Blob): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        // Remove the data:image/jpeg;base64, prefix
-        const base64Data = base64String.split(',')[1];
-        resolve(base64Data);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
   }
 
   private async shareQuoteText(quote: Quote): Promise<void> {
