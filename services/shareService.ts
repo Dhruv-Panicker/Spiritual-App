@@ -95,27 +95,12 @@ class ShareService {
       // Create the message text (reflection + app download)
       const messageText = this.buildQuoteShareText(quote);
 
-      // Use Expo Sharing for better WhatsApp/iMessage support
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(downloadResult.uri, {
-          mimeType: 'image/jpeg',
-          dialogTitle: 'Share Spiritual Quote',
-        });
-        
-        // After sharing image, share the text separately for proper display
-        setTimeout(async () => {
-          await Share.share({
-            message: messageText,
-          });
-        }, 500);
-      } else {
-        // Fallback to React Native Share with local file
-        await Share.share({
-          title: 'Spiritual Wisdom Quote',
-          message: messageText,
-          url: downloadResult.uri,
-        });
-      }
+      // Use React Native Share with both image and text in one action
+      await Share.share({
+        title: 'Spiritual Wisdom Quote',
+        message: messageText,
+        url: downloadResult.uri,
+      });
 
       // Clean up temporary file after 5 seconds
       setTimeout(async () => {
