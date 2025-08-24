@@ -21,12 +21,12 @@ class ShareService {
   private playStoreLink = 'https://play.google.com/store/apps/details?id=com.spiritualwisdom';
   private webAppLink = 'https://spiritualwisdom.app';
 
-  // Array of spiritual guru images - using reliable remote URLs
+  // Array of spiritual guru images - using Replit Object Storage URLs
   private guruImageUrls = [
-    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop&crop=face',
-    'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=800&h=600&fit=crop&crop=face',
-    'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=800&h=600&fit=crop&crop=face',
-    'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=800&h=600&fit=crop&crop=face',
+    'https://storage.googleapis.com/replit-objstore-2671be20-ff2f-4b45-b882-bc823dc5b905/guru-images/guru-image-1.jpg',
+    'https://storage.googleapis.com/replit-objstore-2671be20-ff2f-4b45-b882-bc823dc5b905/guru-images/guru-image-2.jpg',
+    'https://storage.googleapis.com/replit-objstore-2671be20-ff2f-4b45-b882-bc823dc5b905/guru-images/guru-image-3.jpg',
+    'https://storage.googleapis.com/replit-objstore-2671be20-ff2f-4b45-b882-bc823dc5b905/guru-images/guru-image-4.jpg',
   ];
 
   async shareQuote(quote: Quote, includeImage = true): Promise<void> {
