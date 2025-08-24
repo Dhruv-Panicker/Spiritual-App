@@ -151,25 +151,14 @@ class ShareService {
       // Create the message text (reflection + app download)
       const messageText = this.buildQuoteShareText(quote);
 
-      // Use Expo Sharing for better image sharing support
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(imagePath, {
-          mimeType: 'image/jpeg',
-          dialogTitle: 'Share Spiritual Wisdom',
-          UTI: 'public.jpeg',
-        });
-        
-        console.log('✓ Successfully shared image with Expo Sharing');
-      } else {
-        // Fallback to basic sharing with the image file
-        await Share.share({
-          title: 'Spiritual Wisdom Quote',
-          message: messageText,
-          url: `file://${imagePath}`,
-        });
-        
-        console.log('✓ Successfully shared with basic Share API');
-      }
+      // Use React Native Share API to combine image and text message
+      await Share.share({
+        title: 'Spiritual Wisdom Quote',
+        message: messageText,
+        url: `file://${imagePath}`,
+      });
+      
+      console.log('✓ Successfully shared image with message text');
 
     } catch (error) {
       console.error('Error sharing mobile quote with image:', error);
