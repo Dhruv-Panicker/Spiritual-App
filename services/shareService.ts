@@ -1,7 +1,6 @@
 import { Share, Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
-import { Asset } from 'expo-asset';
 
 interface Quote {
   id: string;
@@ -83,17 +82,49 @@ class ShareService {
       // Get a random guru image URL
       const imageUrl = this.getRandomGuruImageUrl();
 
+      // Download the image to device storage for proper inline sharing
+      const downloadResult = await FileSystem.downloadAsync(
+        imageUrl,
+        FileSystem.documentDirectory + 'spiritual_quote_image.jpg'
+      );
+
+      if (!downloadResult.uri) {
+        throw new Error('Failed to download image');
+      }
+
       // Create the message text (reflection + app download)
       const messageText = this.buildQuoteShareText(quote);
 
-      // For better iMessage/WhatsApp display, combine image URL with text
-      const fullMessage = `${messageText}\n\n🖼️ ${imageUrl}`;
+      // Use Expo Sharing for better WhatsApp/iMessage support
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(downloadResult.uri, {
+          mimeType: 'image/jpeg',
+          dialogTitle: 'Share Spiritual Quote',
+        });
+        
+        // After sharing image, share the text separately for proper display
+        setTimeout(async () => {
+          await Share.share({
+            message: messageText,
+          });
+        }, 500);
+      } else {
+        // Fallback to React Native Share with local file
+        await Share.share({
+          title: 'Spiritual Wisdom Quote',
+          message: messageText,
+          url: downloadResult.uri,
+        });
+      }
 
-      // Share with React Native Share
-      await Share.share({
-        title: 'Spiritual Wisdom Quote',
-        message: fullMessage,
-      });
+      // Clean up temporary file after 5 seconds
+      setTimeout(async () => {
+        try {
+          await FileSystem.deleteAsync(downloadResult.uri, { idempotent: true });
+        } catch (cleanupError) {
+          console.log('Cleanup error (non-critical):', cleanupError);
+        }
+      }, 5000);
 
     } catch (error) {
       console.error('Error sharing mobile quote with image:', error);
