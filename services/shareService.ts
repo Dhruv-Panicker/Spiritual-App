@@ -23,10 +23,9 @@ class ShareService {
 
   // Array of spiritual guru images - using Replit Object Storage URLs
   private guruImageUrls = [
-    'https://storage.googleapis.com/replit-objstore-2671be20-ff2f-4b45-b882-bc823dc5b905/guru-images/guru-image-1.jpg',
-    'https://storage.googleapis.com/replit-objstore-2671be20-ff2f-4b45-b882-bc823dc5b905/guru-images/guru-image-2.jpg',
-    'https://storage.googleapis.com/replit-objstore-2671be20-ff2f-4b45-b882-bc823dc5b905/guru-images/guru-image-3.jpg',
-    'https://storage.googleapis.com/replit-objstore-2671be20-ff2f-4b45-b882-bc823dc5b905/guru-images/guru-image-4.jpg',
+    'https://storage.googleapis.com/replit-objstore-74e3c4b0-bc72-4d55-9558-dc44b7baae09/guru-images/guru-image-1.jpg',
+    'https://storage.googleapis.com/replit-objstore-74e3c4b0-bc72-4d55-9558-dc44b7baae09/guru-images/guru-image-2.jpg',
+    'https://storage.googleapis.com/replit-objstore-74e3c4b0-bc72-4d55-9558-dc44b7baae09/guru-images/guru-image-3.jpg',
   ];
 
   async shareQuote(quote: Quote, includeImage = true): Promise<void> {

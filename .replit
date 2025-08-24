@@ -54,3 +54,6 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npx eas build --platform android --profile preview"
+
+[objectStorage]
+defaultBucketID = "replit-objstore-74e3c4b0-bc72-4d55-9558-dc44b7baae09"
