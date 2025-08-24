@@ -2,6 +2,7 @@
 import { Share, Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import { Asset } from 'expo-asset';
 
 interface Quote {
   id: string;
@@ -22,12 +23,12 @@ class ShareService {
   private playStoreLink = 'https://play.google.com/store/apps/details?id=com.spiritualwisdom';
   private webAppLink = 'https://spiritualwisdom.app';
 
-  // Use remote spiritual guru images for quote sharing
-  private quoteImageUrls = [
-    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop&crop=face',
-    'https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=800&h=600&fit=crop&crop=face',
-    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop&crop=face',
-    'https://images.unsplash.com/photo-1494790108755-2616c727e48b?w=800&h=600&fit=crop&crop=face'
+  // Use local guru images for quote sharing
+  private guruImages = [
+    require('../assets/images/guru-image-1.jpg'),
+    require('../assets/images/guru-image-2.jpg'),
+    require('../assets/images/guru-image-3.jpg'),
+    require('../assets/images/guru-image-4.jpg'),
   ];
 
   async shareQuote(quote: Quote, includeImage = true): Promise<void> {
@@ -46,13 +47,10 @@ class ShareService {
 
   private async shareQuoteWithImage(quote: Quote): Promise<void> {
     try {
-      // Get image URL for the quote
-      const imageUrl = this.getImageUrlForQuote(quote.id);
-      
       if (Platform.OS === 'web') {
-        await this.shareWebQuoteWithImage(quote, imageUrl);
+        await this.shareWebQuoteWithImage(quote);
       } else {
-        await this.shareMobileQuoteWithImage(quote, imageUrl);
+        await this.shareMobileQuoteWithImage(quote);
       }
     } catch (error) {
       console.error('Error sharing quote with image:', error);
@@ -60,14 +58,14 @@ class ShareService {
     }
   }
 
-  private getImageUrlForQuote(quoteId: string): string {
+  private getLocalImageForQuote(quoteId: string) {
     // Use quote ID to consistently pick the same image for the same quote
-    const index = parseInt(quoteId) % this.quoteImageUrls.length;
-    return this.quoteImageUrls[index];
+    const index = parseInt(quoteId) % this.guruImages.length;
+    return this.guruImages[index];
   }
 
-  private async shareWebQuoteWithImage(quote: Quote, imageUrl: string): Promise<void> {
-    // For web, we'll share just the text since remote images are harder to handle
+  private async shareWebQuoteWithImage(quote: Quote): Promise<void> {
+    // For web, we'll share just the text since local images are harder to handle
     const shareText = this.buildQuoteShareText(quote);
     
     if (navigator.share) {
@@ -82,17 +80,38 @@ class ShareService {
     }
   }
 
-  private async shareMobileQuoteWithImage(quote: Quote, imageUrl: string): Promise<void> {
+  private async shareMobileQuoteWithImage(quote: Quote): Promise<void> {
     try {
-      // Create the message text (reflection + app download) - this will appear under the image
-      const messageText = this.buildQuoteShareText(quote);
+      // Get the local image asset
+      const imageAsset = this.getLocalImageForQuote(quote.id);
+      const asset = Asset.fromModule(imageAsset);
+      await asset.downloadAsync();
 
-      // Use React Native Share with both URL and message for proper iMessage/WhatsApp display
-      await Share.share({
-        title: 'Spiritual Wisdom Quote',
-        message: messageText,
-        url: imageUrl, // Use the remote image URL directly
-      });
+      // Build the complete message text (quote + reflection + app download)
+      const messageText = this.buildCompleteQuoteShareText(quote);
+
+      // Share using Expo Sharing for better messaging app support
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(asset.localUri || asset.uri, {
+          mimeType: 'image/jpeg',
+          dialogTitle: 'Share Spiritual Quote',
+          UTI: 'public.jpeg',
+        });
+        
+        // Share the text separately to ensure it appears as a follow-up message
+        setTimeout(async () => {
+          await Share.share({
+            message: messageText,
+          });
+        }, 500);
+      } else {
+        // Fallback to React Native Share
+        await Share.share({
+          title: 'Spiritual Wisdom Quote',
+          message: messageText,
+          url: asset.localUri || asset.uri,
+        });
+      }
 
     } catch (error) {
       console.error('Error sharing mobile quote with image:', error);
@@ -114,6 +133,21 @@ class ShareService {
     let text = '';
     
     // Add reflection if available (this will appear under the image in messaging apps)
+    if (quote.reflection) {
+      text += `💭 ${quote.reflection}\n\n`;
+    }
+    
+    // Add app download message 
+    text += `🙏 Discover more spiritual wisdom and daily inspiration in the ${this.appName} app\n`;
+    text += `📱 Download now: ${this.getDownloadLink()}`;
+    
+    return text;
+  }
+
+  private buildCompleteQuoteShareText(quote: Quote): string {
+    let text = `"${quote.text}"\n— ${quote.author}\n\n`;
+    
+    // Add reflection if available
     if (quote.reflection) {
       text += `💭 ${quote.reflection}\n\n`;
     }
