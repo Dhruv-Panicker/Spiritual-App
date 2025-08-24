@@ -1,4 +1,3 @@
-
 import { Platform } from 'react-native';
 import { SPIRITUAL_COLORS } from '../constants/SpiritualColors';
 
@@ -30,7 +29,7 @@ class ImageGenerationService {
     // Return local image based on quote ID for consistency
     const imageIndex = parseInt(quote.id) % this.guruImages.length;
     const imageAsset = this.guruImages[imageIndex];
-    
+
     // For React Native, return the require path
     return imageAsset;
   }

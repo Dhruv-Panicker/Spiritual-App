@@ -1,4 +1,3 @@
-
 import { Share, Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
@@ -23,12 +22,12 @@ class ShareService {
   private playStoreLink = 'https://play.google.com/store/apps/details?id=com.spiritualwisdom';
   private webAppLink = 'https://spiritualwisdom.app';
 
-  // Use local guru images for quote sharing
-  private guruImages = [
-    require('../assets/images/guru-image-1.jpg'),
-    require('../assets/images/guru-image-2.jpg'),
-    require('../assets/images/guru-image-3.jpg'),
-    require('../assets/images/guru-image-4.jpg'),
+  // Array of spiritual guru images - using reliable remote URLs
+  private guruImageUrls = [
+    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop&crop=face',
+    'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=800&h=600&fit=crop&crop=face',
+    'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=800&h=600&fit=crop&crop=face',
+    'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=800&h=600&fit=crop&crop=face',
   ];
 
   async shareQuote(quote: Quote, includeImage = true): Promise<void> {
@@ -58,16 +57,15 @@ class ShareService {
     }
   }
 
-  private getLocalImageForQuote(quoteId: string) {
-    // Use quote ID to consistently pick the same image for the same quote
-    const index = parseInt(quoteId) % this.guruImages.length;
-    return this.guruImages[index];
+  private getRandomGuruImageUrl(): string {
+    const randomIndex = Math.floor(Math.random() * this.guruImageUrls.length);
+    return this.guruImageUrls[randomIndex];
   }
 
   private async shareWebQuoteWithImage(quote: Quote): Promise<void> {
     // For web, we'll share just the text since local images are harder to handle
     const shareText = this.buildQuoteShareText(quote);
-    
+
     if (navigator.share) {
       await navigator.share({
         title: 'Spiritual Wisdom Quote',
@@ -82,36 +80,20 @@ class ShareService {
 
   private async shareMobileQuoteWithImage(quote: Quote): Promise<void> {
     try {
-      // Get the local image asset
-      const imageAsset = this.getLocalImageForQuote(quote.id);
-      const asset = Asset.fromModule(imageAsset);
-      await asset.downloadAsync();
+      // Get a random guru image URL
+      const imageUrl = this.getRandomGuruImageUrl();
 
-      // Build the complete message text (quote + reflection + app download)
-      const messageText = this.buildCompleteQuoteShareText(quote);
+      // Create the message text (reflection + app download)
+      const messageText = this.buildQuoteShareText(quote);
 
-      // Share using Expo Sharing for better messaging app support
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(asset.localUri || asset.uri, {
-          mimeType: 'image/jpeg',
-          dialogTitle: 'Share Spiritual Quote',
-          UTI: 'public.jpeg',
-        });
-        
-        // Share the text separately to ensure it appears as a follow-up message
-        setTimeout(async () => {
-          await Share.share({
-            message: messageText,
-          });
-        }, 500);
-      } else {
-        // Fallback to React Native Share
-        await Share.share({
-          title: 'Spiritual Wisdom Quote',
-          message: messageText,
-          url: asset.localUri || asset.uri,
-        });
-      }
+      // For better iMessage/WhatsApp display, combine image URL with text
+      const fullMessage = `${messageText}\n\n🖼️ ${imageUrl}`;
+
+      // Share with React Native Share
+      await Share.share({
+        title: 'Spiritual Wisdom Quote',
+        message: fullMessage,
+      });
 
     } catch (error) {
       console.error('Error sharing mobile quote with image:', error);
@@ -122,7 +104,7 @@ class ShareService {
 
   private async shareQuoteText(quote: Quote): Promise<void> {
     const shareText = this.buildQuoteShareText(quote);
-    
+
     await Share.share({
       title: 'Spiritual Wisdom Quote',
       message: shareText,
@@ -131,31 +113,31 @@ class ShareService {
 
   private buildQuoteShareText(quote: Quote): string {
     let text = '';
-    
+
     // Add reflection if available (this will appear under the image in messaging apps)
     if (quote.reflection) {
       text += `💭 ${quote.reflection}\n\n`;
     }
-    
+
     // Add app download message 
     text += `🙏 Discover more spiritual wisdom and daily inspiration in the ${this.appName} app\n`;
     text += `📱 Download now: ${this.getDownloadLink()}`;
-    
+
     return text;
   }
 
   private buildCompleteQuoteShareText(quote: Quote): string {
     let text = `"${quote.text}"\n— ${quote.author}\n\n`;
-    
+
     // Add reflection if available
     if (quote.reflection) {
       text += `💭 ${quote.reflection}\n\n`;
     }
-    
+
     // Add app download message 
     text += `🙏 Discover more spiritual wisdom and daily inspiration in the ${this.appName} app\n`;
     text += `📱 Download now: ${this.getDownloadLink()}`;
-    
+
     return text;
   }
 
