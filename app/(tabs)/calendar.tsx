@@ -14,6 +14,7 @@ import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { Share } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { shareService } from '../../services/shareService';
 import { BlurView } from 'expo-blur';
 
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS, SPIRITUAL_TYPOGRAPHY } from '@/constants/SpiritualColors';
@@ -51,14 +52,10 @@ export function CalendarScreen() {
   };
 
   const shareEvent = async (event: Event) => {
-    const shareText = `📅 ${event.title}\n📍 ${event.location}\n🕐 ${event.time}\n\n${event.description}\n\nFrom our Spiritual Wisdom calendar`;
-
     try {
-      await Share.share({
-        message: shareText,
-        title: event.title,
-      });
+      await shareService.shareEvent(event);
     } catch (error) {
+      console.error('Error sharing event:', error);
       Toast.show({
         type: 'error',
         text1: 'Share Failed',
@@ -68,14 +65,10 @@ export function CalendarScreen() {
   };
 
   const shareApp = async () => {
-    const shareText = "🗓️ Stay connected with upcoming spiritual events and teachings through this beautiful app!";
-
     try {
-      await Share.share({
-        message: shareText,
-        title: 'Spiritual Calendar',
-      });
+      await shareService.shareApp();
     } catch (error) {
+      console.error('Error sharing app:', error);
       Toast.show({
         type: 'error',
         text1: 'Share Failed',

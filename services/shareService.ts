@@ -17,6 +17,16 @@ interface Video {
   youtubeId: string;
 }
 
+interface Event {
+  id: string;
+  title: string;
+  date: string;
+  time: string;
+  description: string;
+  location?: string;
+  type: 'meditation' | 'teaching' | 'celebration' | 'retreat';
+}
+
 class ShareService {
   private appName = 'Spiritual Wisdom';
   private appStoreLink = 'https://apps.apple.com/app/spiritual-wisdom';
@@ -212,6 +222,27 @@ class ShareService {
 
     await Share.share({
       title: video.title,
+      message: shareText,
+    });
+  }
+
+  async shareEvent(event: Event): Promise<void> {
+    const eventDate = new Date(event.date).toLocaleDateString();
+    
+    let shareText = `📅 ${event.title}\n\n`;
+    shareText += `🗓️ Date: ${eventDate}\n`;
+    shareText += `🕐 Time: ${event.time}\n`;
+    
+    if (event.location) {
+      shareText += `📍 Location: ${event.location}\n`;
+    }
+    
+    shareText += `\n📝 ${event.description}\n\n`;
+    shareText += `🙏 Stay connected with more spiritual events and teachings in the ${this.appName} app\n`;
+    shareText += `📱 Download now: ${this.getDownloadLink()}`;
+
+    await Share.share({
+      title: event.title,
       message: shareText,
     });
   }
