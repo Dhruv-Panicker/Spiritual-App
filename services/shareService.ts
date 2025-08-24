@@ -22,10 +22,10 @@ class ShareService {
   private webAppLink = 'https://spiritualwisdom.app';
 
   // Array of spiritual guru images - using Replit Object Storage URLs
+  // Only using successfully uploaded images
   private guruImageUrls = [
-    'https://storage.googleapis.com/replit-objstore-74e3c4b0-bc72-4d55-9558-dc44b7baae09/guru-images/guru-image-1.jpg',
     'https://storage.googleapis.com/replit-objstore-74e3c4b0-bc72-4d55-9558-dc44b7baae09/guru-images/guru-image-2.jpg',
-    'https://storage.googleapis.com/replit-objstore-74e3c4b0-bc72-4d55-9558-dc44b7baae09/guru-images/guru-image-3.jpg',
+    'https://storage.googleapis.com/replit-objstore-74e3c4b0-bc72-4d55-9558-dc44b7baae09/guru-images/guru-image-4.jpg',
   ];
 
   async shareQuote(quote: Quote, includeImage = true): Promise<void> {

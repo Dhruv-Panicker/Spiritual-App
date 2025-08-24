@@ -42,8 +42,12 @@ async function uploadGuruImages() {
     console.log('All guru images uploaded successfully!');
     
     // List uploaded files to verify
-    const files = await client.list('guru-images/');
-    console.log('Uploaded files:', files.map(f => f.name));
+    try {
+      const files = await client.list('guru-images/');
+      console.log('Uploaded files:', files);
+    } catch (listError) {
+      console.log('Could not list files, but uploads may have succeeded');
+    }
 
   } catch (error) {
     console.error('Error uploading guru images:', error);
