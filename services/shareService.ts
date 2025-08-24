@@ -1,4 +1,4 @@
-import { Share, Platform } from 'react-native';
+import { Share, Platform, Image } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
@@ -96,8 +96,14 @@ class ShareService {
         // It's a URL from Object Storage
         imageUri = imageAsset;
       } else {
-        // It's a local asset, resolve it
-        imageUri = require('react-native/Libraries/Image/resolveAssetSource')(imageAsset).uri;
+        // It's a local asset, resolve it using Image.resolveAssetSource
+        try {
+          imageUri = Image.resolveAssetSource(imageAsset).uri;
+        } catch (resolveError) {
+          console.warn('Could not resolve asset source, falling back to text sharing:', resolveError);
+          await this.shareQuoteText(quote);
+          return;
+        }
       }
 
       // Create the message text (reflection + app download)
