@@ -15,12 +15,11 @@ interface ShareImageOptions {
 }
 
 class ImageGenerationService {
-  // Use local guru images for quotes
+  // Use Object Storage URLs for uploaded guru images
   private guruImages = [
-    require('../assets/images/guru-image-1.jpg'),
-    require('../assets/images/guru-image-2.jpg'),
-    require('../assets/images/guru-image-3.jpg'),
-    require('../assets/images/guru-image-4.jpg'),
+    'https://storage.googleapis.com/replit-objstore-74e3c4b0-bc72-4d55-9558-dc44b7baae09/guru-images/guru-image-2.jpg',
+    'https://storage.googleapis.com/replit-objstore-74e3c4b0-bc72-4d55-9558-dc44b7baae09/guru-images/guru-image-4.jpg',
+    require('../assets/images/om-symbol.png'), // Fallback to local asset
   ];
 
   async generateQuoteImage(options: ShareImageOptions): Promise<string> {

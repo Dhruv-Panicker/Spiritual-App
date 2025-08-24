@@ -21,11 +21,21 @@ class ShareService {
   private playStoreLink = 'https://play.google.com/store/apps/details?id=com.spiritualwisdom';
   private webAppLink = 'https://spiritualwisdom.app';
 
-  // Array of spiritual guru images - using bundled local assets
-  private guruImages = [
-    require('../assets/images/om-symbol.png'),
-    require('../assets/images/gurudev-hero.jpg'),
-  ];
+  // Array of spiritual guru images - using bundled local assets and Object Storage URLs
+  private guruImages = {
+    'quote-1': require('../assets/images/om-symbol.png'), // Placeholder for the first quote
+    'quote-2': 'https://storage.googleapis.com/replit-objstore-74e3c4b0-bc72-4d55-9558-dc44b7baae09/guru-images/guru-image-2.jpg', // Corresponds to quote-2
+    'quote-3': 'https://storage.googleapis.com/replit-objstore-74e3c4b0-bc72-4d55-9558-dc44b7baae09/guru-images/guru-image-3.jpg', // Corresponds to quote-3
+    'quote-4': 'https://storage.googleapis.com/replit-objstore-74e3c4b0-bc72-4d55-9558-dc44b7baae09/guru-images/guru-image-4.jpg', // Corresponds to quote-4 (assuming quote-4 exists)
+  };
+
+  // Mapping of quote IDs to specific guru image keys
+  private quoteImageMap: { [key: string]: string } = {
+    'quote-1': 'quote-1', // First quote uses the first image
+    'quote-2': 'quote-2', // Second quote uses the second image
+    'quote-3': 'quote-3', // Third quote uses the third image
+    'quote-4': 'quote-4', // Fourth quote uses the fourth image
+  };
 
   async shareQuote(quote: Quote, includeImage = true): Promise<void> {
     try {
@@ -54,9 +64,9 @@ class ShareService {
     }
   }
 
-  private getRandomGuruImage(): any {
-    const randomIndex = Math.floor(Math.random() * this.guruImages.length);
-    return this.guruImages[randomIndex];
+  private getGuruImageForQuote(quoteId: string): any {
+    const imageKey = this.quoteImageMap[quoteId];
+    return imageKey ? this.guruImages[imageKey] : require('../assets/images/om-symbol.png'); // Default to om-symbol if no mapping
   }
 
   private async shareWebQuoteWithImage(quote: Quote): Promise<void> {
@@ -77,18 +87,22 @@ class ShareService {
 
   private async shareMobileQuoteWithImage(quote: Quote): Promise<void> {
     try {
-      // Get a random guru image asset
-      const imageAsset = this.getRandomGuruImage();
+      // Get guru image for this specific quote
+      const imageAsset = this.getGuruImageForQuote(quote.id);
 
-      // For React Native, we need to resolve the asset to get its URI
-      const imageUri = typeof imageAsset === 'number' 
-        ? require('react-native/Libraries/Image/resolveAssetSource')(imageAsset).uri
-        : imageAsset;
+      let imageUri: string;
+
+      if (typeof imageAsset === 'string') {
+        // It's a URL from Object Storage
+        imageUri = imageAsset;
+      } else {
+        // It's a local asset, resolve it
+        imageUri = require('react-native/Libraries/Image/resolveAssetSource')(imageAsset).uri;
+      }
 
       // Create the message text (reflection + app download)
       const messageText = this.buildQuoteShareText(quote);
 
-      // Use React Native Share with both image and text in one action
       await Share.share({
         title: 'Spiritual Wisdom Quote',
         message: messageText,
