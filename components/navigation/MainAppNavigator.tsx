@@ -1,11 +1,12 @@
+
 import React from 'react';
+import { Slot } from 'expo-router';
 import { AuthGuard } from '../auth/AuthGuard';
-import { TabNavigator } from './TabNavigator';
 
 export const MainAppNavigator: React.FC = () => {
   return (
     <AuthGuard>
-      <TabNavigator />
+      <Slot />
     </AuthGuard>
   );
 };
