@@ -8,7 +8,6 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { AuthGuard } from '@/components/auth/AuthGuard';
 import { useAuth } from '@/contexts/AuthContext';
 import { SPIRITUAL_COLORS } from '@/constants/SpiritualColors';
 
@@ -33,7 +32,6 @@ export default function TabLayout() {
   console.log('========================');
 
   return (
-    <AuthGuard>
       <Tabs
         screenOptions={{
           tabBarActiveTintColor: SPIRITUAL_COLORS.primary,
@@ -105,6 +103,5 @@ export default function TabLayout() {
           />
         )}
       </Tabs>
-    </AuthGuard>
   );
 }
