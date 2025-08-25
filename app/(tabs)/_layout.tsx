@@ -22,8 +22,15 @@ export default function TabLayout() {
     'apaaranddhruv@gmail.com',
   ];
   
-  // Check if user is an actual admin based on email
-  const isActualAdmin = user && adminEmails.includes(user.email);
+  // Check if user is an actual admin based on email (case-insensitive)
+  const isActualAdmin = user && user.email && adminEmails.includes(user.email.toLowerCase().trim());
+  
+  // Debug logging
+  console.log('=== ADMIN CHECK DEBUG ===');
+  console.log('User email:', user?.email);
+  console.log('Admin emails:', adminEmails);
+  console.log('Is actual admin:', isActualAdmin);
+  console.log('========================');
 
   return (
     <AuthGuard>
