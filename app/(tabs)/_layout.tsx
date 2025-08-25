@@ -8,32 +8,14 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { useAuth } from '@/contexts/AuthContext';
+import { AuthGuard } from '@/components/auth/AuthGuard';
 import { SPIRITUAL_COLORS } from '@/constants/SpiritualColors';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const { user } = useAuth();
-
-  // Define allowed admin emails
-  const adminEmails = [
-    'dhru.panicker@gmail.com',
-    'apaaranddhruv@gmail.com',
-  ];
-  
-  // Check if user is an actual admin based on email (case-insensitive)
-  const isActualAdmin = user && user.email && adminEmails.includes(user.email.toLowerCase().trim());
-  
-  // Debug logging
-  console.log('=== ADMIN CHECK DEBUG ===');
-  console.log('User object:', user);
-  console.log('User email:', user?.email);
-  console.log('Admin emails:', adminEmails);
-  console.log('Is actual admin:', isActualAdmin);
-  console.log('Admin tab will render:', isActualAdmin === true);
-  console.log('========================');
 
   return (
+    <AuthGuard>
       <Tabs
         screenOptions={{
           tabBarActiveTintColor: SPIRITUAL_COLORS.primary,
@@ -93,17 +75,16 @@ export default function TabLayout() {
             ),
           }}
         />
-        {isActualAdmin === true && (
-          <Tabs.Screen
-            name="admin"
-            options={{
-              title: 'Admin',
-              tabBarIcon: ({ color, focused }) => (
-                <Ionicons name={focused ? 'settings' : 'settings-outline'} size={28} color={color} />
-              ),
-            }}
-          />
-        )}
+        <Tabs.Screen
+          name="admin"
+          options={{
+            title: 'Admin',
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons name={focused ? 'settings' : 'settings-outline'} size={28} color={color} />
+            ),
+          }}
+        />
       </Tabs>
+    </AuthGuard>
   );
 }
