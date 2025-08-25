@@ -26,9 +26,11 @@ export default function TabLayout() {
   
   // Debug logging
   console.log('=== ADMIN CHECK DEBUG ===');
+  console.log('User object:', user);
   console.log('User email:', user?.email);
   console.log('Admin emails:', adminEmails);
   console.log('Is actual admin:', isActualAdmin);
+  console.log('Admin tab will render:', isActualAdmin === true);
   console.log('========================');
 
   return (
@@ -91,7 +93,7 @@ export default function TabLayout() {
             ),
           }}
         />
-        {isActualAdmin && (
+        {isActualAdmin === true && (
           <Tabs.Screen
             name="admin"
             options={{
