@@ -16,6 +16,15 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
   const { user } = useAuth();
 
+  // Define allowed admin emails
+  const adminEmails = [
+    'dhru.panicker@gmail.com',
+    'apaaranddhruv@gmail.com',
+  ];
+  
+  // Check if user is an actual admin based on email
+  const isActualAdmin = user && adminEmails.includes(user.email);
+
   return (
     <AuthGuard>
       <Tabs
@@ -77,7 +86,7 @@ export default function TabLayout() {
             ),
           }}
         />
-        {user?.isAdmin && (
+        {isActualAdmin && (
           <Tabs.Screen
             name="admin"
             options={{
