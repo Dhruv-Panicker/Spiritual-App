@@ -69,14 +69,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         throw new Error('Invalid credentials');
       }
 
-      // For demo purposes, we'll skip email verification check for existing users
-      // In a real app, you'd check if the email was verified during sign up
+      // Check if user is admin based on email
+      const adminEmails = [
+        'dhru.panicker@gmail.com',
+        'apaaranddhruv@gmail.com'
+      ];
 
       const mockUser: User = {
         id: '1',
         name: 'Spiritual Seeker',
         email,
-        isAdmin: email === 'admin@example.com'
+        isAdmin: adminEmails.includes(email.toLowerCase())
       };
 
       setUser(mockUser);
