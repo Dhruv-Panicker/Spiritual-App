@@ -20,6 +20,15 @@ const Tab = createBottomTabNavigator();
 export const TabNavigator: React.FC = () => {
   const { user } = useAuth();
 
+  // Define allowed admin emails
+  const adminEmails = [
+    'dhru.panicker@gmail.com',
+    'apaaranddhruv@gmail.com',
+  ];
+  
+  // Check if user is an actual admin based on email
+  const isActualAdmin = user && adminEmails.includes(user.email);
+
   const handleTabPress = () => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -106,7 +115,7 @@ export const TabNavigator: React.FC = () => {
         component={GurudevScreen}
         options={{ title: 'Gurudev' }}
       />
-      {user?.isAdmin && (
+      {isActualAdmin && (
         <Tab.Screen 
           name="Admin" 
           component={AdminScreen}
