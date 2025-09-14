@@ -21,7 +21,7 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "EXPO_PACKAGER_PROXY_URL=https://$REPLIT_DEV_DOMAIN REACT_NATIVE_PACKAGER_HOSTNAME=$REPLIT_DEV_DOMAIN npx expo start"
+args = "npx expo start --host tunnel"
 
 [[workflows.workflow]]
 name = "EAS Init"
@@ -57,3 +57,6 @@ args = "npx eas build --platform android --profile preview"
 
 [objectStorage]
 defaultBucketID = "replit-objstore-74e3c4b0-bc72-4d55-9558-dc44b7baae09"
+
+[agent]
+expertMode = true
