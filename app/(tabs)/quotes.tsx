@@ -15,41 +15,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS, SPIRITUAL_TYPOGRAPHY } from '@/constants/SpiritualColors';
-
-interface Quote {
-  id: string;
-  text: string;
-  author: string;
-  reflection?: string;
-  date: string;
-}
-
-const mockQuotes: Quote[] = [
-  {
-    id: '1',
-    text: "The mind is everything. What you think you become.",
-    author: "Buddha",
-    reflection: "How can you cultivate positive thoughts today?",
-    date: new Date().toDateString()
-  },
-  {
-    id: '2', 
-    text: "In the depth of silence is the voice of God.",
-    author: "Gurudev",
-    reflection: "Take a moment to sit in silence and listen within.",
-    date: new Date().toDateString()
-  },
-  {
-    id: '3',
-    text: "When you realize there is nothing lacking, the whole world belongs to you.",
-    author: "Lao Tzu",
-    reflection: "What abundance already exists in your life?",
-    date: new Date().toDateString()
-  }
-];
+import { useQuotes, Quote } from '@/contexts/QuotesContext';
 
 export default function QuotesScreen() {
-  const [quotes] = useState<Quote[]>(mockQuotes);
+  const { quotes } = useQuotes();
   const [likedQuotes, setLikedQuotes] = useState<Set<string>>(new Set());
 
   const handleLike = (quoteId: string) => {
@@ -162,7 +131,7 @@ export default function QuotesScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={SPIRITUAL_GRADIENTS.peace}
+        colors={SPIRITUAL_GRADIENTS.peace as any}
         style={styles.gradient}
       >
         <SafeAreaView style={styles.safeArea}>
@@ -190,7 +159,7 @@ export default function QuotesScreen() {
 
           <View style={styles.shareSection}>
             <LinearGradient
-              colors={SPIRITUAL_GRADIENTS.divine}
+              colors={SPIRITUAL_GRADIENTS.divine as any}
               style={styles.shareAppButton}
             >
               <TouchableOpacity 

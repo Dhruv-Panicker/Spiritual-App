@@ -1,6 +1,6 @@
 
 import { Share, Platform, Image } from 'react-native';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { Asset } from 'expo-asset';
 
@@ -187,11 +187,11 @@ class ShareService {
   }
 
   private buildQuoteShareText(quote: Quote): string {
-    let text = '';
+    let text = `"${quote.text}"\n— ${quote.author}\n\n`;
 
-    // Add reflection if available (this will appear under the image in messaging apps)
+    // Add reflection if available
     if (quote.reflection) {
-      text += `💭 ${quote.reflection}\n\n`;
+      text += `💭 Reflection: ${quote.reflection}\n\n`;
     }
 
     // Add app download message 
@@ -206,7 +206,7 @@ class ShareService {
 
     // Add reflection if available
     if (quote.reflection) {
-      text += `💭 ${quote.reflection}\n\n`;
+      text += `💭 Reflection: ${quote.reflection}\n\n`;
     }
 
     // Add app download message 

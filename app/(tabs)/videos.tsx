@@ -18,8 +18,7 @@ import Toast from 'react-native-toast-message';
 import { WebView } from 'react-native-webview';
 
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
-import { useVideos } from '@/hooks/data/useVideos';
-import { type Video } from '@/mocks/data/videos';
+import { useVideos, type Video } from '@/contexts/VideosContext';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 

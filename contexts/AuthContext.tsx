@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { googleSheetsService } from '../services/googleSheetsService';
+import { googleSignInService, GoogleUser } from '../services/googleSignInService';
 
 export interface User {
   id: string;
@@ -13,6 +15,7 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -40,13 +43,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   const checkExistingSession = async () => {
+    console.log('=== CHECKING EXISTING SESSION ===');
     try {
       // For now, always start with login screen
       // You can enable session persistence later by uncommenting below
       // const savedUser = await AsyncStorage.getItem('spiritual-app-user');
       // if (savedUser) {
-      //   setUser(JSON.parse(savedUser));
+      //   const parsedUser = JSON.parse(savedUser);
+      //   console.log('Found existing session for:', parsedUser.email);
+      //   console.log('Admin status:', parsedUser.isAdmin);
+      //   setUser(parsedUser);
+      // } else {
+      //   console.log('No existing session found');
       // }
+      console.log('Session persistence disabled - requiring fresh login');
       setUser(null);
     } catch (error) {
       console.error('Error checking existing session:', error);
@@ -69,14 +79,30 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         throw new Error('Invalid credentials');
       }
 
-      // For demo purposes, we'll skip email verification check for existing users
-      // In a real app, you'd check if the email was verified during sign up
+      // Hardcoded admin emails
+      const ADMIN_EMAILS = [
+        'dhru.panicker@gmail.com',
+        'apparanddhruv@gmail.com'
+      ];
+
+      // Check if user is admin based on email
+      const isAdmin = ADMIN_EMAILS.includes(email.toLowerCase());
+
+      // Console log for web login tracking
+      console.log('=== USER LOGIN ATTEMPT ===');
+      console.log('Email:', email);
+      console.log('Is Admin:', isAdmin);
+      console.log('Login Time:', new Date().toISOString());
+      console.log('==========================');
+      
+      // Also log to Metro bundler using console.warn which shows in terminal
+      console.warn('🔐 LOGIN:', email, '| Admin:', isAdmin);
 
       const mockUser: User = {
         id: '1',
         name: 'Spiritual Seeker',
         email,
-        isAdmin: email === 'admin@example.com'
+        isAdmin
       };
 
       setUser(mockUser);
@@ -104,27 +130,93 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  
+  const loginWithGoogle = async () => {
+    setIsLoading(true);
+    try {
+      console.log('🔐 Starting Google Sign-In...');
+      
+      const googleUser = await googleSignInService.signIn();
+      
+      if (!googleUser) {
+        throw new Error('Google sign-in was cancelled');
+      }
+
+      // Hardcoded admin emails
+      const ADMIN_EMAILS = [
+        'dhru.panicker@gmail.com',
+        'apparanddhruv@gmail.com'
+      ];
+
+      // Check if user is admin based on email
+      const isAdmin = ADMIN_EMAILS.includes(googleUser.email.toLowerCase());
+
+      // Console log for tracking
+      console.log('=== GOOGLE USER LOGIN ===');
+      console.log('Email:', googleUser.email);
+      console.log('Name:', googleUser.name);
+      console.log('Is Admin:', isAdmin);
+      console.log('Login Time:', new Date().toISOString());
+      console.log('Google ID:', googleUser.id);
+      console.log('=========================');
+      
+      console.warn('🔐 GOOGLE LOGIN:', googleUser.email, '| Admin:', isAdmin);
+
+      const user: User = {
+        id: googleUser.id,
+        name: googleUser.name,
+        email: googleUser.email,
+        isAdmin
+      };
+
+      setUser(user);
+      await AsyncStorage.setItem('spiritual-app-user', JSON.stringify(user));
+
+      // Log user login to Google Sheets (non-blocking)
+      googleSheetsService.logUserLogin({
+        email: user.email,
+        name: user.name,
+        loginTime: new Date().toISOString(),
+        isAdmin: user.isAdmin
+      }).catch(error => {
+        console.log('Failed to log Google login to Google Sheets:', error);
+      });
+
+    } catch (error) {
+      console.error('Google login error:', error);
+      throw new Error(error instanceof Error ? error.message : 'Google sign-in failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const logout = async () => {
-    console.log('=== LOGOUT FUNCTION CALLED ===');
+    console.log('=== USER LOGOUT ===');
+    console.log('User logging out:', user?.email);
+    console.log('Was admin:', user?.isAdmin);
+    console.log('Logout time:', new Date().toISOString());
+    console.log('==================');
+    
+    // Also log to Metro bundler using console.warn which shows in terminal
+    console.warn('🚪 LOGOUT:', user?.email, '| Was admin:', user?.isAdmin);
+    
     try {
-      console.log('Playing logout haptic feedback');
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      // Skip haptics on web for now - might be causing issues
+      if (Platform.OS !== 'web') {
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
       
-      console.log('Setting user to null');
       // Clear user state immediately
       setUser(null);
       
-      console.log('Removing user from AsyncStorage');
       // Clear stored session
       await AsyncStorage.removeItem('spiritual-app-user');
       
       console.log('User logged out successfully');
+      console.warn('✅ LOGOUT SUCCESSFUL for:', user?.email);
     } catch (error) {
       console.error('Error during logout:', error);
+      console.warn('❌ LOGOUT ERROR:', error);
       // Even if storage removal fails, still logout the user
-      console.log('Setting user to null despite error');
       setUser(null);
     }
   };
@@ -132,6 +224,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const value: AuthContextType = {
     user,
     login,
+    loginWithGoogle,
     logout,
     isLoading
   };

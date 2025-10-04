@@ -8,6 +8,7 @@ import {
   Dimensions,
   Image,
   Alert,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -50,8 +51,31 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, onP
 export default function HomeScreen() {
   const { user, logout } = useAuth();
 
+  // Test logging to see if logs work
+  console.warn('🏠 HOME SCREEN LOADED - User:', user?.email, 'isAdmin:', user?.isAdmin);
+
   const handleLogout = () => {
     console.log('Logout button clicked');
+    console.warn('🔘 LOGOUT BUTTON CLICKED by:', user?.email);
+    
+    // Simple test - just call logout directly for debugging
+    console.warn('🌐 CALLING LOGOUT DIRECTLY FOR TESTING');
+    logout();
+    return;
+    
+    // For web, bypass Alert.alert which might not work properly and logout directly
+    if (Platform.OS === 'web') {
+      console.warn('🌐 WEB PLATFORM: Direct logout without confirmation');
+      if (window.confirm('Are you sure you want to logout?')) {
+        console.warn('✅ WEB LOGOUT CONFIRMED by:', user?.email, '- calling logout()');
+        logout();
+      } else {
+        console.warn('❌ WEB LOGOUT CANCELLED by:', user?.email);
+      }
+      return;
+    }
+    
+    // For mobile platforms, use Alert.alert
     Alert.alert(
       'Logout',
       'Are you sure you want to logout?',
@@ -59,13 +83,17 @@ export default function HomeScreen() {
         {
           text: 'Cancel',
           style: 'cancel',
-          onPress: () => console.log('Logout cancelled'),
+          onPress: () => {
+            console.log('Logout cancelled');
+            console.warn('❌ LOGOUT CANCELLED by:', user?.email);
+          },
         },
         {
           text: 'Logout',
           style: 'destructive',
           onPress: () => {
             console.log('Logout confirmed, calling logout function');
+            console.warn('✅ LOGOUT CONFIRMED by:', user?.email, '- calling logout()');
             logout();
           },
         },

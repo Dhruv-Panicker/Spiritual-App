@@ -9,10 +9,16 @@ import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { AuthGuard } from '@/components/auth/AuthGuard';
+import { useAuth } from '@/contexts/AuthContext';
 import { SPIRITUAL_COLORS } from '@/constants/SpiritualColors';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const { user } = useAuth();
+
+  // Debug logging
+  console.log('TabLayout - User:', user?.email, 'isAdmin:', user?.isAdmin);
+  console.warn('📱 TAB LAYOUT:', user?.email || 'No user', '| Admin tab href:', user?.isAdmin ? '/admin' : 'HIDDEN');
 
   return (
     <AuthGuard>
@@ -82,6 +88,8 @@ export default function TabLayout() {
             tabBarIcon: ({ color, focused }) => (
               <Ionicons name={focused ? 'settings' : 'settings-outline'} size={28} color={color} />
             ),
+            // Hide admin tab for non-admin users
+            href: user?.isAdmin ? '/admin' : null,
           }}
         />
       </Tabs>

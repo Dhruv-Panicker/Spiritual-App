@@ -8,6 +8,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { QuotesProvider } from '@/contexts/QuotesContext';
+import { VideosProvider } from '@/contexts/VideosContext';
+import { notificationService } from '@/services/notificationService';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -24,6 +27,16 @@ export default function RootLayout() {
     }
   }, [loaded]);
 
+  // Initialize notifications
+  useEffect(() => {
+    notificationService.initialize();
+    
+    // Cleanup on unmount
+    return () => {
+      notificationService.cleanup();
+    };
+  }, []);
+
   if (!loaded) {
     return null;
   }
@@ -31,13 +44,17 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="+not-found" />
-          </Stack>
-          <StatusBar style="auto" />
-        </ThemeProvider>
+        <QuotesProvider>
+          <VideosProvider>
+            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+              <Stack>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="+not-found" />
+              </Stack>
+              <StatusBar style="auto" />
+            </ThemeProvider>
+          </VideosProvider>
+        </QuotesProvider>
       </AuthProvider>
     </GestureHandlerRootView>
   );

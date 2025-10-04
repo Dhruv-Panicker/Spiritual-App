@@ -1,614 +1,592 @@
-
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
+  SafeAreaView,
+  StyleSheet,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   ScrollView,
-  SafeAreaView,
-  KeyboardAvoidingView,
-  Platform,
   Alert,
   ActivityIndicator,
+  Platform,
+  KeyboardAvoidingView,
   Dimensions,
 } from 'react-native';
-import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { LinearGradient } from 'expo-linear-gradient';
+import { TabView, TabBar } from 'react-native-tab-view';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import Toast from 'react-native-toast-message';
 import * as Haptics from 'expo-haptics';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Ionicons } from '@expo/vector-icons';
-
-import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
+import { useAuth } from '../../contexts/AuthContext';
+import { useQuotes } from '../../contexts/QuotesContext';
+import { useVideos } from '../../contexts/VideosContext';
+import { SPIRITUAL_COLORS } from '../../constants/SpiritualColors';
+import { notificationService } from '../../services/notificationService';
 
 const { width } = Dimensions.get('window');
 
-interface QuoteForm {
-  text: string;
-  author: string;
-  reflection: string;
-}
+// Update function name
+export default function AdminScreen() {
+  const { user } = useAuth();
+  const { addQuote } = useQuotes();
+  const { addVideo } = useVideos();
+  
+  // Protect admin screen
+  useEffect(() => {
+    if (user && !user.isAdmin) {
+      router.replace('/');
+      return;
+    }
+  }, [user]);
 
-interface EventForm {
-  title: string;
-  date: Date;
-  time: Date;
-  location: string;
-  description: string;
-  type: string;
-}
+  // Load push token
+  useEffect(() => {
+    const loadPushToken = async () => {
+      const token = notificationService.getPushToken();
+      setPushToken(token);
+    };
+    loadPushToken();
+  }, []);
 
-export const AdminScreen = () => {
+  if (!user?.isAdmin) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>Access Denied</Text>
+      </View>
+    );
+  }
+
+  // Tab navigation state
   const [index, setIndex] = useState(0);
   const [routes] = useState([
     { key: 'quotes', title: 'Quotes', icon: 'chatbubble' },
-    { key: 'events', title: 'Events', icon: 'calendar' },
-    { key: 'notifications', title: 'Notify', icon: 'notifications' },
+    { key: 'videos', title: 'Videos', icon: 'videocam' },
+    { key: 'notifications', title: 'Notifications', icon: 'notifications' },
   ]);
 
-  // Form states
-  const [quoteForm, setQuoteForm] = useState<QuoteForm>({
-    text: '',
-    author: '',
-    reflection: ''
-  });
-
-  const [eventForm, setEventForm] = useState<EventForm>({
-    title: '',
-    date: new Date(),
-    time: new Date(),
-    location: '',
-    description: '',
-    type: 'meditation'
-  });
-
-  // Loading states
+  // Quote form states
+  const [quoteText, setQuoteText] = useState('');
+  const [quoteAuthor, setQuoteAuthor] = useState('');
+  const [reflectionQuestion, setReflectionQuestion] = useState('');
   const [isSubmittingQuote, setIsSubmittingQuote] = useState(false);
-  const [isSubmittingEvent, setIsSubmittingEvent] = useState(false);
+
+  // Video form states
+  const [videoTitle, setVideoTitle] = useState('');
+  const [videoDescription, setVideoDescription] = useState('');
+  const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [isSubmittingVideo, setIsSubmittingVideo] = useState(false);
+
+  // Notification states
+  const [notificationTitle, setNotificationTitle] = useState('');
+  const [notificationBody, setNotificationBody] = useState('');
   const [isSendingNotification, setIsSendingNotification] = useState(false);
+  const [pushToken, setPushToken] = useState<string | null>(null);
 
-  // Date picker states
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
-
-  // Form validation
-  const [quoteErrors, setQuoteErrors] = useState<Partial<QuoteForm>>({});
-  const [eventErrors, setEventErrors] = useState<Partial<EventForm>>({});
-
-  // Auto-save functionality
-  useEffect(() => {
-    const saveInterval = setInterval(() => {
-      saveFormData();
-    }, 30000); // Save every 30 seconds
-
-    return () => clearInterval(saveInterval);
-  }, [quoteForm, eventForm]);
-
-  const saveFormData = async () => {
-    try {
-      await AsyncStorage.setItem('adminQuoteForm', JSON.stringify(quoteForm));
-      await AsyncStorage.setItem('adminEventForm', JSON.stringify({
-        ...eventForm,
-        date: eventForm.date.toISOString(),
-        time: eventForm.time.toISOString(),
-      }));
-    } catch (error) {
-      console.error('Error saving form data:', error);
-    }
-  };
-
-  const loadFormData = async () => {
-    try {
-      const savedQuoteForm = await AsyncStorage.getItem('adminQuoteForm');
-      const savedEventForm = await AsyncStorage.getItem('adminEventForm');
-
-      if (savedQuoteForm) {
-        setQuoteForm(JSON.parse(savedQuoteForm));
-      }
-
-      if (savedEventForm) {
-        const parsed = JSON.parse(savedEventForm);
-        setEventForm({
-          ...parsed,
-          date: new Date(parsed.date),
-          time: new Date(parsed.time),
-        });
-      }
-    } catch (error) {
-      console.error('Error loading form data:', error);
-    }
-  };
-
-  useEffect(() => {
-    loadFormData();
-  }, []);
-
-  // Form validation functions
-  const validateQuoteForm = (): boolean => {
-    const errors: Partial<QuoteForm> = {};
-
-    if (!quoteForm.text.trim()) {
-      errors.text = 'Quote text is required';
-    } else if (quoteForm.text.length < 10) {
-      errors.text = 'Quote must be at least 10 characters';
-    }
-
-    if (!quoteForm.author.trim()) {
-      errors.author = 'Author is required';
-    }
-
-    setQuoteErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const validateEventForm = (): boolean => {
-    const errors: Partial<EventForm> = {};
-
-    if (!eventForm.title.trim()) {
-      errors.title = 'Event title is required';
-    }
-
-    if (!eventForm.description.trim()) {
-      errors.description = 'Event description is required';
-    }
-
-    setEventErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  // Form submission handlers
   const handleQuoteSubmit = async () => {
-    if (!validateQuoteForm()) {
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    if (!quoteText.trim() || !quoteAuthor.trim()) {
+      Alert.alert('Error', 'Please fill in both quote and author fields');
       return;
     }
 
     setIsSubmittingQuote(true);
+    
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
+      // Add the quote to the context
+      console.log('🎯 Admin panel calling addQuote with:', {
+        text: quoteText.trim(),
+        author: quoteAuthor.trim(),
+        category: reflectionQuestion.trim() || 'General'
+      });
+      
+      addQuote({
+        text: quoteText.trim(),
+        author: quoteAuthor.trim(),
+        category: reflectionQuestion.trim() || 'General'
+      });
+      
       Toast.show({
         type: 'success',
         text1: 'Quote Published',
-        text2: 'The quote has been added to the daily feed.',
-        visibilityTime: 4000,
+        text2: 'The quote has been added to the quotes page.',
       });
-
+      
       // Clear form
-      setQuoteForm({ text: '', author: '', reflection: '' });
-      await AsyncStorage.removeItem('adminQuoteForm');
-
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setQuoteText('');
+      setQuoteAuthor('');
+      setReflectionQuestion('');
+      
+      if (Platform.OS !== 'web') {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
     } catch (error) {
       Toast.show({
         type: 'error',
         text1: 'Error',
         text2: 'Failed to publish quote. Please try again.',
-        visibilityTime: 4000,
       });
     } finally {
       setIsSubmittingQuote(false);
     }
   };
 
-  const handleEventSubmit = async () => {
-    if (!validateEventForm()) {
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+  // Utility function to extract YouTube video ID from URL
+  const extractYouTubeId = (url: string): string | null => {
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([^&\n?#]+)/,
+      /(?:youtube\.com\/embed\/)([^&\n?#]+)/,
+    ];
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+    return null;
+  };
+
+  const handleVideoSubmit = async () => {
+    if (!videoTitle.trim() || !videoDescription.trim() || !youtubeUrl.trim()) {
+      Alert.alert('Error', 'Please fill in all video fields');
       return;
     }
 
-    setIsSubmittingEvent(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+    const youtubeId = extractYouTubeId(youtubeUrl.trim());
+    if (!youtubeId) {
+      Alert.alert('Error', 'Please enter a valid YouTube URL (regular video, shorts, or embed link)');
+      return;
+    }
 
+    setIsSubmittingVideo(true);
+    
+    try {
+      // Add the video to the context
+      addVideo({
+        title: videoTitle.trim(),
+        description: videoDescription.trim(),
+        youtubeId: youtubeId
+      });
+      
       Toast.show({
         type: 'success',
-        text1: 'Event Created',
-        text2: 'The event has been added to the calendar.',
-        visibilityTime: 4000,
+        text1: 'Video Added',
+        text2: 'The video has been added to the videos page.',
       });
-
+      
       // Clear form
-      setEventForm({
-        title: '',
-        date: new Date(),
-        time: new Date(),
-        location: '',
-        description: '',
-        type: 'meditation'
-      });
-      await AsyncStorage.removeItem('adminEventForm');
-
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setVideoTitle('');
+      setVideoDescription('');
+      setYoutubeUrl('');
+      
+      if (Platform.OS !== 'web') {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
     } catch (error) {
       Toast.show({
         type: 'error',
         text1: 'Error',
-        text2: 'Failed to create event. Please try again.',
-        visibilityTime: 4000,
+        text2: 'Failed to add video. Please try again.',
       });
     } finally {
-      setIsSubmittingEvent(false);
+      setIsSubmittingVideo(false);
     }
   };
 
-  const handleSendNotification = async () => {
-    Alert.alert(
-      'Send Notification',
-      'Send today\'s quote as a push notification to all users?',
-      [
-        { text: 'Cancel', style: 'cancel' },
+  // Notification handlers
+  const handleSendTestNotification = async () => {
+    setIsSendingNotification(true);
+    
+    try {
+      let success = false;
+      
+      if (pushToken) {
+        // Try push notification if token is available
+        success = await notificationService.sendTestPushNotification();
+      } else {
+        // Fall back to local notification for testing
+        await notificationService.scheduleLocalNotification({
+          type: 'test',
+          title: 'Test Notification',
+          body: 'This is a test notification from Guru Darshan app!',
+          data: { source: 'admin_test' }
+        });
+        success = true;
+      }
+      
+      if (success) {
+        Toast.show({
+          type: 'success',
+          text1: 'Test Notification Sent! 🔔',
+          text2: pushToken ? 'Push notification sent' : 'Local notification scheduled',
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Failed to Send',
+          text2: 'Make sure notifications are enabled',
+        });
+      }
+      
+      if (Platform.OS !== 'web') {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to send test notification',
+      });
+    } finally {
+      setIsSendingNotification(false);
+    }
+  };
+
+  const handleSendCustomNotification = async () => {
+    if (!notificationTitle.trim() || !notificationBody.trim()) {
+      Alert.alert('Error', 'Please fill in both title and message fields');
+      return;
+    }
+
+    setIsSendingNotification(true);
+    
+    try {
+      // Send local notification with custom content
+      await notificationService.scheduleLocalNotification({
+        type: 'test',
+        title: notificationTitle.trim(),
+        body: notificationBody.trim(),
+        data: { customTitle: notificationTitle.trim() }
+      });
+      const success = true;
+      
+      if (success) {
+        Toast.show({
+          type: 'success',
+          text1: 'Custom Notification Sent! 🔔',
+          text2: 'Your custom message has been delivered',
+        });
+        
+        // Clear form
+        setNotificationTitle('');
+        setNotificationBody('');
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Failed to Send',
+          text2: 'Make sure notifications are enabled',
+        });
+      }
+      
+      if (Platform.OS !== 'web') {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to send custom notification',
+      });
+    } finally {
+      setIsSendingNotification(false);
+    }
+  };
+
+  const handleScheduleLocalNotification = async () => {
+    try {
+      await notificationService.scheduleLocalNotification(
         {
-          text: 'Send',
-          onPress: async () => {
-            setIsSendingNotification(true);
-            try {
-              // Simulate push notification
-              await new Promise(resolve => setTimeout(resolve, 1500));
-
-              Toast.show({
-                type: 'success',
-                text1: 'Notification Sent',
-                text2: 'Push notification sent to all users.',
-                visibilityTime: 4000,
-              });
-
-              await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            } catch (error) {
-              Toast.show({
-                type: 'error',
-                text1: 'Error',
-                text2: 'Failed to send notification.',
-                visibilityTime: 4000,
-              });
-            } finally {
-              setIsSendingNotification(false);
-            }
-          }
-        }
-      ]
-    );
-  };
-
-  // Date picker handlers
-  const onDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setEventForm(prev => ({ ...prev, date: selectedDate }));
+          type: 'test',
+          title: 'Guru Darshan',
+          body: 'Test scheduled notification from your spiritual app',
+        },
+        10 // 10 seconds from now
+      );
+      
+      Toast.show({
+        type: 'success',
+        text1: 'Local Notification Scheduled! ⏰',
+        text2: 'You will receive it in 10 seconds',
+      });
+      
+      if (Platform.OS !== 'web') {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to schedule notification',
+      });
     }
   };
 
-  const onTimeChange = (event: any, selectedTime?: Date) => {
-    setShowTimePicker(false);
-    if (selectedTime) {
-      setEventForm(prev => ({ ...prev, time: selectedTime }));
-    }
-  };
-
-  // Tab scenes
-  const QuotesRoute = () => (
-    <KeyboardAvoidingView
-      style={styles.scene}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="add-circle" size={24} color={SPIRITUAL_COLORS.primary} />
-            <Text style={styles.cardTitle}>Add New Quote</Text>
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Quote Text *</Text>
-            <TextInput
-              style={[
-                styles.textArea,
-                quoteErrors.text ? styles.inputError : null
-              ]}
-              placeholder="Enter the inspirational quote..."
-              placeholderTextColor={SPIRITUAL_COLORS.textMuted}
-              value={quoteForm.text}
-              onChangeText={(text) => {
-                setQuoteForm(prev => ({ ...prev, text }));
-                if (quoteErrors.text) {
-                  setQuoteErrors(prev => ({ ...prev, text: undefined }));
-                }
-              }}
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-            />
-            {quoteErrors.text && <Text style={styles.errorText}>{quoteErrors.text}</Text>}
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Author *</Text>
-            <TextInput
-              style={[
-                styles.input,
-                quoteErrors.author ? styles.inputError : null
-              ]}
-              placeholder="e.g., Gurudev, Buddha, Rumi..."
-              placeholderTextColor={SPIRITUAL_COLORS.textMuted}
-              value={quoteForm.author}
-              onChangeText={(text) => {
-                setQuoteForm(prev => ({ ...prev, author: text }));
-                if (quoteErrors.author) {
-                  setQuoteErrors(prev => ({ ...prev, author: undefined }));
-                }
-              }}
-            />
-            {quoteErrors.author && <Text style={styles.errorText}>{quoteErrors.author}</Text>}
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Reflection Question (Optional)</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="A question to help users reflect..."
-              placeholderTextColor={SPIRITUAL_COLORS.textMuted}
-              value={quoteForm.reflection}
-              onChangeText={(text) => setQuoteForm(prev => ({ ...prev, reflection: text }))}
-            />
-          </View>
-
-          <TouchableOpacity
-            style={[
-              styles.submitButton,
-              isSubmittingQuote && styles.buttonDisabled
-            ]}
-            onPress={handleQuoteSubmit}
-            disabled={isSubmittingQuote}
-            activeOpacity={0.8}
-          >
-            {isSubmittingQuote ? (
-              <ActivityIndicator color={SPIRITUAL_COLORS.primaryForeground} />
-            ) : (
-              <>
-                <Ionicons name="checkmark-circle" size={20} color={SPIRITUAL_COLORS.primaryForeground} />
-                <Text style={styles.submitButtonText}>Publish Quote</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
-  );
-
-  const EventsRoute = () => (
-    <KeyboardAvoidingView
-      style={styles.scene}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="calendar" size={24} color={SPIRITUAL_COLORS.primary} />
-            <Text style={styles.cardTitle}>Create New Event</Text>
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Event Title *</Text>
-            <TextInput
-              style={[
-                styles.input,
-                eventErrors.title ? styles.inputError : null
-              ]}
-              placeholder="e.g., Morning Meditation, Vedanta Talk..."
-              placeholderTextColor={SPIRITUAL_COLORS.textMuted}
-              value={eventForm.title}
-              onChangeText={(text) => {
-                setEventForm(prev => ({ ...prev, title: text }));
-                if (eventErrors.title) {
-                  setEventErrors(prev => ({ ...prev, title: undefined }));
-                }
-              }}
-            />
-            {eventErrors.title && <Text style={styles.errorText}>{eventErrors.title}</Text>}
-          </View>
-
-          <View style={styles.row}>
-            <View style={styles.halfInput}>
-              <Text style={styles.label}>Date *</Text>
-              <TouchableOpacity
-                style={styles.dateButton}
-                onPress={() => setShowDatePicker(true)}
-              >
-                <Text style={styles.dateButtonText}>
-                  {eventForm.date.toLocaleDateString()}
-                </Text>
-                <Ionicons name="calendar-outline" size={20} color={SPIRITUAL_COLORS.primary} />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.halfInput}>
-              <Text style={styles.label}>Time *</Text>
-              <TouchableOpacity
-                style={styles.dateButton}
-                onPress={() => setShowTimePicker(true)}
-              >
-                <Text style={styles.dateButtonText}>
-                  {eventForm.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </Text>
-                <Ionicons name="time-outline" size={20} color={SPIRITUAL_COLORS.primary} />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Location</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g., Main Hall, Online, Community Center..."
-              placeholderTextColor={SPIRITUAL_COLORS.textMuted}
-              value={eventForm.location}
-              onChangeText={(text) => setEventForm(prev => ({ ...prev, location: text }))}
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Event Type</Text>
-            <View style={styles.pickerContainer}>
-              {['meditation', 'teaching', 'celebration', 'retreat'].map((type) => (
-                <TouchableOpacity
-                  key={type}
-                  style={[
-                    styles.pickerOption,
-                    eventForm.type === type && styles.pickerOptionSelected
-                  ]}
-                  onPress={() => setEventForm(prev => ({ ...prev, type }))}
-                >
-                  <Text style={[
-                    styles.pickerOptionText,
-                    eventForm.type === type && styles.pickerOptionTextSelected
-                  ]}>
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Description *</Text>
-            <TextInput
-              style={[
-                styles.textArea,
-                eventErrors.description ? styles.inputError : null
-              ]}
-              placeholder="Describe the event, what participants can expect..."
-              placeholderTextColor={SPIRITUAL_COLORS.textMuted}
-              value={eventForm.description}
-              onChangeText={(text) => {
-                setEventForm(prev => ({ ...prev, description: text }));
-                if (eventErrors.description) {
-                  setEventErrors(prev => ({ ...prev, description: undefined }));
-                }
-              }}
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-            />
-            {eventErrors.description && <Text style={styles.errorText}>{eventErrors.description}</Text>}
-          </View>
-
-          <TouchableOpacity
-            style={[
-              styles.submitButton,
-              isSubmittingEvent && styles.buttonDisabled
-            ]}
-            onPress={handleEventSubmit}
-            disabled={isSubmittingEvent}
-            activeOpacity={0.8}
-          >
-            {isSubmittingEvent ? (
-              <ActivityIndicator color={SPIRITUAL_COLORS.primaryForeground} />
-            ) : (
-              <>
-                <Ionicons name="checkmark-circle" size={20} color={SPIRITUAL_COLORS.primaryForeground} />
-                <Text style={styles.submitButtonText}>Create Event</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {showDatePicker && (
-          <DateTimePicker
-            value={eventForm.date}
-            mode="date"
-            display="default"
-            onChange={onDateChange}
-          />
-        )}
-
-        {showTimePicker && (
-          <DateTimePicker
-            value={eventForm.time}
-            mode="time"
-            display="default"
-            onChange={onTimeChange}
-          />
-        )}
-      </ScrollView>
-    </KeyboardAvoidingView>
-  );
-
-  const NotificationsRoute = () => (
+  // Render functions for each tab
+  const renderQuotesTab = () => (
     <ScrollView contentContainerStyle={styles.scrollContent}>
       <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Ionicons name="notifications" size={24} color={SPIRITUAL_COLORS.primary} />
-          <Text style={styles.cardTitle}>Send Push Notification</Text>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Quote Text *</Text>
+          <TextInput
+            style={styles.textArea}
+            placeholder="Enter the inspirational quote..."
+            placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+            value={quoteText}
+            onChangeText={setQuoteText}
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
+          />
         </View>
 
-        <Text style={styles.description}>
-          Send today's quote as a push notification to all app users.
-        </Text>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Author *</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g., Gurudev, Buddha, Rumi..."
+            placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+            value={quoteAuthor}
+            onChangeText={setQuoteAuthor}
+          />
+        </View>
+
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Reflection Question (Optional)</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="A question to help users reflect on this quote..."
+            placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+            value={reflectionQuestion}
+            onChangeText={setReflectionQuestion}
+          />
+        </View>
 
         <TouchableOpacity
-          style={[
-            styles.submitButton,
-            isSendingNotification && styles.buttonDisabled
-          ]}
-          onPress={handleSendNotification}
+          style={[styles.submitButton, isSubmittingQuote && styles.buttonDisabled]}
+          onPress={handleQuoteSubmit}
+          disabled={isSubmittingQuote}
+        >
+          {isSubmittingQuote ? (
+            <ActivityIndicator color={SPIRITUAL_COLORS.primaryForeground} />
+          ) : (
+            <>
+              <Ionicons name="checkmark-circle" size={20} color={SPIRITUAL_COLORS.primaryForeground} />
+              <Text style={styles.submitButtonText}>Publish Quote</Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
+
+  const renderVideosTab = () => (
+    <ScrollView contentContainerStyle={styles.scrollContent}>
+      <View style={styles.card}>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Video Title *</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter the video title..."
+            placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+            value={videoTitle}
+            onChangeText={setVideoTitle}
+          />
+        </View>
+
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Description *</Text>
+          <TextInput
+            style={styles.textArea}
+            placeholder="Describe what this video is about..."
+            placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+            value={videoDescription}
+            onChangeText={setVideoDescription}
+            multiline
+            numberOfLines={3}
+            textAlignVertical="top"
+          />
+        </View>
+
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>YouTube URL *</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="https://youtube.com/watch?v=... or youtu.be/... or youtube.com/shorts/..."
+            placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+            value={youtubeUrl}
+            onChangeText={setYoutubeUrl}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+        </View>
+
+        <TouchableOpacity
+          style={[styles.submitButton, isSubmittingVideo && styles.buttonDisabled]}
+          onPress={handleVideoSubmit}
+          disabled={isSubmittingVideo}
+        >
+          {isSubmittingVideo ? (
+            <ActivityIndicator color={SPIRITUAL_COLORS.primaryForeground} />
+          ) : (
+            <>
+              <Ionicons name="videocam" size={20} color={SPIRITUAL_COLORS.primaryForeground} />
+              <Text style={styles.submitButtonText}>Add Video</Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
+
+  const renderNotificationsTab = () => (
+    <ScrollView contentContainerStyle={styles.scrollContent}>
+      {/* Push Token Status */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>📱 Push Notification Status</Text>
+        <View style={styles.tokenContainer}>
+          <Text style={styles.label}>Push Token Status:</Text>
+          <Text style={[styles.tokenStatus, pushToken ? styles.tokenActive : styles.tokenInactive]}>
+            {pushToken ? '✅ Active' : '⚠️ Development Mode'}
+          </Text>
+          {pushToken ? (
+            <Text style={styles.tokenText} numberOfLines={3}>
+              {pushToken.substring(0, 50)}...
+            </Text>
+          ) : (
+            <Text style={styles.infoText}>
+              Push tokens are not available in development mode.{'\n'}
+              Local notifications will work for testing.{'\n'}
+              Push notifications work in production builds.
+            </Text>
+          )}
+        </View>
+      </View>
+
+      {/* Quick Test Notification */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>🧪 Quick Test</Text>
+        <Text style={styles.cardDescription}>
+          Send a test notification to verify the system is working
+        </Text>
+        
+        <TouchableOpacity
+          style={[styles.submitButton, styles.testButton, isSendingNotification && styles.buttonDisabled]}
+          onPress={handleSendTestNotification}
           disabled={isSendingNotification}
-          activeOpacity={0.8}
+        >
+          {isSendingNotification ? (
+            <ActivityIndicator color={SPIRITUAL_COLORS.primaryForeground} />
+          ) : (
+            <>
+              <Ionicons name="notifications" size={20} color={SPIRITUAL_COLORS.primaryForeground} />
+              <Text style={styles.submitButtonText}>
+                {pushToken ? 'Send Test Push Notification' : 'Send Test Local Notification'}
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {/* Custom Notification */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>✏️ Custom Notification</Text>
+        <Text style={styles.cardDescription}>
+          Create and send a custom notification message
+        </Text>
+
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Notification Title *</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g., Daily Spiritual Wisdom"
+            placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+            value={notificationTitle}
+            onChangeText={setNotificationTitle}
+          />
+        </View>
+
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Notification Message *</Text>
+          <TextInput
+            style={styles.textArea}
+            placeholder="Write your spiritual message here..."
+            placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+            value={notificationBody}
+            onChangeText={setNotificationBody}
+            multiline
+            numberOfLines={3}
+            textAlignVertical="top"
+          />
+        </View>
+
+        <TouchableOpacity
+          style={[styles.submitButton, styles.customButton, isSendingNotification && styles.buttonDisabled]}
+          onPress={handleSendCustomNotification}
+          disabled={isSendingNotification || !pushToken || !notificationTitle.trim() || !notificationBody.trim()}
         >
           {isSendingNotification ? (
             <ActivityIndicator color={SPIRITUAL_COLORS.primaryForeground} />
           ) : (
             <>
               <Ionicons name="send" size={20} color={SPIRITUAL_COLORS.primaryForeground} />
-              <Text style={styles.submitButtonText}>Send Daily Quote Notification</Text>
+              <Text style={styles.submitButtonText}>Send Custom Notification</Text>
             </>
           )}
         </TouchableOpacity>
       </View>
 
+      {/* Local Notification Test */}
       <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Ionicons name="time" size={24} color={SPIRITUAL_COLORS.secondary} />
-          <Text style={styles.cardTitle}>Recent Activity</Text>
-        </View>
+        <Text style={styles.cardTitle}>⏰ Local Notification Test</Text>
+        <Text style={styles.cardDescription}>
+          Schedule a local notification that will appear in 10 seconds
+        </Text>
+        
+        <TouchableOpacity
+          style={[styles.submitButton, styles.localButton]}
+          onPress={handleScheduleLocalNotification}
+        >
+          <Ionicons name="timer" size={20} color={SPIRITUAL_COLORS.primaryForeground} />
+          <Text style={styles.submitButtonText}>Schedule Local Notification</Text>
+        </TouchableOpacity>
+      </View>
 
-        <View style={styles.activityList}>
-          <View style={styles.activityItem}>
-            <Text style={styles.activityText}>Quote published: "The mind is everything..."</Text>
-            <Text style={styles.activityTime}>2 hours ago</Text>
-          </View>
-          <View style={styles.activityItem}>
-            <Text style={styles.activityText}>Event created: New Moon Meditation</Text>
-            <Text style={styles.activityTime}>1 day ago</Text>
-          </View>
-          <View style={styles.activityItem}>
-            <Text style={styles.activityText}>Push notification sent to 1,247 users</Text>
-            <Text style={styles.activityTime}>2 days ago</Text>
-          </View>
-        </View>
+      {/* Information */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>ℹ️ Information</Text>
+        <Text style={styles.infoText}>
+          • <Text style={styles.infoBold}>Test Notifications:</Text> Send to your device only{'\n'}
+          • <Text style={styles.infoBold}>Push Notifications:</Text> Require internet connection{'\n'}
+          • <Text style={styles.infoBold}>Local Notifications:</Text> Work offline{'\n'}
+          • <Text style={styles.infoBold}>Permissions:</Text> Must be enabled in device settings
+        </Text>
       </View>
     </ScrollView>
   );
 
-  const renderScene = SceneMap({
-    quotes: QuotesRoute,
-    events: EventsRoute,
-    notifications: NotificationsRoute,
-  });
+  const renderScene = ({ route }: { route: any }) => {
+    switch (route.key) {
+      case 'quotes':
+        return renderQuotesTab();
+      case 'videos':
+        return renderVideosTab();
+      case 'notifications':
+        return renderNotificationsTab();
+      default:
+        return null;
+    }
+  };
 
   const renderTabBar = (props: any) => (
     <TabBar
       {...props}
-      indicatorStyle={styles.tabIndicator}
-      style={styles.tabBar}
-      labelStyle={styles.tabLabel}
+      indicatorStyle={{ backgroundColor: SPIRITUAL_COLORS.primary }}
+      style={{ backgroundColor: 'transparent' }}
+      labelStyle={{ fontSize: 12, fontWeight: '600' }}
       activeColor={SPIRITUAL_COLORS.primary}
       inactiveColor={SPIRITUAL_COLORS.textMuted}
-      renderIcon={({ route, focused, color }) => (
+      renderIcon={({ route, focused, color }: any) => (
         <Ionicons
           name={route.icon as any}
           size={20}
@@ -622,12 +600,13 @@ export const AdminScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient
-        colors={SPIRITUAL_GRADIENTS.peace}
+        colors={[SPIRITUAL_COLORS.background, SPIRITUAL_COLORS.cardBackground]}
         style={styles.gradient}
       >
         <View style={styles.header}>
+          <Ionicons name="settings" size={32} color={SPIRITUAL_COLORS.primary} />
           <Text style={styles.title}>Admin Panel</Text>
-          <Text style={styles.subtitle}>Manage quotes, events, and notifications</Text>
+          <Text style={styles.subtitle}>Manage quotes and videos</Text>
         </View>
 
         <TabView
@@ -641,152 +620,76 @@ export const AdminScreen = () => {
       <Toast />
     </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: SPIRITUAL_COLORS.background,
   },
   gradient: {
     flex: 1,
   },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 20,
+  },
   header: {
     alignItems: 'center',
+    marginBottom: 30,
     paddingTop: 20,
-    paddingBottom: 10,
-    paddingHorizontal: 20,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: SPIRITUAL_COLORS.foreground,
-    marginBottom: 4,
+    marginTop: 10,
   },
   subtitle: {
     fontSize: 16,
     color: SPIRITUAL_COLORS.textMuted,
-    textAlign: 'center',
-  },
-  tabBar: {
-    backgroundColor: SPIRITUAL_COLORS.cardBackground,
-    ...SPIRITUAL_SHADOWS.card,
-  },
-  tabIndicator: {
-    backgroundColor: SPIRITUAL_COLORS.primary,
-    height: 3,
-  },
-  tabLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'none',
-  },
-  scene: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 100,
+    marginTop: 5,
   },
   card: {
     backgroundColor: SPIRITUAL_COLORS.cardBackground,
     borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-    ...SPIRITUAL_SHADOWS.divine,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  cardTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: SPIRITUAL_COLORS.foreground,
-    marginLeft: 12,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   inputContainer: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   label: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
     color: SPIRITUAL_COLORS.foreground,
     marginBottom: 8,
   },
   input: {
-    backgroundColor: SPIRITUAL_COLORS.input,
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    color: SPIRITUAL_COLORS.foreground,
     borderWidth: 1,
     borderColor: SPIRITUAL_COLORS.border,
+    borderRadius: 12,
+    padding: 12,
+    fontSize: 16,
+    color: SPIRITUAL_COLORS.foreground,
+    backgroundColor: SPIRITUAL_COLORS.cardBackground,
   },
   textArea: {
-    backgroundColor: SPIRITUAL_COLORS.input,
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    color: SPIRITUAL_COLORS.foreground,
     borderWidth: 1,
     borderColor: SPIRITUAL_COLORS.border,
+    borderRadius: 12,
+    padding: 12,
+    fontSize: 16,
+    color: SPIRITUAL_COLORS.foreground,
+    backgroundColor: SPIRITUAL_COLORS.cardBackground,
     minHeight: 100,
-  },
-  inputError: {
-    borderColor: SPIRITUAL_COLORS.spiritualRed,
-    borderWidth: 2,
-  },
-  errorText: {
-    color: SPIRITUAL_COLORS.spiritualRed,
-    fontSize: 12,
-    marginTop: 4,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  halfInput: {
-    flex: 1,
-  },
-  dateButton: {
-    backgroundColor: SPIRITUAL_COLORS.input,
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: SPIRITUAL_COLORS.border,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  dateButtonText: {
-    fontSize: 16,
-    color: SPIRITUAL_COLORS.foreground,
-  },
-  pickerContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  pickerOption: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: SPIRITUAL_COLORS.border,
-    backgroundColor: SPIRITUAL_COLORS.input,
-  },
-  pickerOptionSelected: {
-    backgroundColor: SPIRITUAL_COLORS.primary,
-    borderColor: SPIRITUAL_COLORS.primary,
-  },
-  pickerOptionText: {
-    fontSize: 14,
-    color: SPIRITUAL_COLORS.foreground,
-  },
-  pickerOptionTextSelected: {
-    color: SPIRITUAL_COLORS.primaryForeground,
-    fontWeight: '600',
   },
   submitButton: {
     backgroundColor: SPIRITUAL_COLORS.primary,
@@ -795,8 +698,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
-    ...SPIRITUAL_SHADOWS.peaceful,
+    gap: 8,
+    marginTop: 10,
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -805,34 +708,65 @@ const styles = StyleSheet.create({
     color: SPIRITUAL_COLORS.primaryForeground,
     fontSize: 16,
     fontWeight: '600',
-    marginLeft: 8,
   },
-  description: {
+  errorText: {
+    color: SPIRITUAL_COLORS.spiritualRed,
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 50,
+  },
+  // Notification styles
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: SPIRITUAL_COLORS.foreground,
+    marginBottom: 12,
+  },
+  cardDescription: {
     fontSize: 14,
     color: SPIRITUAL_COLORS.textMuted,
-    marginBottom: 20,
+    marginBottom: 16,
     lineHeight: 20,
   },
-  activityList: {
-    gap: 12,
+  tokenContainer: {
+    marginTop: 8,
   },
-  activityItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: SPIRITUAL_COLORS.border,
-  },
-  activityText: {
-    flex: 1,
+  tokenStatus: {
     fontSize: 14,
-    color: SPIRITUAL_COLORS.foreground,
+    fontWeight: '600',
+    marginBottom: 8,
   },
-  activityTime: {
+  tokenActive: {
+    color: SPIRITUAL_COLORS.secondary, // Gold for active
+  },
+  tokenInactive: {
+    color: SPIRITUAL_COLORS.spiritualRed,
+  },
+  tokenText: {
     fontSize: 12,
     color: SPIRITUAL_COLORS.textMuted,
+    fontFamily: 'monospace',
+    backgroundColor: SPIRITUAL_COLORS.input,
+    padding: 8,
+    borderRadius: 6,
+    marginTop: 4,
+  },
+  testButton: {
+    backgroundColor: SPIRITUAL_COLORS.secondary, // Gold for test
+  },
+  customButton: {
+    backgroundColor: SPIRITUAL_COLORS.accent, // Light saffron for custom
+  },
+  localButton: {
+    backgroundColor: SPIRITUAL_COLORS.omGold, // Om gold for local
+  },
+  infoText: {
+    fontSize: 14,
+    color: SPIRITUAL_COLORS.textMuted,
+    lineHeight: 22,
+  },
+  infoBold: {
+    fontWeight: '600',
+    color: SPIRITUAL_COLORS.foreground,
   },
 });
-
-export default AdminScreen;

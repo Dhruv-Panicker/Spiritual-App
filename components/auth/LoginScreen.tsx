@@ -21,6 +21,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS } from '../../constants/SpiritualColors';
 import { OTPVerificationScreen } from './OTPVerificationScreen';
 import { emailVerificationService } from '../../services/emailService';
+import { GoogleSignInButton } from '../GoogleSignInButton';
+import { GoogleUser } from '../../services/googleSignInService';
 
 export const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -31,7 +33,7 @@ export const LoginScreen = () => {
   const [showOTPScreen, setShowOTPScreen] = useState(false);
   const [pendingSignUpData, setPendingSignUpData] = useState<{email: string; password: string} | null>(null);
   
-  const { login, isLoading } = useAuth();
+  const { login, loginWithGoogle, isLoading } = useAuth();
   
   // Animation references
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -197,6 +199,34 @@ export const LoginScreen = () => {
     setPasswordError('');
   };
 
+  const handleGoogleSignInSuccess = async (googleUser: GoogleUser) => {
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      
+      Toast.show({
+        type: 'success',
+        text1: `Welcome ${googleUser.name}!`,
+        text2: 'You have been successfully signed in with Google.',
+        visibilityTime: 4000,
+      });
+      
+      // Note: The GoogleSignInButton component already calls loginWithGoogle internally
+      // so the user should be automatically logged in through AuthContext
+    } catch (error) {
+      console.error('Error handling Google sign-in success:', error);
+    }
+  };
+
+  const handleGoogleSignInError = (error: Error) => {
+    console.error('Google sign-in error:', error);
+    Toast.show({
+      type: 'error',
+      text1: 'Google Sign-In Failed',
+      text2: error.message || 'Please try again.',
+      visibilityTime: 4000,
+    });
+  };
+
   // Show OTP verification screen if needed
   if (showOTPScreen && pendingSignUpData) {
     return (
@@ -299,6 +329,21 @@ export const LoginScreen = () => {
                   {isLoading ? 'Loading...' : (isSignUp ? 'Sign Up' : 'Sign In')}
                 </Text>
               </TouchableOpacity>
+
+              {/* Divider */}
+              <View style={styles.dividerContainer}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>or</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              {/* Google Sign-In Button */}
+              <GoogleSignInButton
+                onSignInSuccess={handleGoogleSignInSuccess}
+                onSignInError={handleGoogleSignInError}
+                buttonText="Continue with Google"
+                style={styles.googleButton}
+              />
 
               <TouchableOpacity
                 style={styles.switchButton}
@@ -418,5 +463,24 @@ const styles = StyleSheet.create({
     color: SPIRITUAL_COLORS.primary,
     fontSize: 14,
     fontWeight: '500',
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: SPIRITUAL_COLORS.border,
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    color: SPIRITUAL_COLORS.textMuted,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  googleButton: {
+    marginBottom: 16,
   },
 });

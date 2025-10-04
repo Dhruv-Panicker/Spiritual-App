@@ -32,8 +32,22 @@ yarn-error.*
 
 # local env files
 .env*.local
+.env
 
 # typescript
 *.tsbuildinfo
+
+# Google Services (sensitive files)
+GoogleService-Info.plist
+google-services.json
+
+# IDE
+.vscode/
+.idea/
+
+# Additional build files
+build/
+*.tgz
+.yarn-integrity
 
 app-example
