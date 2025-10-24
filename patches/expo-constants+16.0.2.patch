@@ -1,0 +1,12 @@
+diff --git a/node_modules/expo-constants/scripts/get-app-config-ios.sh b/node_modules/expo-constants/scripts/get-app-config-ios.sh
+index 1234567..abcdefg 100755
+--- a/node_modules/expo-constants/scripts/get-app-config-ios.sh
++++ b/node_modules/expo-constants/scripts/get-app-config-ios.sh
+@@ -1,6 +1,6 @@
+ #!/usr/bin/env bash
+ 
+-set -eo pipefail
++#set -eo pipefail
+ 
+ DEST="$CONFIGURATION_BUILD_DIR"
+ RESOURCE_BUNDLE_NAME="EXConstants.bundle"

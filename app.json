@@ -7,7 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "guru-darshan",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
@@ -16,15 +15,17 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.spiritualapp.gurudarshan",
-      "googleServicesFile": "./GoogleService-Info.plist"
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "flipper": false
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.spiritualapp.gurudarshan",
-      "googleServicesFile": "./google-services.json"
+      "package": "com.spiritualapp.gurudarshan"
     },
     "web": {
       "bundler": "metro",
@@ -45,6 +46,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0a61bbdb-728e-4e8e-8f64-74d6790183b0"
+      }
+    },
+    "owner": "dhruv_panicker"
   }
 }

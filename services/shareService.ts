@@ -1,6 +1,6 @@
 
 import { Share, Platform, Image } from 'react-native';
-import * as FileSystem from 'expo-file-system/legacy';
+import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { Asset } from 'expo-asset';
 

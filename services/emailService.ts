@@ -1,5 +1,5 @@
 
-import emailjs from '@emailjs/react-native';
+
 
 interface OTPData {
   email: string;
@@ -14,21 +14,17 @@ class EmailVerificationService {
   private readonly OTP_LENGTH = 6;
   private isInitialized = false;
 
-  // Initialize EmailJS with your service credentials
-  private async initializeEmailJS() {
+  // Mock email initialization - can be replaced with actual service later
+  private async initializeEmailService() {
     if (this.isInitialized) return;
     
     try {
-      // You'll need to replace these with your actual EmailJS credentials
-      // Sign up at https://www.emailjs.com/ to get these values
-      await emailjs.init({
-        publicKey: 'YOUR_PUBLIC_KEY', // Replace with your EmailJS public key
-        // You can sign up for free at emailjs.com
-      });
+      // For now, just mock the initialization
+      // You can replace this with your preferred email service later
       this.isInitialized = true;
-      console.log('EmailJS initialized successfully');
+      console.log('Email service initialized successfully');
     } catch (error) {
-      console.error('Failed to initialize EmailJS:', error);
+      console.error('Failed to initialize email service:', error);
     }
   }
 
@@ -42,8 +38,8 @@ class EmailVerificationService {
     try {
       console.log(`Sending OTP to: ${email}`);
       
-      // Initialize EmailJS if not already done
-      await this.initializeEmailJS();
+      // Initialize email service if not already done
+      await this.initializeEmailService();
       
       // Generate OTP
       const otp = this.generateOTP();
@@ -74,17 +70,15 @@ class EmailVerificationService {
           expiry_minutes: this.OTP_EXPIRY_MINUTES,
         };
 
-        // Replace these with your actual EmailJS service and template IDs
-        const response = await emailjs.send(
-          'YOUR_SERVICE_ID', // Replace with your EmailJS service ID
-          'YOUR_TEMPLATE_ID', // Replace with your EmailJS template ID
-          templateParams
-        );
-
-        console.log('Email sent successfully:', response.status, response.text);
+        // Mock email sending - for development purposes
+        // You can integrate with your preferred email service here
+        console.log('📧 Mock email sent to:', email);
+        console.log('🔐 OTP Code:', otp);
+        console.log('📋 Template Params:', templateParams);
+        
         return true;
       } catch (emailError) {
-        console.warn('Failed to send email via EmailJS, but OTP is available in console:', emailError);
+        console.warn('Email service not configured, but OTP is available in console:', emailError);
         // Return true anyway since OTP is logged to console for development
         return true;
       }
@@ -131,7 +125,8 @@ class EmailVerificationService {
   // Clean up expired OTPs
   cleanupExpiredOTPs(): void {
     const now = Date.now();
-    for (const [email, otpData] of this.otpStorage.entries()) {
+    const entries = Array.from(this.otpStorage.entries());
+    for (const [email, otpData] of entries) {
       if (now > otpData.expiresAt) {
         this.otpStorage.delete(email);
       }

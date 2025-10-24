@@ -7,8 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Configure how notifications should be handled when the app is running
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
+    shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
   }),
@@ -185,9 +184,8 @@ class NotificationService {
           sound: 'default',
         },
         trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
           seconds: triggerSeconds,
-        },
+        } as Notifications.TimeIntervalTriggerInput,
       });
 
       console.log('📅 Local notification scheduled:', notificationId);
@@ -311,11 +309,10 @@ class NotificationService {
           data: { type: 'quote' },
         },
         trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
           hour: 7,
           minute: 0,
           repeats: true,
-        },
+        } as Notifications.CalendarTriggerInput,
       });
 
       console.log('📅 Daily quote reminder scheduled for 7:00 AM');
@@ -333,11 +330,10 @@ class NotificationService {
           data: { type: 'reflection' },
         },
         trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
           hour: 20,
           minute: 0,
           repeats: true,
-        },
+        } as Notifications.CalendarTriggerInput,
       });
 
       console.log('📅 Evening reflection scheduled for 8:00 PM');
