@@ -40,9 +40,16 @@ workflows:
       - name: Expo prebuild
         script: |
           npx expo prebuild --platform ios --clean
+      - name: Patch iOS Pod settings
+        script: |
+          node scripts/patch-ios-pods.js
       - name: Pod install
         script: |
           cd ios && pod install
+      - name: Post-pod install patch
+        script: |
+          # Run the patch again after pod install to ensure Pods project is updated
+          node scripts/patch-ios-pods.js
       - name: Build iOS with Xcode
         script: |
           # Build directly with Xcode (bypassing EAS entirely)
