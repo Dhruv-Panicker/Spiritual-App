@@ -3,12 +3,7 @@ workflows:
     name: iOS Spiritual App Build
     max_build_duration: 60
     instance_type: mac_mini_m1
-    integrations:
-      app_store_connect: codemagic
     environment:
-      ios_signing:
-        distribution_type: development
-        bundle_identifier: com.spiritualapp.gurudarshan
       vars:
         # Environment variables to prevent shell issues
         EXPO_NO_FLIPPER: "1"
@@ -47,8 +42,8 @@ workflows:
           keychain initialize
       - name: Build iOS
         script: |
-          # Use production build to avoid development client issues
-          npx eas build --platform ios --profile production --non-interactive --no-wait
+          # Test build without code signing first
+          npx expo build:ios --type simulator --non-interactive
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
