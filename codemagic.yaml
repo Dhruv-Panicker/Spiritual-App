@@ -1,0 +1,60 @@
+workflows:
+  ios-workflow:
+    name: iOS Spiritual App Build
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    integrations:
+      app_store_connect: codemagic
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.spiritualapp.gurudarshan
+      vars:
+        # Environment variables to prevent shell issues
+        EXPO_NO_FLIPPER: "1"
+        RCT_NEW_ARCH_ENABLED: "0"
+        SHELL: "/bin/bash"
+        BASH_SILENCE_DEPRECATION_WARNING: "1"
+        CI: "true"
+        # Prevent dotenv issues
+        EXPO_NO_DOTENV: "1"
+      node: 20.19.4
+      xcode: latest
+      cocoapods: default
+    cache:
+      cache_paths:
+        - $HOME/.npm
+        - node_modules
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm install --legacy-peer-deps
+      - name: Fix expo-constants PhaseScriptExecution error
+        script: |
+          # Apply the fix from your research - comment out 'set -eo pipefail'
+          if [ -f "node_modules/expo-constants/scripts/get-app-config-ios.sh" ]; then
+            echo "Applying expo-constants fix..."
+            sed -i '' 's/^set -eo pipefail/#set -eo pipefail/' node_modules/expo-constants/scripts/get-app-config-ios.sh
+            echo "✅ expo-constants fix applied"
+          else
+            echo "⚠️ expo-constants script not found"
+          fi
+      - name: Expo prebuild
+        script: |
+          npx expo prebuild --platform ios --clean
+      - name: Set up code signing
+        script: |
+          keychain initialize
+      - name: Build iOS
+        script: |
+          # Use production build to avoid development client issues
+          npx eas build --platform ios --profile production --non-interactive --no-wait
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        beta_groups:
+          - App Store Connect Users
