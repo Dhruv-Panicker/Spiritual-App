@@ -42,14 +42,51 @@ workflows:
           npx expo prebuild --platform ios --clean
       - name: Patch iOS Pod settings
         script: |
-          node scripts/patch-ios-pods.js
+          # Try Node.js script first, fallback to direct sed approach
+          if ! node scripts/patch-ios-pods.js; then
+            echo "Node script failed, using direct Podfile patch..."
+            cd ios
+            
+            # Ensure platform is set
+            if ! grep -q "platform :ios" Podfile; then
+              sed -i '' '1i\
+platform :ios, '\''12.0'\''
+' Podfile
+            fi
+            
+            # Add post_install hook if not present
+            if ! grep -q "post_install do" Podfile; then
+              cat >> Podfile << 'EOF'
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '12.0'
+      config.build_settings['SWIFT_VERSION'] = '5.0'
+      if config.name == 'Debug'
+        config.build_settings['SWIFT_OPTIMIZATION_LEVEL'] = '-Onone'
+      end
+    end
+  end
+end
+EOF
+            fi
+            
+            echo "✅ Direct Podfile patch completed"
+          fi
       - name: Pod install
         script: |
           cd ios && pod install
       - name: Post-pod install patch
         script: |
-          # Run the patch again after pod install to ensure Pods project is updated
-          node scripts/patch-ios-pods.js
+          # Patch the generated Pods project directly
+          if [ -f "ios/Pods/Pods.xcodeproj/project.pbxproj" ]; then
+            echo "Patching Pods Xcode project..."
+            cd ios/Pods/Pods.xcodeproj
+            sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = [^;]*/IPHONEOS_DEPLOYMENT_TARGET = 12.0/g' project.pbxproj
+            sed -i '' 's/SWIFT_VERSION = [^;]*/SWIFT_VERSION = 5.0/g' project.pbxproj
+            echo "✅ Pods project patched"
+          fi
       - name: Build iOS with Xcode
         script: |
           # Build directly with Xcode (bypassing EAS entirely)

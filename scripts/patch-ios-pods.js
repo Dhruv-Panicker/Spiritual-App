@@ -29,8 +29,7 @@ function patchPodfile() {
   }
 
   // Add or update post_install hook
-  const postInstallHook = `
-post_install do |installer|
+  const postInstallHook = `post_install do |installer|
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
       # Set minimum iOS deployment target
@@ -53,15 +52,52 @@ end`;
   if (podfileContent.includes('post_install do |installer|')) {
     // Replace existing post_install hook
     const postInstallRegex = /post_install do \|installer\|[\s\S]*?^end/m;
-    podfileContent = podfileContent.replace(postInstallRegex, postInstallHook.trim());
+    podfileContent = podfileContent.replace(postInstallRegex, postInstallHook);
     console.log('✅ Updated existing post_install hook');
   } else {
-    // Add new post_install hook at the end
-    podfileContent = podfileContent.trim() + '\n' + postInstallHook;
+    // Add new post_install hook - ensure proper placement
+    // Remove any trailing whitespace and ensure we don't have double 'end' statements
+    podfileContent = podfileContent.trim();
+    
+    // If the file doesn't end with 'end', add it properly
+    if (!podfileContent.endsWith('end')) {
+      podfileContent = podfileContent + '\n\n' + postInstallHook;
+    } else {
+      // Insert before the final 'end' statement
+      const lastEndIndex = podfileContent.lastIndexOf('\nend');
+      if (lastEndIndex > -1) {
+        podfileContent = podfileContent.substring(0, lastEndIndex) + '\n\n' + postInstallHook + '\nend';
+      } else {
+        // Fallback: just append
+        podfileContent = podfileContent + '\n\n' + postInstallHook;
+      }
+    }
     console.log('✅ Added new post_install hook');
   }
 
+  // Validate basic Ruby syntax by counting do/end pairs
+  const doCount = (podfileContent.match(/\bdo\b/g) || []).length;
+  const endCount = (podfileContent.match(/\bend\b/g) || []).length;
+  
+  if (doCount !== endCount) {
+    console.log(`⚠️  Syntax warning: Found ${doCount} 'do' and ${endCount} 'end' statements`);
+    console.log('Attempting to fix...');
+    
+    // If we have more ends than dos, remove the extra end
+    if (endCount > doCount) {
+      const extraEnds = endCount - doCount;
+      for (let i = 0; i < extraEnds; i++) {
+        const lastEndIndex = podfileContent.lastIndexOf('\nend');
+        if (lastEndIndex > -1) {
+          podfileContent = podfileContent.substring(0, lastEndIndex) + podfileContent.substring(lastEndIndex + 4);
+        }
+      }
+      console.log(`✅ Removed ${extraEnds} extra 'end' statement(s)`);
+    }
+  }
+
   fs.writeFileSync(PODFILE_PATH, podfileContent, 'utf8');
+  console.log('✅ Podfile written successfully');
   return true;
 }
 
