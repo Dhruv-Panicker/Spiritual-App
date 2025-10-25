@@ -13,6 +13,8 @@ workflows:
         CI: "true"
         # Prevent dotenv issues
         EXPO_NO_DOTENV: "1"
+      groups:
+        - expo
       node: 20.19.4
       xcode: latest
       cocoapods: default
@@ -23,6 +25,7 @@ workflows:
     scripts:
       - name: Install dependencies
         script: |
+          npm install -g @expo/cli eas-cli
           npm install --legacy-peer-deps
       - name: Fix expo-constants PhaseScriptExecution error
         script: |
@@ -40,9 +43,13 @@ workflows:
       - name: Set up code signing
         script: |
           keychain initialize
-      - name: Build iOS
+      - name: EAS Login and Build iOS
         script: |
+          # Login to EAS using token
+          echo "Logging into EAS..."
+          npx eas login --non-interactive
           # Use EAS build for simulator (no code signing needed)
+          echo "Starting iOS simulator build..."
           npx eas build --platform ios --profile simulator --non-interactive
     artifacts:
       - build/ios/ipa/*.ipa
