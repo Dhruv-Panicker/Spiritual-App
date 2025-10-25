@@ -42,8 +42,8 @@ workflows:
           keychain initialize
       - name: Build iOS
         script: |
-          # Test build without code signing first
-          npx expo build:ios --type simulator --non-interactive
+          # Use EAS build for simulator (no code signing needed)
+          npx eas build --platform ios --profile simulator --non-interactive
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log

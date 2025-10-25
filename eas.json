@@ -16,6 +16,19 @@
         "CI": "true"
       }
     },
+    "simulator": {
+      "ios": {
+        "simulator": true
+      },
+      "node": "20.19.4",
+      "env": {
+        "RCT_NEW_ARCH_ENABLED": "0",
+        "EXPO_NO_FLIPPER": "1",
+        "SHELL": "/bin/bash",
+        "BASH_SILENCE_DEPRECATION_WARNING": "1",
+        "CI": "true"
+      }
+    },
     "preview": {
       "distribution": "internal",
       "node": "20.19.4",
