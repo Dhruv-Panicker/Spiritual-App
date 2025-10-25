@@ -47,7 +47,9 @@ workflows:
         script: |
           # Build directly with Xcode (bypassing EAS entirely)
           cd ios
-          xcodebuild -workspace *.xcworkspace -scheme * -configuration Release -destination 'generic/platform=iOS Simulator' build
+          echo "Listing available workspaces and schemes..."
+          ls -la
+          xcodebuild -workspace SpiritualApp.xcworkspace -scheme SpiritualApp -configuration Release -destination 'generic/platform=iOS Simulator' build
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
