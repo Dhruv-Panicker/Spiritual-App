@@ -108,7 +108,7 @@ workflows:
           
           # Use a specific simulator ID from the available list
           # iPhone 15 arm64: FD1BF54E-4D3D-45B8-AF09-425C68025542
-          echo "Starting Xcode build for simulator..."
+          echo "Starting Xcode build for simulator (arm64 only)..."
           set -o pipefail && xcodebuild \
             -workspace SpiritualApp.xcworkspace \
             -scheme SpiritualApp \
@@ -118,7 +118,9 @@ workflows:
             -derivedDataPath ./build \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
-            ONLY_ACTIVE_ARCH=NO \
+            ONLY_ACTIVE_ARCH=YES \
+            ARCHS=arm64 \
+            VALID_ARCHS=arm64 \
             build 2>&1 | tee xcodebuild.log
           
           BUILD_EXIT_CODE=$?
