@@ -71,9 +71,6 @@ workflows:
               target.build_configurations.each do |config|
                 config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '12.0'
                 config.build_settings['SWIFT_VERSION'] = '5.0'
-                if config.name == 'Debug'
-                  config.build_settings['SWIFT_OPTIMIZATION_LEVEL'] = '-Onone'
-                end
               end
             end
           end
@@ -100,11 +97,35 @@ workflows:
           fi
       - name: Build iOS with Xcode
         script: |
-          # Build directly with Xcode (bypassing EAS entirely)
+          # Build directly with Xcode for simulator (Debug configuration)
           cd ios
           echo "Listing available workspaces and schemes..."
           ls -la
-          xcodebuild -workspace SpiritualApp.xcworkspace -scheme SpiritualApp -configuration Release -destination 'generic/platform=iOS Simulator' build
+          
+          # Clean build folder first
+          echo "Cleaning build folder..."
+          xcodebuild clean -workspace SpiritualApp.xcworkspace -scheme SpiritualApp
+          
+          # Use Debug configuration for simulator builds to match -Onone optimization
+          echo "Starting Xcode build..."
+          xcodebuild -workspace SpiritualApp.xcworkspace \
+            -scheme SpiritualApp \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
+            -derivedDataPath ./build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build | tee xcodebuild.log
+          
+          # Check build result
+          if [ ${PIPESTATUS[0]} -ne 0 ]; then
+            echo "❌ Build failed. Showing detailed error logs..."
+            grep -A 10 "error:" xcodebuild.log || echo "No specific errors found"
+            exit 1
+          fi
+          
+          echo "✅ Build completed successfully"
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
