@@ -64,20 +64,20 @@ workflows:
             fi
             
             # Add post_install hook at the end
-            cat >> Podfile << 'PODFILE_END'
-
-post_install do |installer|
-  installer.pods_project.targets.each do |target|
-    target.build_configurations.each do |config|
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '12.0'
-      config.build_settings['SWIFT_VERSION'] = '5.0'
-      if config.name == 'Debug'
-        config.build_settings['SWIFT_OPTIMIZATION_LEVEL'] = '-Onone'
-      end
-    end
-  end
-end
-PODFILE_END
+            cat >> Podfile <<'PODFILE_END'
+          
+          post_install do |installer|
+            installer.pods_project.targets.each do |target|
+              target.build_configurations.each do |config|
+                config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '12.0'
+                config.build_settings['SWIFT_VERSION'] = '5.0'
+                if config.name == 'Debug'
+                  config.build_settings['SWIFT_OPTIMIZATION_LEVEL'] = '-Onone'
+                end
+              end
+            end
+          end
+          PODFILE_END
             echo "✅ Added post_install hook"
           fi
           
