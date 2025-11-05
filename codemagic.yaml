@@ -42,21 +42,29 @@ workflows:
           npx expo prebuild --platform ios --clean
       - name: Patch iOS Pod settings
         script: |
-          # Try Node.js script first, fallback to direct sed approach
-          if ! node scripts/patch-ios-pods.js; then
-            echo "Node script failed, using direct Podfile patch..."
-            cd ios
-            
-            # Ensure platform is set
-            if ! grep -q "platform :ios" Podfile; then
-              sed -i '' '1i\
-platform :ios, '\''12.0'\''
-' Podfile
+          echo "Patching Podfile for iOS 12.0 deployment target..."
+          cd ios
+          
+          # Backup original Podfile
+          cp Podfile Podfile.backup
+          
+          # Check if post_install already exists
+          if grep -q "post_install do" Podfile; then
+            echo "⚠️  post_install hook already exists, skipping Podfile modification"
+            echo "Will patch Pods project directly after pod install"
+          else
+            # Ensure platform is set to iOS 12.0
+            if grep -q "platform :ios" Podfile; then
+              sed -i '' "s/platform :ios, '[^']*'/platform :ios, '12.0'/" Podfile
+              echo "✅ Updated platform to iOS 12.0"
+            else
+              # Add platform at the top
+              echo "platform :ios, '12.0'" | cat - Podfile > Podfile.tmp && mv Podfile.tmp Podfile
+              echo "✅ Added platform iOS 12.0"
             fi
             
-            # Add post_install hook if not present
-            if ! grep -q "post_install do" Podfile; then
-              cat >> Podfile << 'EOF'
+            # Add post_install hook at the end
+            cat >> Podfile << 'PODFILE_END'
 
 post_install do |installer|
   installer.pods_project.targets.each do |target|
@@ -69,11 +77,14 @@ post_install do |installer|
     end
   end
 end
-EOF
-            fi
-            
-            echo "✅ Direct Podfile patch completed"
+PODFILE_END
+            echo "✅ Added post_install hook"
           fi
+          
+          # Show the last few lines to verify
+          echo "=== Last 10 lines of Podfile ==="
+          tail -10 Podfile
+          echo "================================"
       - name: Pod install
         script: |
           cd ios && pod install

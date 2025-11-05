@@ -15,89 +15,53 @@ function patchPodfile() {
   }
 
   let podfileContent = fs.readFileSync(PODFILE_PATH, 'utf8');
+  console.log('📄 Original Podfile length:', podfileContent.length);
   
   // Ensure minimum iOS deployment target
   if (!podfileContent.includes("platform :ios, '12.0'") && !podfileContent.includes("platform :ios, '13.0'")) {
     // Replace any existing platform declaration or add at the top
     if (podfileContent.includes('platform :ios,')) {
       podfileContent = podfileContent.replace(/platform :ios, '[^']*'/, "platform :ios, '12.0'");
+      console.log('✅ Updated iOS platform to 12.0');
     } else {
       // Add platform declaration at the beginning
       podfileContent = "platform :ios, '12.0'\n\n" + podfileContent;
+      console.log('✅ Added iOS platform 12.0');
     }
-    console.log('✅ Set iOS platform to 12.0');
+  } else {
+    console.log('✅ iOS platform already set correctly');
   }
 
-  // Add or update post_install hook
-  const postInstallHook = `post_install do |installer|
+  // Check if post_install already exists
+  if (podfileContent.includes('post_install do |installer|')) {
+    console.log('⚠️  post_install hook already exists - skipping to avoid conflicts');
+    console.log('ℹ️  Will patch Pods project directly after pod install instead');
+    fs.writeFileSync(PODFILE_PATH, podfileContent, 'utf8');
+    return true;
+  }
+
+  // Only add post_install if it doesn't exist
+  // Simply append at the end - don't try to be smart about placement
+  const postInstallHook = `
+post_install do |installer|
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
-      # Set minimum iOS deployment target
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '12.0'
-      
-      # Set Swift version for consistency
       config.build_settings['SWIFT_VERSION'] = '5.0'
-      
-      # For Debug builds, use -Onone to avoid preview/optimization conflicts
       if config.name == 'Debug'
         config.build_settings['SWIFT_OPTIMIZATION_LEVEL'] = '-Onone'
       end
-      
-      # Silence deployment target warnings
-      config.build_settings['CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS'] = 'NO'
     end
   end
-end`;
+end
+`;
 
-  if (podfileContent.includes('post_install do |installer|')) {
-    // Replace existing post_install hook
-    const postInstallRegex = /post_install do \|installer\|[\s\S]*?^end/m;
-    podfileContent = podfileContent.replace(postInstallRegex, postInstallHook);
-    console.log('✅ Updated existing post_install hook');
-  } else {
-    // Add new post_install hook - ensure proper placement
-    // Remove any trailing whitespace and ensure we don't have double 'end' statements
-    podfileContent = podfileContent.trim();
-    
-    // If the file doesn't end with 'end', add it properly
-    if (!podfileContent.endsWith('end')) {
-      podfileContent = podfileContent + '\n\n' + postInstallHook;
-    } else {
-      // Insert before the final 'end' statement
-      const lastEndIndex = podfileContent.lastIndexOf('\nend');
-      if (lastEndIndex > -1) {
-        podfileContent = podfileContent.substring(0, lastEndIndex) + '\n\n' + postInstallHook + '\nend';
-      } else {
-        // Fallback: just append
-        podfileContent = podfileContent + '\n\n' + postInstallHook;
-      }
-    }
-    console.log('✅ Added new post_install hook');
-  }
-
-  // Validate basic Ruby syntax by counting do/end pairs
-  const doCount = (podfileContent.match(/\bdo\b/g) || []).length;
-  const endCount = (podfileContent.match(/\bend\b/g) || []).length;
-  
-  if (doCount !== endCount) {
-    console.log(`⚠️  Syntax warning: Found ${doCount} 'do' and ${endCount} 'end' statements`);
-    console.log('Attempting to fix...');
-    
-    // If we have more ends than dos, remove the extra end
-    if (endCount > doCount) {
-      const extraEnds = endCount - doCount;
-      for (let i = 0; i < extraEnds; i++) {
-        const lastEndIndex = podfileContent.lastIndexOf('\nend');
-        if (lastEndIndex > -1) {
-          podfileContent = podfileContent.substring(0, lastEndIndex) + podfileContent.substring(lastEndIndex + 4);
-        }
-      }
-      console.log(`✅ Removed ${extraEnds} extra 'end' statement(s)`);
-    }
-  }
+  podfileContent = podfileContent.trimEnd() + '\n' + postInstallHook;
+  console.log('✅ Added post_install hook at end of file');
 
   fs.writeFileSync(PODFILE_PATH, podfileContent, 'utf8');
   console.log('✅ Podfile written successfully');
+  console.log('📄 New Podfile length:', podfileContent.length);
   return true;
 }
 
