@@ -106,23 +106,30 @@ workflows:
           echo "Cleaning build folder..."
           xcodebuild clean -workspace SpiritualApp.xcworkspace -scheme SpiritualApp
           
-          # Use Debug configuration for simulator builds to match -Onone optimization
-          echo "Starting Xcode build..."
-          xcodebuild -workspace SpiritualApp.xcworkspace \
+          # Use a specific simulator ID from the available list
+          # iPhone 15 arm64: FD1BF54E-4D3D-45B8-AF09-425C68025542
+          echo "Starting Xcode build for simulator..."
+          set -o pipefail && xcodebuild \
+            -workspace SpiritualApp.xcworkspace \
             -scheme SpiritualApp \
             -configuration Debug \
             -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 15' \
+            -destination 'id=FD1BF54E-4D3D-45B8-AF09-425C68025542' \
             -derivedDataPath ./build \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
-            build | tee xcodebuild.log
+            ONLY_ACTIVE_ARCH=NO \
+            build 2>&1 | tee xcodebuild.log
           
-          # Check build result
-          if [ ${PIPESTATUS[0]} -ne 0 ]; then
-            echo "❌ Build failed. Showing detailed error logs..."
-            grep -A 10 "error:" xcodebuild.log || echo "No specific errors found"
-            exit 1
+          BUILD_EXIT_CODE=$?
+          
+          if [ $BUILD_EXIT_CODE -ne 0 ]; then
+            echo "❌ Build failed with exit code: $BUILD_EXIT_CODE"
+            echo "=== Full build log tail ==="
+            tail -100 xcodebuild.log
+            echo "=== Searching for errors ==="
+            grep -i "error" xcodebuild.log | head -20 || echo "No errors found in grep"
+            exit $BUILD_EXIT_CODE
           fi
           
           echo "✅ Build completed successfully"
