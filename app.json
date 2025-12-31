@@ -17,8 +17,7 @@
       "bundleIdentifier": "com.spiritualapp.gurudarshan",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
-      },
-      "flipper": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -34,7 +33,6 @@
     },
     "plugins": [
       "expo-router",
-      "@react-native-google-signin/google-signin",
       [
         "expo-notifications",
         {
@@ -48,11 +46,9 @@
       "typedRoutes": true
     },
     "extra": {
-      "router": {},
       "eas": {
         "projectId": "0a61bbdb-728e-4e8e-8f64-74d6790183b0"
       }
-    },
-    "owner": "dhruv_panicker"
+    }
   }
 }

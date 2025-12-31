@@ -8,28 +8,27 @@ import {
   SafeAreaView,
   Dimensions,
   Modal,
+  ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
-import { Share } from 'react-native';
-import Toast from 'react-native-toast-message';
-import { shareService } from '../../services/shareService';
 import { BlurView } from 'expo-blur';
-
+import { useEvents, type MonthData, type Event } from '@/contexts/EventsContext';
+import { shareService } from '@/services/shareService';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS, SPIRITUAL_TYPOGRAPHY } from '@/constants/SpiritualColors';
-import { useEvents, type MonthData } from '@/hooks/data/useEvents';
-import { type Event } from '@/mocks/data/events';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-export function CalendarScreen() {
+export default function CalendarScreen() {
   const {
     monthlyData,
     getCurrentMonthEvents,
     monthNames,
     getEventTypeColor,
     getEventTypeBadgeStyle,
+    loading,
   } = useEvents();
 
   const [selectedMonth, setSelectedMonth] = useState<MonthData | null>(null);
@@ -37,47 +36,69 @@ export function CalendarScreen() {
   const [isMonthModalOpen, setIsMonthModalOpen] = useState(false);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
 
-  const currentMonthEvents = getCurrentMonthEvents;
-
   const handleMonthPress = async (monthData: MonthData) => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (Platform.OS !== 'web') {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     setSelectedMonth(monthData);
     setIsMonthModalOpen(true);
   };
 
   const handleEventPress = async (event: Event) => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSelectedEvent(event);
-    setIsEventModalOpen(true);
-  };
-
-  const shareEvent = async (event: Event) => {
-    try {
-      await shareService.shareEvent(event);
-    } catch (error) {
-      console.error('Error sharing event:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Share Failed',
-        text2: 'Unable to share event details.',
-      });
+    if (Platform.OS !== 'web') {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    // Close month modal first, then open event modal after a brief delay
+    if (isMonthModalOpen) {
+      setIsMonthModalOpen(false);
+      // Small delay to ensure month modal closes before event modal opens
+      setTimeout(() => {
+        setSelectedEvent(event);
+        setIsEventModalOpen(true);
+      }, 100);
+    } else {
+      setSelectedEvent(event);
+      setIsEventModalOpen(true);
     }
   };
 
-  const shareApp = async () => {
+  const closeMonthModal = () => {
+    setIsMonthModalOpen(false);
+    setSelectedMonth(null);
+  };
+
+  const closeEventModal = () => {
+    setIsEventModalOpen(false);
+    setSelectedEvent(null);
+  };
+
+  const handleShareEvent = async (event: Event) => {
     try {
-      await shareService.shareApp();
+      if (Platform.OS !== 'web') {
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      await shareService.shareEvent(event);
     } catch (error) {
-      console.error('Error sharing app:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Share Failed',
-        text2: 'Unable to share app.',
-      });
+      console.error('Error sharing event:', error);
     }
   };
 
   const cardWidth = (screenWidth - 60) / 2; // 2 columns with padding
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient colors={SPIRITUAL_GRADIENTS.peace} style={styles.gradient}>
+          <SafeAreaView style={styles.safeArea}>
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={SPIRITUAL_COLORS.primary} />
+              <Text style={styles.loadingText}>Loading events...</Text>
+            </View>
+          </SafeAreaView>
+        </LinearGradient>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -99,7 +120,7 @@ export function CalendarScreen() {
           </View>
 
           {/* Current Month Events Banner */}
-          {currentMonthEvents.length > 0 && (
+          {getCurrentMonthEvents.length > 0 && (
             <View style={styles.currentMonthBanner}>
               <Text style={styles.currentMonthTitle}>
                 This Month
@@ -109,7 +130,7 @@ export function CalendarScreen() {
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.currentMonthEventsContainer}
               >
-                {currentMonthEvents.map((event) => (
+                {getCurrentMonthEvents.map((event) => (
                   <TouchableOpacity
                     key={event.id}
                     style={styles.currentMonthEventCard}
@@ -144,7 +165,7 @@ export function CalendarScreen() {
 
           {/* 12-Month Grid */}
           <View style={styles.monthGrid}>
-            {monthlyData.map((monthData, index) => (
+            {monthlyData.map((monthData) => (
               <TouchableOpacity
                 key={monthData.month}
                 style={[styles.monthCard, { width: cardWidth }]}
@@ -165,7 +186,7 @@ export function CalendarScreen() {
                       </View>
 
                       <View style={styles.eventDots}>
-                        {monthData.events.slice(0, 3).map((event, eventIndex) => (
+                        {monthData.events.slice(0, 3).map((event) => (
                           <View
                             key={event.id}
                             style={[
@@ -186,29 +207,6 @@ export function CalendarScreen() {
               </TouchableOpacity>
             ))}
           </View>
-
-          {/* Share App CTA */}
-          <View style={styles.shareContainer}>
-            <LinearGradient
-              colors={SPIRITUAL_GRADIENTS.divine}
-              style={styles.shareCard}
-            >
-              <Text style={[SPIRITUAL_TYPOGRAPHY.spiritualHeading, styles.shareTitle]}>
-                Stay Connected
-              </Text>
-              <Text style={styles.shareSubtitle}>
-                Share this app with someone who might find it meaningful
-              </Text>
-              <TouchableOpacity
-                style={styles.shareButton}
-                onPress={shareApp}
-                activeOpacity={0.8}
-              >
-                <Ionicons name="share" size={20} color={SPIRITUAL_COLORS.foreground} />
-                <Text style={styles.shareButtonText}>Share App</Text>
-              </TouchableOpacity>
-            </LinearGradient>
-          </View>
         </ScrollView>
 
         {/* Month Events Modal */}
@@ -216,21 +214,22 @@ export function CalendarScreen() {
           visible={isMonthModalOpen}
           animationType="slide"
           transparent={true}
-          onRequestClose={() => setIsMonthModalOpen(false)}
+          onRequestClose={closeMonthModal}
         >
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPressOut={() => setIsMonthModalOpen(false)}
-          >
+          <View style={styles.modalOverlay}>
             <BlurView intensity={20} style={styles.blurOverlay}>
+              <TouchableOpacity
+                style={StyleSheet.absoluteFill}
+                activeOpacity={1}
+                onPress={closeMonthModal}
+              />
               <View style={styles.modalContainer}>
                 <View style={styles.modalHeader}>
                   <Text style={[SPIRITUAL_TYPOGRAPHY.spiritualHeading, styles.modalTitle]}>
                     {selectedMonth?.month} {selectedMonth?.year}
                   </Text>
                   <TouchableOpacity
-                    onPress={() => setIsMonthModalOpen(false)}
+                    onPress={closeMonthModal}
                     style={styles.closeButton}
                   >
                     <Ionicons name="close" size={24} color={SPIRITUAL_COLORS.foreground} />
@@ -243,10 +242,7 @@ export function CalendarScreen() {
                       <TouchableOpacity
                         key={event.id}
                         style={styles.eventCard}
-                        onPress={() => {
-                          setIsMonthModalOpen(false);
-                          setTimeout(() => handleEventPress(event), 300);
-                        }}
+                        onPress={() => handleEventPress(event)}
                         activeOpacity={0.8}
                       >
                         <View style={styles.eventCardHeader}>
@@ -274,6 +270,19 @@ export function CalendarScreen() {
                             </View>
                           )}
                         </View>
+
+                        {/* Share button in event card */}
+                        <TouchableOpacity
+                          style={styles.eventCardShareButton}
+                          onPress={(e) => {
+                            e.stopPropagation();
+                            handleShareEvent(event);
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <Ionicons name="share-outline" size={18} color={SPIRITUAL_COLORS.primary} />
+                          <Text style={styles.eventCardShareText}>Share</Text>
+                        </TouchableOpacity>
                       </TouchableOpacity>
                     ))
                   ) : (
@@ -282,7 +291,7 @@ export function CalendarScreen() {
                 </ScrollView>
               </View>
             </BlurView>
-          </TouchableOpacity>
+          </View>
         </Modal>
 
         {/* Event Detail Modal */}
@@ -290,31 +299,34 @@ export function CalendarScreen() {
           visible={isEventModalOpen}
           animationType="slide"
           transparent={true}
-          statusBarTranslucent={true}
-          presentationStyle="overFullScreen"
-          onRequestClose={() => setIsEventModalOpen(false)}
+          onRequestClose={closeEventModal}
         >
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPressOut={() => setIsEventModalOpen(false)}
-          >
+          <View style={styles.modalOverlay}>
             <BlurView intensity={20} style={styles.blurOverlay}>
-              <View style={styles.modalContainer}>
+              <TouchableOpacity
+                style={StyleSheet.absoluteFill}
+                activeOpacity={1}
+                onPress={closeEventModal}
+              />
+              <View style={styles.eventModalContainer}>
                 <View style={styles.modalHeader}>
-                  <Text style={[SPIRITUAL_TYPOGRAPHY.spiritualHeading, styles.modalTitle]}>
+                  <Text style={[SPIRITUAL_TYPOGRAPHY.spiritualHeading, styles.eventModalTitle]}>
                     {selectedEvent?.title}
                   </Text>
                   <View style={styles.modalHeaderActions}>
+                    {selectedEvent && (
+                      <TouchableOpacity
+                        onPress={() => handleShareEvent(selectedEvent)}
+                        style={styles.shareEventButton}
+                        activeOpacity={0.7}
+                      >
+                        <Ionicons name="share-outline" size={22} color={SPIRITUAL_COLORS.primary} />
+                      </TouchableOpacity>
+                    )}
                     <TouchableOpacity
-                      onPress={() => selectedEvent && shareEvent(selectedEvent)}
-                      style={styles.shareEventButton}
-                    >
-                      <Ionicons name="share" size={20} color={SPIRITUAL_COLORS.primary} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => setIsEventModalOpen(false)}
+                      onPress={closeEventModal}
                       style={styles.closeButton}
+                      activeOpacity={0.7}
                     >
                       <Ionicons name="close" size={24} color={SPIRITUAL_COLORS.foreground} />
                     </TouchableOpacity>
@@ -349,22 +361,38 @@ export function CalendarScreen() {
 
                       <View style={styles.descriptionSection}>
                         <Text style={styles.descriptionTitle}>Description</Text>
-                        <Text style={styles.descriptionText}>{selectedEvent.description}</Text>
+                        <Text style={styles.descriptionText}>
+                          {selectedEvent.description || 'No description available.'}
+                        </Text>
                       </View>
+
+                      {/* Share button at bottom of event details */}
+                      {selectedEvent && (
+                        <TouchableOpacity
+                          style={styles.shareButtonContainer}
+                          onPress={() => handleShareEvent(selectedEvent)}
+                          activeOpacity={0.8}
+                        >
+                          <LinearGradient
+                            colors={SPIRITUAL_GRADIENTS.meditation as any}
+                            style={styles.shareButtonGradient}
+                          >
+                            <Ionicons name="share-outline" size={20} color={SPIRITUAL_COLORS.primaryForeground} />
+                            <Text style={styles.shareButtonText}>Share Event</Text>
+                          </LinearGradient>
+                        </TouchableOpacity>
+                      )}
                     </View>
                   )}
                 </ScrollView>
               </View>
             </BlurView>
-          </TouchableOpacity>
+          </View>
         </Modal>
       </LinearGradient>
-      <Toast />
     </SafeAreaView>
   );
 }
-
-export default CalendarScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -372,6 +400,19 @@ const styles = StyleSheet.create({
   },
   gradient: {
     flex: 1,
+  },
+  safeArea: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: SPIRITUAL_COLORS.textMuted,
   },
   scrollView: {
     flex: 1,
@@ -381,246 +422,21 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 30,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
   },
   title: {
-    color: SPIRITUAL_COLORS.primary,
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: SPIRITUAL_COLORS.foreground,
     marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
     color: SPIRITUAL_COLORS.textMuted,
     textAlign: 'center',
-  },
-  monthGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    gap: 16,
-  },
-  monthCard: {
-    backgroundColor: SPIRITUAL_COLORS.cardBackground,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    ...SPIRITUAL_SHADOWS.card,
-  },
-  monthCardContent: {
-    alignItems: 'center',
-  },
-  monthName: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: SPIRITUAL_COLORS.primary,
-    marginBottom: 4,
-  },
-  yearText: {
-    fontSize: 14,
-    color: SPIRITUAL_COLORS.textMuted,
-    marginBottom: 12,
-  },
-  eventInfo: {
-    alignItems: 'center',
-    width: '100%',
-  },
-  eventCountContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  eventCount: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: SPIRITUAL_COLORS.foreground,
-    marginLeft: 4,
-  },
-  eventDots: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  eventDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  moreEventsText: {
-    fontSize: 10,
-    color: SPIRITUAL_COLORS.textMuted,
-    marginLeft: 4,
-  },
-  noEventsText: {
-    fontSize: 12,
-    color: SPIRITUAL_COLORS.textMuted,
-    fontStyle: 'italic',
-  },
-  shareContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 30,
-  },
-  shareCard: {
-    borderRadius: 16,
-    padding: 24,
-    alignItems: 'center',
-    ...SPIRITUAL_SHADOWS.divine,
-  },
-  shareTitle: {
-    color: SPIRITUAL_COLORS.primaryForeground,
-    marginBottom: 8,
-  },
-  shareSubtitle: {
-    fontSize: 16,
-    color: SPIRITUAL_COLORS.primaryForeground,
-    textAlign: 'center',
-    marginBottom: 20,
-    opacity: 0.9,
-  },
-  shareButton: {
-    backgroundColor: SPIRITUAL_COLORS.cardBackground,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
-    gap: 8,
-  },
-  shareButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: SPIRITUAL_COLORS.foreground,
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingVertical: 60,
-    paddingHorizontal: 16,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  blurOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingVertical: 60,
-    paddingHorizontal: 16,
-  },
-  modalContainer: {
-    backgroundColor: SPIRITUAL_COLORS.cardBackground,
-    borderRadius: 20,
-    maxHeight: screenHeight * 0.8,
-    ...SPIRITUAL_SHADOWS.divine,
-    marginVertical: 20,
-    flex: 1,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: SPIRITUAL_COLORS.border,
-  },
-  modalTitle: {
-    color: SPIRITUAL_COLORS.primary,
-    flex: 1,
-  },
-  modalHeaderActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  shareEventButton: {
-    padding: 8,
-  },
-  closeButton: {
-    padding: 8,
-  },
-  modalContent: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  eventCard: {
-    backgroundColor: SPIRITUAL_COLORS.background,
-    borderRadius: 12,
-    padding: 16,
-    marginVertical: 8,
-    ...SPIRITUAL_SHADOWS.peaceful,
-  },
-  eventCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  eventTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: SPIRITUAL_COLORS.foreground,
-    flex: 1,
-    marginRight: 12,
-  },
-  eventBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  eventBadgeLarge: {
-    alignSelf: 'center',
-    marginBottom: 20,
-  },
-  eventBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'capitalize',
-  },
-  eventDetails: {
-    gap: 8,
-  },
-  eventDetailsSection: {
-    gap: 12,
-    marginBottom: 24,
-  },
-  eventDetailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  eventDetailText: {
-    fontSize: 14,
-    color: SPIRITUAL_COLORS.textMuted,
-  },
-  eventDetailTextLarge: {
-    fontSize: 16,
-    color: SPIRITUAL_COLORS.foreground,
-  },
-  noEventsMessage: {
-    fontSize: 16,
-    color: SPIRITUAL_COLORS.textMuted,
-    textAlign: 'center',
-    paddingVertical: 40,
-    fontStyle: 'italic',
-  },
-  eventDetailContainer: {
-    paddingVertical: 20,
-  },
-  descriptionSection: {
-    borderTopWidth: 1,
-    borderTopColor: SPIRITUAL_COLORS.border,
-    paddingTop: 20,
-  },
-  descriptionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: SPIRITUAL_COLORS.foreground,
-    marginBottom: 12,
-  },
-  descriptionText: {
-    fontSize: 16,
-    color: SPIRITUAL_COLORS.textMuted,
-    lineHeight: 24,
   },
   currentMonthBanner: {
     marginHorizontal: 20,
@@ -671,5 +487,255 @@ const styles = StyleSheet.create({
   currentMonthEventDetailText: {
     fontSize: 12,
     color: SPIRITUAL_COLORS.textMuted,
+  },
+  monthGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  monthCard: {
+    marginBottom: 16,
+  },
+  monthCardContent: {
+    backgroundColor: SPIRITUAL_COLORS.cardBackground,
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    minHeight: 140,
+    ...SPIRITUAL_SHADOWS.card,
+  },
+  monthName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: SPIRITUAL_COLORS.foreground,
+    marginBottom: 4,
+  },
+  yearText: {
+    fontSize: 14,
+    color: SPIRITUAL_COLORS.textMuted,
+    marginBottom: 16,
+  },
+  eventInfo: {
+    alignItems: 'center',
+    width: '100%',
+  },
+  eventCountContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 12,
+  },
+  eventCount: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: SPIRITUAL_COLORS.foreground,
+  },
+  eventDots: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
+  eventDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  moreEventsText: {
+    fontSize: 12,
+    color: SPIRITUAL_COLORS.textMuted,
+    fontWeight: '600',
+  },
+  noEventsText: {
+    fontSize: 14,
+    color: SPIRITUAL_COLORS.textMuted,
+    fontStyle: 'italic',
+  },
+  eventBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  eventBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    textTransform: 'capitalize',
+  },
+  eventBadgeLarge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  blurOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 16,
+    position: 'relative',
+  },
+  modalContainer: {
+    backgroundColor: SPIRITUAL_COLORS.cardBackground,
+    borderRadius: 20,
+    maxHeight: screenHeight * 0.8,
+    ...SPIRITUAL_SHADOWS.divine,
+    marginVertical: 20,
+    flex: 1,
+    zIndex: 1000,
+  },
+  eventModalContainer: {
+    backgroundColor: SPIRITUAL_COLORS.cardBackground,
+    borderRadius: 20,
+    maxHeight: screenHeight * 0.85,
+    ...SPIRITUAL_SHADOWS.divine,
+    overflow: 'hidden',
+    zIndex: 1000,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: SPIRITUAL_COLORS.border,
+  },
+  modalTitle: {
+    color: SPIRITUAL_COLORS.primary,
+    flex: 1,
+  },
+  eventModalTitle: {
+    color: SPIRITUAL_COLORS.primary,
+    flex: 1,
+  },
+  modalHeaderActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  shareEventButton: {
+    padding: 8,
+    marginRight: 4,
+  },
+  closeButton: {
+    padding: 8,
+  },
+  eventCardShareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: SPIRITUAL_COLORS.accent,
+    gap: 6,
+  },
+  eventCardShareText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: SPIRITUAL_COLORS.primary,
+  },
+  shareButtonContainer: {
+    marginTop: 24,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  shareButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    gap: 8,
+  },
+  shareButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: SPIRITUAL_COLORS.primaryForeground,
+  },
+  modalContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  eventCard: {
+    backgroundColor: SPIRITUAL_COLORS.background,
+    borderRadius: 12,
+    padding: 16,
+    marginVertical: 8,
+    ...SPIRITUAL_SHADOWS.peaceful,
+  },
+  eventCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  eventTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: SPIRITUAL_COLORS.foreground,
+    flex: 1,
+    marginRight: 12,
+  },
+  eventDetails: {
+    gap: 8,
+  },
+  eventDetailsSection: {
+    gap: 12,
+    marginBottom: 24,
+  },
+  eventDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  eventDetailText: {
+    fontSize: 14,
+    color: SPIRITUAL_COLORS.textMuted,
+  },
+  eventDetailTextLarge: {
+    fontSize: 16,
+    color: SPIRITUAL_COLORS.foreground,
+  },
+  noEventsMessage: {
+    fontSize: 16,
+    color: SPIRITUAL_COLORS.textMuted,
+    textAlign: 'center',
+    paddingVertical: 40,
+    fontStyle: 'italic',
+  },
+  eventDetailContainer: {
+    paddingVertical: 20,
+  },
+  descriptionSection: {
+    borderTopWidth: 1,
+    borderTopColor: SPIRITUAL_COLORS.border,
+    paddingTop: 20,
+  },
+  descriptionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: SPIRITUAL_COLORS.foreground,
+    marginBottom: 12,
+  },
+  descriptionText: {
+    fontSize: 16,
+    color: SPIRITUAL_COLORS.textMuted,
+    lineHeight: 24,
   },
 });

@@ -5,179 +5,167 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Image,
-  Share,
-  Dimensions,
+  ActivityIndicator,
+  Platform,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import Toast from 'react-native-toast-message';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS, SPIRITUAL_TYPOGRAPHY } from '@/constants/SpiritualColors';
+import * as Haptics from 'expo-haptics';
+import { Ionicons } from '@expo/vector-icons';
 import { useQuotes, Quote } from '@/contexts/QuotesContext';
+import { shareService } from '@/services/shareService';
+import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS, SPIRITUAL_TYPOGRAPHY } from '@/constants/SpiritualColors';
 
-export default function QuotesScreen() {
-  const { quotes } = useQuotes();
-  const [likedQuotes, setLikedQuotes] = useState<Set<string>>(new Set());
+const QuoteCard: React.FC<{ quote: Quote }> = ({ quote }) => {
+  const [isLiked, setIsLiked] = useState(false);
 
-  const handleLike = (quoteId: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const newLiked = new Set(likedQuotes);
-    if (newLiked.has(quoteId)) {
-      newLiked.delete(quoteId);
-    } else {
-      newLiked.add(quoteId);
+  const handleLike = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    setLikedQuotes(newLiked);
+    setIsLiked(!isLiked);
   };
 
-  const handleShare = async (quote: Quote) => {
+  const handleShare = async () => {
     try {
-      const { shareService } = await import('../../services/shareService');
-      await shareService.shareQuote(quote, true); // true = include image
-      
-      Toast.show({
-        type: 'success',
-        text1: 'Quote Shared! 🙏',
-        text2: 'Image with reflection and app link shared',
-      });
+      if (Platform.OS !== 'web') {
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      await shareService.shareQuote(quote);
     } catch (error) {
-      console.error('Share error:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Share Failed',
-        text2: 'Unable to share quote at this time.',
-      });
+      console.error('Error sharing quote:', error);
     }
   };
 
-  const shareApp = async () => {
+  const formatDate = (dateString: string) => {
     try {
-      const { shareService } = await import('../../services/shareService');
-      await shareService.shareApp();
-      
-      Toast.show({
-        type: 'success',
-        text1: 'App Shared! 🙏',
-        text2: 'Help spread the spiritual wisdom',
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: 'numeric'
       });
-    } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Share Failed',
-        text2: 'Unable to share app at this time.',
-      });
+    } catch {
+      return 'Today';
     }
-  };
-
-  const QuoteCard = ({ quote }: { quote: Quote }) => {
-    const isLiked = likedQuotes.has(quote.id);
-
-    return (
-      <View style={[styles.quoteCard, SPIRITUAL_SHADOWS.card]}>
-        <View style={styles.quoteHeader}>
-          <Image
-            source={require('@/assets/images/om-symbol.png')}
-            style={styles.omIcon}
-            resizeMode="contain"
-          />
-          <Text style={styles.date}>{quote.date}</Text>
-        </View>
-
-        <Text style={[styles.quoteText, SPIRITUAL_TYPOGRAPHY.quoteText]}>
-          "{quote.text}"
-        </Text>
-        <Text style={[styles.author, SPIRITUAL_TYPOGRAPHY.author]}>
-          — {quote.author}
-        </Text>
-
-        {quote.reflection && (
-          <View style={styles.reflectionContainer}>
-            <Text style={styles.reflectionLabel}>Reflection:</Text>
-            <Text style={[styles.reflectionText, SPIRITUAL_TYPOGRAPHY.reflection]}>
-              {quote.reflection}
-            </Text>
-          </View>
-        )}
-
-        <View style={styles.actionButtons}>
-          <TouchableOpacity
-            style={[styles.actionButton, isLiked && styles.likedButton]}
-            onPress={() => handleLike(quote.id)}
-          >
-            <Icon 
-              name={isLiked ? 'favorite' : 'favorite-border'} 
-              size={20} 
-              color={isLiked ? SPIRITUAL_COLORS.primary : SPIRITUAL_COLORS.textMuted} 
-            />
-            <Text style={[styles.actionText, isLiked && styles.likedText]}>
-              {isLiked ? 'Liked' : 'Like'}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => handleShare(quote)}
-          >
-            <Icon name="share" size={20} color={SPIRITUAL_COLORS.textMuted} />
-            <Text style={styles.actionText}>Share</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
   };
 
   return (
+    <View style={styles.quoteCard}>
+      <View style={styles.quoteHeader}>
+        <View style={styles.omContainer}>
+          <Text style={styles.omSymbol}>ॐ</Text>
+        </View>
+        <Text style={styles.date}>{formatDate(quote.dateAdded)}</Text>
+      </View>
+
+      <Text style={[styles.quoteText, SPIRITUAL_TYPOGRAPHY.quoteText]}>
+        "{quote.text}"
+      </Text>
+      
+      <Text style={[styles.author, SPIRITUAL_TYPOGRAPHY.author]}>
+        — {quote.author}
+      </Text>
+
+      {quote.category && (
+        <View style={styles.categoryBadge}>
+          <Text style={styles.categoryText}>{quote.category}</Text>
+        </View>
+      )}
+
+      {quote.reflection && (
+        <View style={styles.reflectionContainer}>
+          <Text style={styles.reflectionLabel}>Reflection:</Text>
+          <Text style={[styles.reflectionText, SPIRITUAL_TYPOGRAPHY.reflection]}>
+            {quote.reflection}
+          </Text>
+        </View>
+      )}
+
+      <View style={styles.actionButtons}>
+        <TouchableOpacity
+          style={[styles.actionButton, isLiked && styles.likedButton]}
+          onPress={handleLike}
+          activeOpacity={0.7}
+        >
+          <Ionicons 
+            name={isLiked ? 'heart' : 'heart-outline'} 
+            size={20} 
+            color={isLiked ? SPIRITUAL_COLORS.primary : SPIRITUAL_COLORS.textMuted} 
+          />
+          <Text style={[styles.actionText, isLiked && styles.likedText]}>
+            {isLiked ? 'Liked' : 'Like'}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={handleShare}
+          activeOpacity={0.7}
+        >
+          <Ionicons 
+            name="share-outline" 
+            size={20} 
+            color={SPIRITUAL_COLORS.textMuted} 
+          />
+          <Text style={styles.actionText}>Share</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
+
+export default function QuotesScreen() {
+  const { quotes, loading } = useQuotes();
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient colors={SPIRITUAL_GRADIENTS.peace} style={styles.gradient}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={SPIRITUAL_COLORS.primary} />
+            <Text style={styles.loadingText}>Loading wisdom...</Text>
+          </View>
+        </LinearGradient>
+      </View>
+    );
+  }
+
+  return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={SPIRITUAL_GRADIENTS.peace as any}
-        style={styles.gradient}
-      >
-        <SafeAreaView style={styles.safeArea}>
-          <View style={styles.header}>
-            <Image
-              source={require('@/assets/images/om-symbol.png')}
-              style={styles.headerIcon}
-              resizeMode="contain"
-            />
-            <Text style={[styles.headerTitle, SPIRITUAL_TYPOGRAPHY.spiritualHeading]}>
-              Daily Wisdom
-            </Text>
-            <Text style={styles.headerSubtitle}>Find peace in sacred teachings</Text>
+      <LinearGradient colors={SPIRITUAL_GRADIENTS.peace} style={styles.gradient}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.omHeaderContainer}>
+            <Text style={styles.omHeaderSymbol}>ॐ</Text>
           </View>
+          <Text style={[styles.headerTitle, SPIRITUAL_TYPOGRAPHY.spiritualHeading]}>
+            Daily Wisdom
+          </Text>
+          <Text style={styles.headerSubtitle}>Find peace in sacred teachings</Text>
+        </View>
 
-          <ScrollView
-            style={styles.scrollView}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
-          >
-            {quotes.map((quote) => (
+        {/* Quotes List */}
+        <ScrollView
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {quotes.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Ionicons name="book-outline" size={64} color={SPIRITUAL_COLORS.textMuted} />
+              <Text style={styles.emptyText}>No quotes available</Text>
+              <Text style={styles.emptySubtext}>Check back later for new wisdom</Text>
+            </View>
+          ) : (
+            quotes.map((quote) => (
               <QuoteCard key={quote.id} quote={quote} />
-            ))}
-          </ScrollView>
-
-          <View style={styles.shareSection}>
-            <LinearGradient
-              colors={SPIRITUAL_GRADIENTS.divine as any}
-              style={styles.shareAppButton}
-            >
-              <TouchableOpacity 
-                style={styles.shareAppButtonInner} 
-                onPress={shareApp}
-              >
-                <Icon name="share" size={20} color={SPIRITUAL_COLORS.primaryForeground} />
-                <Text style={styles.shareAppText}>Share this app with others</Text>
-              </TouchableOpacity>
-            </LinearGradient>
-          </View>
-        </SafeAreaView>
+            ))
+          )}
+        </ScrollView>
       </LinearGradient>
     </View>
   );
 }
-
-const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {
@@ -186,29 +174,48 @@ const styles = StyleSheet.create({
   gradient: {
     flex: 1,
   },
-  safeArea: {
+  loadingContainer: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: SPIRITUAL_COLORS.textMuted,
   },
   header: {
     alignItems: 'center',
-    paddingVertical: 20,
-    paddingHorizontal: 24,
-    backgroundColor: SPIRITUAL_COLORS.cardBackground,
+    paddingTop: 60,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
   },
-  headerIcon: {
-    width: 48,
-    height: 48,
-    marginBottom: 12,
+  omHeaderContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: SPIRITUAL_COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    ...SPIRITUAL_SHADOWS.divine,
+  },
+  omHeaderSymbol: {
+    fontSize: 28,
+    color: SPIRITUAL_COLORS.primaryForeground,
+    fontWeight: 'bold',
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
     color: SPIRITUAL_COLORS.foreground,
     marginBottom: 4,
+    textAlign: 'center',
   },
   headerSubtitle: {
     fontSize: 16,
     color: SPIRITUAL_COLORS.textMuted,
+    textAlign: 'center',
   },
   scrollView: {
     flex: 1,
@@ -216,13 +223,14 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 16,
-    paddingBottom: 100,
+    paddingBottom: 100, // Space for tab bar
   },
   quoteCard: {
     backgroundColor: SPIRITUAL_COLORS.cardBackground,
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
+    ...SPIRITUAL_SHADOWS.card,
   },
   quoteHeader: {
     flexDirection: 'row',
@@ -230,9 +238,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  omIcon: {
-    width: 24,
-    height: 24,
+  omContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: SPIRITUAL_COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  omSymbol: {
+    fontSize: 16,
+    color: SPIRITUAL_COLORS.primaryForeground,
+    fontWeight: 'bold',
   },
   date: {
     fontSize: 12,
@@ -242,7 +259,20 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   author: {
-    marginBottom: 16,
+    marginBottom: 12,
+  },
+  categoryBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: SPIRITUAL_COLORS.accent,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  categoryText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: SPIRITUAL_COLORS.foreground,
   },
   reflectionContainer: {
     backgroundColor: SPIRITUAL_COLORS.accent,
@@ -262,7 +292,8 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'flex-start',
+    gap: 12,
   },
   actionButton: {
     flexDirection: 'row',
@@ -279,38 +310,26 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 14,
     color: SPIRITUAL_COLORS.textMuted,
-    fontWeight: '500',  
+    fontWeight: '500',
   },
   likedText: {
     color: SPIRITUAL_COLORS.primary,
   },
-  shareSection: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    paddingBottom: 20,
-  },
-  shareAppButton: {
-    borderRadius: 12,
-    ...SPIRITUAL_SHADOWS.peaceful,
-  },
-  shareAppButtonInner: {
-    flexDirection: 'row',
+  emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    paddingVertical: 60,
   },
-  shareAppText: {
-    marginLeft: 8,
-    fontSize: 16,
-    color: SPIRITUAL_COLORS.primaryForeground,
+  emptyText: {
+    fontSize: 18,
     fontWeight: '600',
+    color: SPIRITUAL_COLORS.foreground,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: SPIRITUAL_COLORS.textMuted,
+    textAlign: 'center',
   },
 });
-
-// Export as default for Expo Router
-export { QuotesScreen };
