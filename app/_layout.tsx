@@ -13,8 +13,15 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   useEffect(() => {
-    // Initialize notification service
-    notificationService.initialize();
+    // Initialize notification service on app start
+    (async () => {
+      try {
+        await notificationService.initialize();
+        console.log('✅ Notification service initialized');
+      } catch (error) {
+        console.error('❌ Failed to initialize notification service on app start:', error);
+      }
+    })();
 
     // Hide splash screen after a short delay
     const timer = setTimeout(() => {

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { googleSheetsService } from '../services/googleSheetsService';
+import { notificationService } from '../services/notificationService';
 
 export interface User {
   id: string;
@@ -104,6 +105,67 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         console.log('Failed to log to Google Sheets:', error);
         // This is non-blocking - login continues regardless
       });
+
+      // Save push token to Google Sheets (non-blocking)
+      // This allows admin to send notifications to this user later
+      // Note: Notification service should already be initialized in app/_layout.tsx
+      (async () => {
+        try {
+          console.log('🔔 Preparing to save push token for user:', user.email);
+          
+          // Ensure notification service is initialized (it may already be from app/_layout.tsx)
+          console.log('  Ensuring notification service is initialized...');
+          await notificationService.initialize();
+          
+          // Wait a bit longer for token to be ready, then try multiple times
+          const maxAttempts = 10; // Increased attempts
+          let attempt = 0;
+          
+          const trySaveToken = async (): Promise<void> => {
+            attempt++;
+            console.log(`🔄 Attempt ${attempt}/${maxAttempts} to get push token...`);
+            
+            let pushToken = notificationService.getPushToken();
+            console.log('  Current token from service:', pushToken ? pushToken.substring(0, 30) + '...' : 'null');
+            
+            if (!pushToken) {
+              // Try stored token
+              console.log('  Token not available, checking stored token...');
+              pushToken = await notificationService.getStoredPushToken();
+              console.log('  Stored token:', pushToken ? pushToken.substring(0, 30) + '...' : 'null');
+            }
+            
+            if (pushToken) {
+              console.log('🎫 Found push token! Saving to Google Sheets...');
+              console.log('  Email:', user.email);
+              const saved = await googleSheetsService.savePushToken(user.email, pushToken);
+              if (saved) {
+                console.log('✅ Push token saved successfully to Google Sheets');
+              } else {
+                console.error('❌ Failed to save push token to Google Sheets');
+              }
+              return;
+            }
+            
+            // If no token yet and we have more attempts, try again
+            if (attempt < maxAttempts) {
+              const delay = 2000; // Wait 2 seconds between attempts
+              console.log(`  No token yet, waiting ${delay}ms before next attempt...`);
+              setTimeout(trySaveToken, delay);
+            } else {
+              console.error('❌ Could not get push token after', maxAttempts, 'attempts');
+            }
+          };
+          
+          // Start trying after a longer delay to ensure initialization is complete
+          console.log('  Waiting 3 seconds before first attempt...');
+          setTimeout(trySaveToken, 3000);
+        } catch (err: any) {
+          console.error('❌ Failed to save push token:', err);
+          console.error('  Error message:', err?.message);
+          console.error('  Error stack:', err?.stack);
+        }
+      })();
 
       console.log('✅ Login successful');
 
