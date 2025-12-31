@@ -1,5 +1,4 @@
-
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,13 +15,11 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
-import Toast from 'react-native-toast-message';
-
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS, SPIRITUAL_TYPOGRAPHY } from '@/constants/SpiritualColors';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-export function GurudevScreen() {
+export default function GurudevScreen() {
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -55,7 +52,9 @@ export function GurudevScreen() {
   }, []);
 
   const shareApp = async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (Platform.OS !== 'web') {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     
     const shareText = "🙏 I've been inspired by the teachings shared in this beautiful spiritual app. Thought you might find it meaningful too!";
     
@@ -65,11 +64,7 @@ export function GurudevScreen() {
         title: 'Meet Our Gurudev',
       });
     } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Share Failed',
-        text2: 'Unable to share at this time.',
-      });
+      console.error('Error sharing app:', error);
     }
   };
 
@@ -202,12 +197,9 @@ export function GurudevScreen() {
           </View>
         </ScrollView>
       </LinearGradient>
-      <Toast />
     </SafeAreaView>
   );
 }
-
-export default GurudevScreen;
 
 const styles = StyleSheet.create({
   container: {

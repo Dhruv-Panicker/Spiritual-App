@@ -1,7 +1,4 @@
-
-// SPIRITUAL COLOR PALETTE - Extract these exact colors for React Native
-// Use these hex values in your React Native StyleSheet
-
+// SPIRITUAL COLOR PALETTE
 export const SPIRITUAL_COLORS = {
   // Primary Saffron Colors
   primary: '#FF6B35',           // Rich saffron orange
@@ -99,3 +96,4 @@ export const SPIRITUAL_TYPOGRAPHY = {
     lineHeight: 20,
   }
 };
+

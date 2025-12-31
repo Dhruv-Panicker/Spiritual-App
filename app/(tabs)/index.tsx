@@ -6,23 +6,14 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
-  Image,
-  Alert,
   Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
-
-// Safe gradient helper
-const getSafeGradient = (gradientKey: keyof typeof SPIRITUAL_GRADIENTS) => {
-  const gradient = SPIRITUAL_GRADIENTS[gradientKey];
-  return gradient && Array.isArray(gradient) && gradient.length > 0
-    ? gradient
-    : ['#FFFFFF', '#F5F5F5'];
-};
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -33,72 +24,38 @@ interface FeatureCardProps {
   onPress: () => void;
 }
 
-const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, onPress }) => (
-  <TouchableOpacity style={styles.featureCard} onPress={onPress} activeOpacity={0.8}>
-    <LinearGradient
-      colors={[SPIRITUAL_COLORS.cardBackground, SPIRITUAL_COLORS.accent]}
-      style={styles.featureCardGradient}
-    >
-      <View style={styles.featureIconContainer}>
-        <Ionicons name={icon} size={32} color={SPIRITUAL_COLORS.primary} />
-      </View>
-      <Text style={styles.featureTitle}>{title}</Text>
-      <Text style={styles.featureDescription}>{description}</Text>
-    </LinearGradient>
-  </TouchableOpacity>
-);
+const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, onPress }) => {
+  const handlePress = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    onPress();
+  };
+
+  return (
+    <TouchableOpacity style={styles.featureCard} onPress={handlePress} activeOpacity={0.8}>
+      <LinearGradient
+        colors={[SPIRITUAL_COLORS.cardBackground, SPIRITUAL_COLORS.accent]}
+        style={styles.featureCardGradient}
+      >
+        <View style={styles.featureIconContainer}>
+          <Ionicons name={icon} size={32} color={SPIRITUAL_COLORS.primary} />
+        </View>
+        <Text style={styles.featureTitle}>{title}</Text>
+        <Text style={styles.featureDescription}>{description}</Text>
+      </LinearGradient>
+    </TouchableOpacity>
+  );
+};
 
 export default function HomeScreen() {
   const { user, logout } = useAuth();
 
-  // Test logging to see if logs work
-  console.warn('🏠 HOME SCREEN LOADED - User:', user?.email, 'isAdmin:', user?.isAdmin);
-
   const handleLogout = () => {
-    console.log('Logout button clicked');
-    console.warn('🔘 LOGOUT BUTTON CLICKED by:', user?.email);
-    
-    // Simple test - just call logout directly for debugging
-    console.warn('🌐 CALLING LOGOUT DIRECTLY FOR TESTING');
-    logout();
-    return;
-    
-    // For web, bypass Alert.alert which might not work properly and logout directly
-    if (Platform.OS === 'web') {
-      console.warn('🌐 WEB PLATFORM: Direct logout without confirmation');
-      if (window.confirm('Are you sure you want to logout?')) {
-        console.warn('✅ WEB LOGOUT CONFIRMED by:', user?.email, '- calling logout()');
-        logout();
-      } else {
-        console.warn('❌ WEB LOGOUT CANCELLED by:', user?.email);
-      }
-      return;
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    
-    // For mobile platforms, use Alert.alert
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-          onPress: () => {
-            console.log('Logout cancelled');
-            console.warn('❌ LOGOUT CANCELLED by:', user?.email);
-          },
-        },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: () => {
-            console.log('Logout confirmed, calling logout function');
-            console.warn('✅ LOGOUT CONFIRMED by:', user?.email, '- calling logout()');
-            logout();
-          },
-        },
-      ]
-    );
+    logout();
   };
 
   const features = [
@@ -157,10 +114,7 @@ export default function HomeScreen() {
               </View>
               <TouchableOpacity
                 style={styles.logoutButton}
-                onPress={() => {
-                  console.log('TouchableOpacity pressed');
-                  handleLogout();
-                }}
+                onPress={handleLogout}
                 activeOpacity={0.7}
               >
                 <Ionicons name="log-out-outline" size={24} color={SPIRITUAL_COLORS.primary} />
@@ -242,7 +196,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 100, // Space for tab bar
   },
   header: {
     alignItems: 'center',
@@ -412,6 +366,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 20,
+    paddingBottom: 20,
   },
   footerText: {
     fontSize: 18,

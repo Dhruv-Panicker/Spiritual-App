@@ -1,20 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { googleSheetsService } from '../services/googleSheetsService';
-
-export interface Video {
-  id: string;
-  title: string;
-  description: string;
-  youtubeId: string;
-  dateAdded: string;
-}
+import { googleSheetsService, Video } from '../services/googleSheetsService';
 
 interface VideosContextType {
   videos: Video[];
   loading: boolean;
   addVideo: (video: Omit<Video, 'id' | 'dateAdded'>) => Promise<void>;
-  removeVideo: (id: string) => Promise<void>;
-  updateVideo: (id: string, video: Partial<Video>) => Promise<void>;
+  refreshVideos: () => Promise<void>;
 }
 
 const VideosContext = createContext<VideosContextType | undefined>(undefined);
@@ -23,54 +14,37 @@ export function VideosProvider({ children }: { children: ReactNode }) {
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const loadVideos = async () => {
-      try {
-        await googleSheetsService.initializeWithSampleData();
-        const loadedVideos = await googleSheetsService.getVideos();
-        setVideos(loadedVideos);
-        console.log(`📺 Loaded ${loadedVideos.length} videos from local storage`);
-      } catch (error) {
-        console.error('Error loading videos:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadVideos = async () => {
+    try {
+      setLoading(true);
+      const loadedVideos = await googleSheetsService.getVideos();
+      setVideos(loadedVideos);
+      console.log(`📺 Loaded ${loadedVideos.length} videos`);
+    } catch (error) {
+      console.error('Error loading videos:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // Load videos on mount
+  useEffect(() => {
     loadVideos();
   }, []);
 
   const addVideo = async (newVideo: Omit<Video, 'id' | 'dateAdded'>) => {
     try {
       const addedVideo = await googleSheetsService.addVideo(newVideo);
-      if (addedVideo) {
-        setVideos(prev => [addedVideo, ...prev]);
-      }
+      setVideos(prev => [addedVideo, ...prev]);
+      console.log('✅ Video added successfully');
     } catch (error) {
       console.error('Error adding video:', error);
+      throw error;
     }
   };
 
-  const removeVideo = async (id: string) => {
-    try {
-      const success = await googleSheetsService.removeVideo(id);
-      if (success) {
-        setVideos(prev => prev.filter(v => v.id !== id));
-      }
-    } catch (error) {
-      console.error('Error removing video:', error);
-    }
-  };
-
-  const updateVideo = async (id: string, updatedVideo: Partial<Video>) => {
-    try {
-      const updated = await googleSheetsService.updateVideo(id, updatedVideo);
-      if (updated) {
-        setVideos(prev => prev.map(v => v.id === id ? updated : v));
-      }
-    } catch (error) {
-      console.error('Error updating video:', error);
-    }
+  const refreshVideos = async () => {
+    await loadVideos();
   };
 
   return (
@@ -78,8 +52,7 @@ export function VideosProvider({ children }: { children: ReactNode }) {
       videos,
       loading,
       addVideo,
-      removeVideo,
-      updateVideo
+      refreshVideos
     }}>
       {children}
     </VideosContext.Provider>
@@ -93,3 +66,6 @@ export function useVideos() {
   }
   return context;
 }
+
+export type { Video };
+

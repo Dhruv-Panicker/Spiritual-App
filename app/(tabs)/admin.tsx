@@ -14,75 +14,82 @@ import {
   Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { TabView, TabBar } from 'react-native-tab-view';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import Toast from 'react-native-toast-message';
 import * as Haptics from 'expo-haptics';
-import { useAuth } from '../../contexts/AuthContext';
-import { useQuotes } from '../../contexts/QuotesContext';
-import { useVideos } from '../../contexts/VideosContext';
-import { SPIRITUAL_COLORS } from '../../constants/SpiritualColors';
-import { notificationService } from '../../services/notificationService';
+import { useAuth } from '@/contexts/AuthContext';
+import { useQuotes } from '@/contexts/QuotesContext';
+import { useVideos } from '@/contexts/VideosContext';
+import { useEvents } from '@/contexts/EventsContext';
+import { notificationService } from '@/services/notificationService';
+import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
 
 const { width } = Dimensions.get('window');
 
-// Update function name
 export default function AdminScreen() {
   const { user } = useAuth();
-  const { addQuote } = useQuotes();
-  const { addVideo } = useVideos();
-  
-  // Protect admin screen
+  const { addQuote, refreshQuotes } = useQuotes();
+  const { addVideo, refreshVideos } = useVideos();
+  const { addEvent, refreshEvents } = useEvents();
+
+  // Redirect non-admin users immediately - no UI shown
   useEffect(() => {
     if (user && !user.isAdmin) {
       router.replace('/');
-      return;
     }
   }, [user]);
 
-  // Load push token
-  useEffect(() => {
-    const loadPushToken = async () => {
-      const token = notificationService.getPushToken();
-      setPushToken(token);
-    };
-    loadPushToken();
-  }, []);
-
-  if (!user?.isAdmin) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>Access Denied</Text>
-      </View>
-    );
+  // Return null while checking or if not admin (prevents flash of content)
+  if (!user || !user.isAdmin) {
+    return null;
   }
 
   // Tab navigation state
-  const [index, setIndex] = useState(0);
-  const [routes] = useState([
-    { key: 'quotes', title: 'Quotes', icon: 'chatbubble' },
-    { key: 'videos', title: 'Videos', icon: 'videocam' },
-    { key: 'notifications', title: 'Notifications', icon: 'notifications' },
-  ]);
+  const [activeTab, setActiveTab] = useState<'quotes' | 'videos' | 'events' | 'notifications'>('quotes');
 
   // Quote form states
   const [quoteText, setQuoteText] = useState('');
   const [quoteAuthor, setQuoteAuthor] = useState('');
-  const [reflectionQuestion, setReflectionQuestion] = useState('');
+  const [quoteCategory, setQuoteCategory] = useState('');
   const [isSubmittingQuote, setIsSubmittingQuote] = useState(false);
+  const [sendQuoteNotification, setSendQuoteNotification] = useState(true);
 
   // Video form states
   const [videoTitle, setVideoTitle] = useState('');
   const [videoDescription, setVideoDescription] = useState('');
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [isSubmittingVideo, setIsSubmittingVideo] = useState(false);
+  const [sendVideoNotification, setSendVideoNotification] = useState(true);
 
-  // Notification states
-  const [notificationTitle, setNotificationTitle] = useState('');
-  const [notificationBody, setNotificationBody] = useState('');
+  // Event form states
+  const [eventTitle, setEventTitle] = useState('');
+  const [eventDate, setEventDate] = useState('');
+  const [eventTime, setEventTime] = useState('');
+  const [eventDescription, setEventDescription] = useState('');
+  const [eventLocation, setEventLocation] = useState('');
+  const [eventType, setEventType] = useState<'meditation' | 'teaching' | 'celebration' | 'retreat'>('teaching');
+  const [isSubmittingEvent, setIsSubmittingEvent] = useState(false);
+  const [sendEventNotification, setSendEventNotification] = useState(true);
+
+  // Notification tab states
+  const [notificationMessage, setNotificationMessage] = useState('');
   const [isSendingNotification, setIsSendingNotification] = useState(false);
-  const [pushToken, setPushToken] = useState<string | null>(null);
+
+  const handleTabPress = async (tab: 'quotes' | 'videos' | 'events' | 'notifications') => {
+    if (Platform.OS !== 'web') {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setActiveTab(tab);
+  };
+
+  // Get push tokens from all users
+  // For now, returning empty array to test LOCAL NOTIFICATIONS first
+  // Local notifications work immediately on the device that triggers them
+  const getPushTokens = async (): Promise<string[]> => {
+    // TODO: Later we'll fetch from Google Sheets
+    // For now, empty array = use local notifications
+    return [];
+  };
 
   const handleQuoteSubmit = async () => {
     if (!quoteText.trim() || !quoteAuthor.trim()) {
@@ -91,41 +98,43 @@ export default function AdminScreen() {
     }
 
     setIsSubmittingQuote(true);
-    
+
     try {
-      // Add the quote to the context
-      console.log('🎯 Admin panel calling addQuote with:', {
+      const quoteData = {
         text: quoteText.trim(),
         author: quoteAuthor.trim(),
-        category: reflectionQuestion.trim() || 'General'
-      });
-      
-      addQuote({
-        text: quoteText.trim(),
-        author: quoteAuthor.trim(),
-        category: reflectionQuestion.trim() || 'General'
-      });
-      
-      Toast.show({
-        type: 'success',
-        text1: 'Quote Published',
-        text2: 'The quote has been added to the quotes page.',
-      });
+        category: quoteCategory.trim() || 'General',
+      };
+
+      await addQuote(quoteData);
+
+      // Send notification if enabled
+      if (sendQuoteNotification) {
+        try {
+          const pushTokens = await getPushTokens();
+          await notificationService.notifyNewQuote(quoteData.text, quoteData.author, pushTokens);
+        } catch (notifError) {
+          console.error('Error sending notification:', notifError);
+          // Don't fail the quote submission if notification fails
+        }
+      }
+
+      Alert.alert('Success', 'Quote has been added successfully!');
       
       // Clear form
       setQuoteText('');
       setQuoteAuthor('');
-      setReflectionQuestion('');
+      setQuoteCategory('');
       
+      // Refresh quotes
+      await refreshQuotes();
+
       if (Platform.OS !== 'web') {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
     } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Failed to publish quote. Please try again.',
-      });
+      Alert.alert('Error', 'Failed to add quote. Please try again.');
+      console.error('Error adding quote:', error);
     } finally {
       setIsSubmittingQuote(false);
     }
@@ -137,7 +146,7 @@ export default function AdminScreen() {
       /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([^&\n?#]+)/,
       /(?:youtube\.com\/embed\/)([^&\n?#]+)/,
     ];
-    
+
     for (const pattern of patterns) {
       const match = url.match(pattern);
       if (match && match[1]) {
@@ -155,469 +164,588 @@ export default function AdminScreen() {
 
     const youtubeId = extractYouTubeId(youtubeUrl.trim());
     if (!youtubeId) {
-      Alert.alert('Error', 'Please enter a valid YouTube URL (regular video, shorts, or embed link)');
+      Alert.alert('Error', 'Please enter a valid YouTube URL');
       return;
     }
 
     setIsSubmittingVideo(true);
-    
+
     try {
-      // Add the video to the context
-      addVideo({
+      const videoData = {
         title: videoTitle.trim(),
         description: videoDescription.trim(),
-        youtubeId: youtubeId
-      });
-      
-      Toast.show({
-        type: 'success',
-        text1: 'Video Added',
-        text2: 'The video has been added to the videos page.',
-      });
-      
+        youtubeId: youtubeId,
+      };
+
+      await addVideo(videoData);
+
+      // Send notification if enabled
+      if (sendVideoNotification) {
+        try {
+          const pushTokens = await getPushTokens();
+          await notificationService.notifyNewVideo(videoData.title, pushTokens);
+        } catch (notifError) {
+          console.error('Error sending notification:', notifError);
+        }
+      }
+
+      Alert.alert('Success', 'Video has been added successfully!');
+
       // Clear form
       setVideoTitle('');
       setVideoDescription('');
       setYoutubeUrl('');
-      
+
+      // Refresh videos
+      await refreshVideos();
+
       if (Platform.OS !== 'web') {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
     } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Failed to add video. Please try again.',
-      });
+      Alert.alert('Error', 'Failed to add video. Please try again.');
+      console.error('Error adding video:', error);
     } finally {
       setIsSubmittingVideo(false);
     }
   };
 
-  // Notification handlers
-  const handleSendTestNotification = async () => {
-    setIsSendingNotification(true);
-    
-    try {
-      let success = false;
-      
-      if (pushToken) {
-        // Try push notification if token is available
-        success = await notificationService.sendTestPushNotification();
-      } else {
-        // Fall back to local notification for testing
-        await notificationService.scheduleLocalNotification({
-          type: 'test',
-          title: 'Test Notification',
-          body: 'This is a test notification from Guru Darshan app!',
-          data: { source: 'admin_test' }
-        });
-        success = true;
-      }
-      
-      if (success) {
-        Toast.show({
-          type: 'success',
-          text1: 'Test Notification Sent! 🔔',
-          text2: pushToken ? 'Push notification sent' : 'Local notification scheduled',
-        });
-      } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Failed to Send',
-          text2: 'Make sure notifications are enabled',
-        });
-      }
-      
-      if (Platform.OS !== 'web') {
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
-    } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Failed to send test notification',
-      });
-    } finally {
-      setIsSendingNotification(false);
-    }
-  };
-
-  const handleSendCustomNotification = async () => {
-    if (!notificationTitle.trim() || !notificationBody.trim()) {
-      Alert.alert('Error', 'Please fill in both title and message fields');
+  const handleEventSubmit = async () => {
+    if (!eventTitle.trim() || !eventDate.trim() || !eventTime.trim() || !eventDescription.trim()) {
+      Alert.alert('Error', 'Please fill in all required event fields');
       return;
     }
 
-    setIsSendingNotification(true);
-    
-    try {
-      // Send local notification with custom content
-      await notificationService.scheduleLocalNotification({
-        type: 'test',
-        title: notificationTitle.trim(),
-        body: notificationBody.trim(),
-        data: { customTitle: notificationTitle.trim() }
-      });
-      const success = true;
-      
-      if (success) {
-        Toast.show({
-          type: 'success',
-          text1: 'Custom Notification Sent! 🔔',
-          text2: 'Your custom message has been delivered',
-        });
-        
-        // Clear form
-        setNotificationTitle('');
-        setNotificationBody('');
-      } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Failed to Send',
-          text2: 'Make sure notifications are enabled',
-        });
-      }
-      
-      if (Platform.OS !== 'web') {
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
-    } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Failed to send custom notification',
-      });
-    } finally {
-      setIsSendingNotification(false);
-    }
-  };
+    setIsSubmittingEvent(true);
 
-  const handleScheduleLocalNotification = async () => {
     try {
-      await notificationService.scheduleLocalNotification(
-        {
-          type: 'test',
-          title: 'Guru Darshan',
-          body: 'Test scheduled notification from your spiritual app',
-        },
-        10 // 10 seconds from now
-      );
-      
-      Toast.show({
-        type: 'success',
-        text1: 'Local Notification Scheduled! ⏰',
-        text2: 'You will receive it in 10 seconds',
-      });
-      
+      const eventData = {
+        title: eventTitle.trim(),
+        date: eventDate.trim(),
+        time: eventTime.trim(),
+        description: eventDescription.trim(),
+        location: eventLocation.trim() || undefined,
+        type: eventType,
+      };
+
+      await addEvent(eventData);
+
+      // Send notification if enabled
+      if (sendEventNotification) {
+        try {
+          const pushTokens = await getPushTokens();
+          await notificationService.notifyNewEvent(eventData.title, eventData.date, pushTokens);
+        } catch (notifError) {
+          console.error('Error sending notification:', notifError);
+        }
+      }
+
+      Alert.alert('Success', 'Event has been added successfully!');
+
+      // Clear form
+      setEventTitle('');
+      setEventDate('');
+      setEventTime('');
+      setEventDescription('');
+      setEventLocation('');
+      setEventType('teaching');
+
+      // Refresh events
+      await refreshEvents();
+
       if (Platform.OS !== 'web') {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
     } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Failed to schedule notification',
-      });
+      Alert.alert('Error', 'Failed to add event. Please try again.');
+      console.error('Error adding event:', error);
+    } finally {
+      setIsSubmittingEvent(false);
     }
   };
 
   // Render functions for each tab
   const renderQuotesTab = () => (
-    <ScrollView contentContainerStyle={styles.scrollContent}>
-      <View style={styles.card}>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Quote Text *</Text>
-          <TextInput
-            style={styles.textArea}
-            placeholder="Enter the inspirational quote..."
-            placeholderTextColor={SPIRITUAL_COLORS.textMuted}
-            value={quoteText}
-            onChangeText={setQuoteText}
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
-          />
-        </View>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.keyboardView}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Add New Quote</Text>
 
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Author *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g., Gurudev, Buddha, Rumi..."
-            placeholderTextColor={SPIRITUAL_COLORS.textMuted}
-            value={quoteAuthor}
-            onChangeText={setQuoteAuthor}
-          />
-        </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Quote Text *</Text>
+            <TextInput
+              style={styles.textArea}
+              placeholder="Enter the inspirational quote..."
+              placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+              value={quoteText}
+              onChangeText={setQuoteText}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+          </View>
 
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Reflection Question (Optional)</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="A question to help users reflect on this quote..."
-            placeholderTextColor={SPIRITUAL_COLORS.textMuted}
-            value={reflectionQuestion}
-            onChangeText={setReflectionQuestion}
-          />
-        </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Author *</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g., Gurudev, Buddha, Rumi..."
+              placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+              value={quoteAuthor}
+              onChangeText={setQuoteAuthor}
+            />
+          </View>
 
-        <TouchableOpacity
-          style={[styles.submitButton, isSubmittingQuote && styles.buttonDisabled]}
-          onPress={handleQuoteSubmit}
-          disabled={isSubmittingQuote}
-        >
-          {isSubmittingQuote ? (
-            <ActivityIndicator color={SPIRITUAL_COLORS.primaryForeground} />
-          ) : (
-            <>
-              <Ionicons name="checkmark-circle" size={20} color={SPIRITUAL_COLORS.primaryForeground} />
-              <Text style={styles.submitButtonText}>Publish Quote</Text>
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Category (Optional)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g., Wisdom, Love, Peace..."
+              placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+              value={quoteCategory}
+              onChangeText={setQuoteCategory}
+            />
+          </View>
+
+          <View style={styles.checkboxContainer}>
+            <TouchableOpacity
+              style={styles.checkbox}
+              onPress={() => setSendQuoteNotification(!sendQuoteNotification)}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name={sendQuoteNotification ? 'checkbox' : 'checkbox-outline'}
+                size={24}
+                color={sendQuoteNotification ? SPIRITUAL_COLORS.primary : SPIRITUAL_COLORS.textMuted}
+              />
+              <Text style={styles.checkboxLabel}>Send notification to all users</Text>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.submitButton, isSubmittingQuote && styles.buttonDisabled]}
+            onPress={handleQuoteSubmit}
+            disabled={isSubmittingQuote}
+          >
+            {isSubmittingQuote ? (
+              <ActivityIndicator color={SPIRITUAL_COLORS.primaryForeground} />
+            ) : (
+              <>
+                <Ionicons name="checkmark-circle" size={20} color={SPIRITUAL_COLORS.primaryForeground} />
+                <Text style={styles.submitButtonText}>Publish Quote</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 
   const renderVideosTab = () => (
-    <ScrollView contentContainerStyle={styles.scrollContent}>
-      <View style={styles.card}>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Video Title *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter the video title..."
-            placeholderTextColor={SPIRITUAL_COLORS.textMuted}
-            value={videoTitle}
-            onChangeText={setVideoTitle}
-          />
-        </View>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.keyboardView}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Add New Video</Text>
 
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Description *</Text>
-          <TextInput
-            style={styles.textArea}
-            placeholder="Describe what this video is about..."
-            placeholderTextColor={SPIRITUAL_COLORS.textMuted}
-            value={videoDescription}
-            onChangeText={setVideoDescription}
-            multiline
-            numberOfLines={3}
-            textAlignVertical="top"
-          />
-        </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Video Title *</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter the video title..."
+              placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+              value={videoTitle}
+              onChangeText={setVideoTitle}
+            />
+          </View>
 
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>YouTube URL *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="https://youtube.com/watch?v=... or youtu.be/... or youtube.com/shorts/..."
-            placeholderTextColor={SPIRITUAL_COLORS.textMuted}
-            value={youtubeUrl}
-            onChangeText={setYoutubeUrl}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-        </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Description *</Text>
+            <TextInput
+              style={styles.textArea}
+              placeholder="Describe what this video is about..."
+              placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+              value={videoDescription}
+              onChangeText={setVideoDescription}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+            />
+          </View>
 
-        <TouchableOpacity
-          style={[styles.submitButton, isSubmittingVideo && styles.buttonDisabled]}
-          onPress={handleVideoSubmit}
-          disabled={isSubmittingVideo}
-        >
-          {isSubmittingVideo ? (
-            <ActivityIndicator color={SPIRITUAL_COLORS.primaryForeground} />
-          ) : (
-            <>
-              <Ionicons name="videocam" size={20} color={SPIRITUAL_COLORS.primaryForeground} />
-              <Text style={styles.submitButtonText}>Add Video</Text>
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>YouTube URL *</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="https://youtube.com/watch?v=... or youtu.be/..."
+              placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+              value={youtubeUrl}
+              onChangeText={setYoutubeUrl}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </View>
+
+          <View style={styles.checkboxContainer}>
+            <TouchableOpacity
+              style={styles.checkbox}
+              onPress={() => setSendVideoNotification(!sendVideoNotification)}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name={sendVideoNotification ? 'checkbox' : 'checkbox-outline'}
+                size={24}
+                color={sendVideoNotification ? SPIRITUAL_COLORS.primary : SPIRITUAL_COLORS.textMuted}
+              />
+              <Text style={styles.checkboxLabel}>Send notification to all users</Text>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.submitButton, isSubmittingVideo && styles.buttonDisabled]}
+            onPress={handleVideoSubmit}
+            disabled={isSubmittingVideo}
+          >
+            {isSubmittingVideo ? (
+              <ActivityIndicator color={SPIRITUAL_COLORS.primaryForeground} />
+            ) : (
+              <>
+                <Ionicons name="videocam" size={20} color={SPIRITUAL_COLORS.primaryForeground} />
+                <Text style={styles.submitButtonText}>Add Video</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 
-  const renderNotificationsTab = () => (
-    <ScrollView contentContainerStyle={styles.scrollContent}>
-      {/* Push Token Status */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>📱 Push Notification Status</Text>
-        <View style={styles.tokenContainer}>
-          <Text style={styles.label}>Push Token Status:</Text>
-          <Text style={[styles.tokenStatus, pushToken ? styles.tokenActive : styles.tokenInactive]}>
-            {pushToken ? '✅ Active' : '⚠️ Development Mode'}
-          </Text>
-          {pushToken ? (
-            <Text style={styles.tokenText} numberOfLines={3}>
-              {pushToken.substring(0, 50)}...
-            </Text>
-          ) : (
-            <Text style={styles.infoText}>
-              Push tokens are not available in development mode.{'\n'}
-              Local notifications will work for testing.{'\n'}
-              Push notifications work in production builds.
-            </Text>
-          )}
+  const renderEventsTab = () => (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.keyboardView}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Add New Event</Text>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Event Title *</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter the event title..."
+              placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+              value={eventTitle}
+              onChangeText={setEventTitle}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Date * (YYYY-MM-DD)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="2025-01-15"
+              placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+              value={eventDate}
+              onChangeText={setEventDate}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Time *</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="7:00 PM"
+              placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+              value={eventTime}
+              onChangeText={setEventTime}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Description *</Text>
+            <TextInput
+              style={styles.textArea}
+              placeholder="Describe the event..."
+              placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+              value={eventDescription}
+              onChangeText={setEventDescription}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Location (Optional)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Event location..."
+              placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+              value={eventLocation}
+              onChangeText={setEventLocation}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Event Type *</Text>
+            <View style={styles.typeSelector}>
+              {(['meditation', 'teaching', 'celebration', 'retreat'] as const).map((type) => (
+                <TouchableOpacity
+                  key={type}
+                  style={[
+                    styles.typeButton,
+                    eventType === type && styles.typeButtonActive,
+                  ]}
+                  onPress={() => setEventType(type)}
+                >
+                  <Text
+                    style={[
+                      styles.typeButtonText,
+                      eventType === type && styles.typeButtonTextActive,
+                    ]}
+                  >
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.checkboxContainer}>
+            <TouchableOpacity
+              style={styles.checkbox}
+              onPress={() => setSendEventNotification(!sendEventNotification)}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name={sendEventNotification ? 'checkbox' : 'checkbox-outline'}
+                size={24}
+                color={sendEventNotification ? SPIRITUAL_COLORS.primary : SPIRITUAL_COLORS.textMuted}
+              />
+              <Text style={styles.checkboxLabel}>Send notification to all users</Text>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.submitButton, isSubmittingEvent && styles.buttonDisabled]}
+            onPress={handleEventSubmit}
+            disabled={isSubmittingEvent}
+          >
+            {isSubmittingEvent ? (
+              <ActivityIndicator color={SPIRITUAL_COLORS.primaryForeground} />
+            ) : (
+              <>
+                <Ionicons name="calendar" size={20} color={SPIRITUAL_COLORS.primaryForeground} />
+                <Text style={styles.submitButtonText}>Add Event</Text>
+              </>
+            )}
+          </TouchableOpacity>
         </View>
-      </View>
-
-      {/* Quick Test Notification */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>🧪 Quick Test</Text>
-        <Text style={styles.cardDescription}>
-          Send a test notification to verify the system is working
-        </Text>
-        
-        <TouchableOpacity
-          style={[styles.submitButton, styles.testButton, isSendingNotification && styles.buttonDisabled]}
-          onPress={handleSendTestNotification}
-          disabled={isSendingNotification}
-        >
-          {isSendingNotification ? (
-            <ActivityIndicator color={SPIRITUAL_COLORS.primaryForeground} />
-          ) : (
-            <>
-              <Ionicons name="notifications" size={20} color={SPIRITUAL_COLORS.primaryForeground} />
-              <Text style={styles.submitButtonText}>
-                {pushToken ? 'Send Test Push Notification' : 'Send Test Local Notification'}
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
-
-      {/* Custom Notification */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>✏️ Custom Notification</Text>
-        <Text style={styles.cardDescription}>
-          Create and send a custom notification message
-        </Text>
-
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Notification Title *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g., Daily Spiritual Wisdom"
-            placeholderTextColor={SPIRITUAL_COLORS.textMuted}
-            value={notificationTitle}
-            onChangeText={setNotificationTitle}
-          />
-        </View>
-
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Notification Message *</Text>
-          <TextInput
-            style={styles.textArea}
-            placeholder="Write your spiritual message here..."
-            placeholderTextColor={SPIRITUAL_COLORS.textMuted}
-            value={notificationBody}
-            onChangeText={setNotificationBody}
-            multiline
-            numberOfLines={3}
-            textAlignVertical="top"
-          />
-        </View>
-
-        <TouchableOpacity
-          style={[styles.submitButton, styles.customButton, isSendingNotification && styles.buttonDisabled]}
-          onPress={handleSendCustomNotification}
-          disabled={isSendingNotification || !pushToken || !notificationTitle.trim() || !notificationBody.trim()}
-        >
-          {isSendingNotification ? (
-            <ActivityIndicator color={SPIRITUAL_COLORS.primaryForeground} />
-          ) : (
-            <>
-              <Ionicons name="send" size={20} color={SPIRITUAL_COLORS.primaryForeground} />
-              <Text style={styles.submitButtonText}>Send Custom Notification</Text>
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
-
-      {/* Local Notification Test */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>⏰ Local Notification Test</Text>
-        <Text style={styles.cardDescription}>
-          Schedule a local notification that will appear in 10 seconds
-        </Text>
-        
-        <TouchableOpacity
-          style={[styles.submitButton, styles.localButton]}
-          onPress={handleScheduleLocalNotification}
-        >
-          <Ionicons name="timer" size={20} color={SPIRITUAL_COLORS.primaryForeground} />
-          <Text style={styles.submitButtonText}>Schedule Local Notification</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Information */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>ℹ️ Information</Text>
-        <Text style={styles.infoText}>
-          • <Text style={styles.infoBold}>Test Notifications:</Text> Send to your device only{'\n'}
-          • <Text style={styles.infoBold}>Push Notifications:</Text> Require internet connection{'\n'}
-          • <Text style={styles.infoBold}>Local Notifications:</Text> Work offline{'\n'}
-          • <Text style={styles.infoBold}>Permissions:</Text> Must be enabled in device settings
-        </Text>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 
-  const renderScene = ({ route }: { route: any }) => {
-    switch (route.key) {
-      case 'quotes':
-        return renderQuotesTab();
-      case 'videos':
-        return renderVideosTab();
-      case 'notifications':
-        return renderNotificationsTab();
-      default:
-        return null;
+  const handleSendNotification = async () => {
+    if (!notificationMessage.trim()) {
+      Alert.alert('Error', 'Please enter a notification message');
+      return;
+    }
+
+    setIsSendingNotification(true);
+
+    try {
+      // Check permissions first
+      const hasPermission = await notificationService.checkPermissions();
+      if (!hasPermission) {
+        Alert.alert(
+          'Permissions Required',
+          'Please allow notifications in your device settings to send notifications.',
+          [{ text: 'OK' }]
+        );
+        setIsSendingNotification(false);
+        return;
+      }
+
+      const pushTokens = await getPushTokens();
+      console.log('📤 Sending notification with tokens:', pushTokens.length);
+      
+      const success = await notificationService.notifyGeneral(notificationMessage.trim(), pushTokens);
+      
+      if (success) {
+        Alert.alert('Success', '✅ Notification sent! Check your notification tray.');
+        setNotificationMessage('');
+      } else {
+        Alert.alert('Error', 'Failed to send notification. Please check console for details.');
+      }
+    } catch (error: any) {
+      const errorMessage = error?.message || 'Unknown error';
+      console.error('❌ Error sending notification:', error);
+      Alert.alert(
+        'Error', 
+        `Failed to send notification: ${errorMessage}\n\nMake sure notifications are enabled in device settings.`
+      );
+    } finally {
+      setIsSendingNotification(false);
     }
   };
 
-  const renderTabBar = (props: any) => (
-    <TabBar
-      {...props}
-      indicatorStyle={{ backgroundColor: SPIRITUAL_COLORS.primary }}
-      style={{ backgroundColor: 'transparent' }}
-      labelStyle={{ fontSize: 12, fontWeight: '600' }}
-      activeColor={SPIRITUAL_COLORS.primary}
-      inactiveColor={SPIRITUAL_COLORS.textMuted}
-      renderIcon={({ route, focused, color }: any) => (
-        <Ionicons
-          name={route.icon as any}
-          size={20}
-          color={color}
-          style={{ marginBottom: 4 }}
-        />
-      )}
-    />
+  const renderNotificationsTab = () => (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.keyboardView}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Send Notification</Text>
+          <Text style={styles.cardDescription}>
+            Send a notification to all users of the app. This is useful for general announcements or greetings.
+          </Text>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Notification Message *</Text>
+            <TextInput
+              style={styles.textArea}
+              placeholder="e.g., Hello! New spiritual wisdom awaits you..."
+              placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+              value={notificationMessage}
+              onChangeText={setNotificationMessage}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+          </View>
+
+          <TouchableOpacity
+            style={[styles.submitButton, isSendingNotification && styles.buttonDisabled]}
+            onPress={handleSendNotification}
+            disabled={isSendingNotification}
+          >
+            {isSendingNotification ? (
+              <ActivityIndicator color={SPIRITUAL_COLORS.primaryForeground} />
+            ) : (
+              <>
+                <Ionicons name="notifications" size={20} color={SPIRITUAL_COLORS.primaryForeground} />
+                <Text style={styles.submitButtonText}>Send Notification</Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.infoCard}>
+            <Ionicons name="information-circle" size={20} color={SPIRITUAL_COLORS.primary} />
+            <Text style={styles.infoText}>
+              Notifications are sent immediately to all users. In production, you'll need a backend service to collect and manage user push tokens.
+            </Text>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient
-        colors={[SPIRITUAL_COLORS.background, SPIRITUAL_COLORS.cardBackground]}
+        colors={SPIRITUAL_GRADIENTS.peace}
         style={styles.gradient}
       >
         <View style={styles.header}>
           <Ionicons name="settings" size={32} color={SPIRITUAL_COLORS.primary} />
           <Text style={styles.title}>Admin Panel</Text>
-          <Text style={styles.subtitle}>Manage quotes and videos</Text>
+          <Text style={styles.subtitle}>Manage content</Text>
         </View>
 
-        <TabView
-          navigationState={{ index, routes }}
-          renderScene={renderScene}
-          onIndexChange={setIndex}
-          initialLayout={{ width }}
-          renderTabBar={renderTabBar}
-        />
+        {/* Custom Tab Bar */}
+        <View style={styles.tabBar}>
+          <TouchableOpacity
+            style={[styles.tabButton, activeTab === 'quotes' && styles.tabButtonActive]}
+            onPress={() => handleTabPress('quotes')}
+          >
+            <Ionicons
+              name={activeTab === 'quotes' ? 'chatbubble' : 'chatbubble-outline'}
+              size={20}
+              color={activeTab === 'quotes' ? SPIRITUAL_COLORS.primary : SPIRITUAL_COLORS.textMuted}
+            />
+            <Text
+              style={[
+                styles.tabButtonText,
+                activeTab === 'quotes' && styles.tabButtonTextActive,
+              ]}
+            >
+              Quotes
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.tabButton, activeTab === 'videos' && styles.tabButtonActive]}
+            onPress={() => handleTabPress('videos')}
+          >
+            <Ionicons
+              name={activeTab === 'videos' ? 'videocam' : 'videocam-outline'}
+              size={20}
+              color={activeTab === 'videos' ? SPIRITUAL_COLORS.primary : SPIRITUAL_COLORS.textMuted}
+            />
+            <Text
+              style={[
+                styles.tabButtonText,
+                activeTab === 'videos' && styles.tabButtonTextActive,
+              ]}
+            >
+              Videos
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.tabButton, activeTab === 'events' && styles.tabButtonActive]}
+            onPress={() => handleTabPress('events')}
+          >
+            <Ionicons
+              name={activeTab === 'events' ? 'calendar' : 'calendar-outline'}
+              size={20}
+              color={activeTab === 'events' ? SPIRITUAL_COLORS.primary : SPIRITUAL_COLORS.textMuted}
+            />
+            <Text
+              style={[
+                styles.tabButtonText,
+                activeTab === 'events' && styles.tabButtonTextActive,
+              ]}
+            >
+              Events
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.tabButton, activeTab === 'notifications' && styles.tabButtonActive]}
+            onPress={() => handleTabPress('notifications')}
+          >
+            <Ionicons
+              name={activeTab === 'notifications' ? 'notifications' : 'notifications-outline'}
+              size={20}
+              color={activeTab === 'notifications' ? SPIRITUAL_COLORS.primary : SPIRITUAL_COLORS.textMuted}
+            />
+            <Text
+              style={[
+                styles.tabButtonText,
+                activeTab === 'notifications' && styles.tabButtonTextActive,
+              ]}
+            >
+              Notify
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Tab Content */}
+        <View style={styles.tabContent}>
+          {activeTab === 'quotes' && renderQuotesTab()}
+          {activeTab === 'videos' && renderVideosTab()}
+          {activeTab === 'events' && renderEventsTab()}
+          {activeTab === 'notifications' && renderNotificationsTab()}
+        </View>
       </LinearGradient>
-      <Toast />
     </SafeAreaView>
   );
 }
@@ -630,14 +758,18 @@ const styles = StyleSheet.create({
   gradient: {
     flex: 1,
   },
+  keyboardView: {
+    flex: 1,
+  },
   scrollContent: {
     flexGrow: 1,
     padding: 20,
+    paddingBottom: 100,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 30,
     paddingTop: 20,
+    paddingBottom: 20,
   },
   title: {
     fontSize: 28,
@@ -650,18 +782,50 @@ const styles = StyleSheet.create({
     color: SPIRITUAL_COLORS.textMuted,
     marginTop: 5,
   },
+  tabBar: {
+    flexDirection: 'row',
+    backgroundColor: SPIRITUAL_COLORS.cardBackground,
+    marginHorizontal: 16,
+    borderRadius: 12,
+    padding: 4,
+    marginBottom: 16,
+    ...SPIRITUAL_SHADOWS.card,
+  },
+  tabButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    gap: 6,
+  },
+  tabButtonActive: {
+    backgroundColor: SPIRITUAL_COLORS.primary,
+  },
+  tabButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: SPIRITUAL_COLORS.textMuted,
+  },
+  tabButtonTextActive: {
+    color: SPIRITUAL_COLORS.primaryForeground,
+  },
+  tabContent: {
+    flex: 1,
+  },
   card: {
     backgroundColor: SPIRITUAL_COLORS.cardBackground,
     borderRadius: 16,
     padding: 24,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    ...SPIRITUAL_SHADOWS.divine,
+  },
+  cardTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: SPIRITUAL_COLORS.foreground,
+    marginBottom: 20,
   },
   inputContainer: {
     marginBottom: 20,
@@ -679,7 +843,7 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     color: SPIRITUAL_COLORS.foreground,
-    backgroundColor: SPIRITUAL_COLORS.cardBackground,
+    backgroundColor: SPIRITUAL_COLORS.input,
   },
   textArea: {
     borderWidth: 1,
@@ -688,8 +852,33 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     color: SPIRITUAL_COLORS.foreground,
-    backgroundColor: SPIRITUAL_COLORS.cardBackground,
+    backgroundColor: SPIRITUAL_COLORS.input,
     minHeight: 100,
+  },
+  typeSelector: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  typeButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: SPIRITUAL_COLORS.border,
+    backgroundColor: SPIRITUAL_COLORS.input,
+  },
+  typeButtonActive: {
+    backgroundColor: SPIRITUAL_COLORS.primary,
+    borderColor: SPIRITUAL_COLORS.primary,
+  },
+  typeButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: SPIRITUAL_COLORS.foreground,
+  },
+  typeButtonTextActive: {
+    color: SPIRITUAL_COLORS.primaryForeground,
   },
   submitButton: {
     backgroundColor: SPIRITUAL_COLORS.primary,
@@ -709,64 +898,40 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  errorText: {
-    color: SPIRITUAL_COLORS.spiritualRed,
-    fontSize: 16,
-    textAlign: 'center',
-    marginTop: 50,
+  checkboxContainer: {
+    marginBottom: 20,
+    marginTop: 8,
   },
-  // Notification styles
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  checkbox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  checkboxLabel: {
+    fontSize: 14,
     color: SPIRITUAL_COLORS.foreground,
-    marginBottom: 12,
+    fontWeight: '500',
   },
   cardDescription: {
     fontSize: 14,
     color: SPIRITUAL_COLORS.textMuted,
-    marginBottom: 16,
+    marginBottom: 20,
     lineHeight: 20,
   },
-  tokenContainer: {
-    marginTop: 8,
-  },
-  tokenStatus: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  tokenActive: {
-    color: SPIRITUAL_COLORS.secondary, // Gold for active
-  },
-  tokenInactive: {
-    color: SPIRITUAL_COLORS.spiritualRed,
-  },
-  tokenText: {
-    fontSize: 12,
-    color: SPIRITUAL_COLORS.textMuted,
-    fontFamily: 'monospace',
-    backgroundColor: SPIRITUAL_COLORS.input,
-    padding: 8,
-    borderRadius: 6,
-    marginTop: 4,
-  },
-  testButton: {
-    backgroundColor: SPIRITUAL_COLORS.secondary, // Gold for test
-  },
-  customButton: {
-    backgroundColor: SPIRITUAL_COLORS.accent, // Light saffron for custom
-  },
-  localButton: {
-    backgroundColor: SPIRITUAL_COLORS.omGold, // Om gold for local
+  infoCard: {
+    flexDirection: 'row',
+    backgroundColor: SPIRITUAL_COLORS.accent,
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 20,
+    gap: 12,
+    alignItems: 'flex-start',
   },
   infoText: {
-    fontSize: 14,
-    color: SPIRITUAL_COLORS.textMuted,
-    lineHeight: 22,
-  },
-  infoBold: {
-    fontWeight: '600',
+    flex: 1,
+    fontSize: 13,
     color: SPIRITUAL_COLORS.foreground,
+    lineHeight: 18,
   },
 });
+

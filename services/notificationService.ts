@@ -14,7 +14,7 @@ Notifications.setNotificationHandler({
 });
 
 interface NotificationData {
-  type: 'quote' | 'reflection' | 'event' | 'test';
+  type: 'quote' | 'video' | 'event' | 'general';
   title: string;
   body: string;
   data?: any;
@@ -24,8 +24,11 @@ class NotificationService {
   private expoPushToken: string | null = null;
   private notificationListener: any = null;
   private responseListener: any = null;
+  private initialized = false;
 
   async initialize(): Promise<void> {
+    if (this.initialized) return;
+
     try {
       console.log('🔔 Initializing notification service...');
       
@@ -40,6 +43,7 @@ class NotificationService {
         this.setupNotificationListeners();
         
         console.log('✅ Notification service initialized successfully');
+        this.initialized = true;
       } else {
         console.log('⚠️ Notification permissions denied');
       }
@@ -56,6 +60,7 @@ class NotificationService {
           importance: Notifications.AndroidImportance.MAX,
           vibrationPattern: [0, 250, 250, 250],
           lightColor: '#FF231F7C',
+          sound: 'default',
         });
       }
 
@@ -76,8 +81,9 @@ class NotificationService {
         console.log('✅ Notification permissions granted');
         return true;
       } else {
-        console.log('❌ Must use physical device for Push Notifications');
-        return false;
+        console.log('⚠️ Using simulator - push notifications require a physical device');
+        // For simulator, we can still use local notifications
+        return true;
       }
     } catch (error) {
       console.error('❌ Error requesting permissions:', error);
@@ -88,37 +94,25 @@ class NotificationService {
   private async registerForPushNotifications(): Promise<void> {
     try {
       if (Device.isDevice) {
-        // Try to get push token without projectId first
         let token;
         try {
-          // First try with projectId if it exists
           const projectId = Constants.expoConfig?.extra?.eas?.projectId;
           if (projectId) {
             token = await Notifications.getExpoPushTokenAsync({
               projectId: projectId,
             });
           } else {
-            // Try without projectId for development
             token = await Notifications.getExpoPushTokenAsync();
           }
           
           this.expoPushToken = token.data;
           console.log('🎫 Expo Push Token:', this.expoPushToken);
           
-          // Store token for later use
           await AsyncStorage.setItem('@expo_push_token', this.expoPushToken);
-          
-          // TODO: Send token to your backend server here
-          // await this.sendTokenToServer(this.expoPushToken);
-          
         } catch (tokenError) {
-          console.log('⚠️ Push token not available in development mode');
-          console.log('💡 Push notifications will work when you build the app for production');
+          console.log('⚠️ Push token not available - using local notifications only');
           this.expoPushToken = null;
         }
-        
-      } else {
-        console.log('❌ Must use physical device for push notifications');
       }
     } catch (error) {
       console.error('❌ Error getting push token:', error);
@@ -126,7 +120,7 @@ class NotificationService {
   }
 
   private setupNotificationListeners(): void {
-    // Handle notifications that are received while the app is running
+    // Handle notifications received while app is running
     this.notificationListener = Notifications.addNotificationReceivedListener(
       (notification) => {
         console.log('🔔 Notification received:', notification);
@@ -137,7 +131,6 @@ class NotificationService {
     this.responseListener = Notifications.addNotificationResponseReceivedListener(
       (response) => {
         console.log('👆 Notification tapped:', response);
-        
         const notificationData = response.notification.request.content.data;
         if (notificationData?.type) {
           this.handleNotificationTap(notificationData);
@@ -148,34 +141,51 @@ class NotificationService {
 
   private handleNotificationTap(data: any): void {
     console.log('🎯 Handling notification tap:', data);
-    
-    switch (data.type) {
-      case 'quote':
-        // Navigate to quotes tab
-        console.log('📚 Navigating to quotes...');
-        break;
-      case 'reflection':
-        // Navigate to reflection or quotes tab
-        console.log('💭 Navigating to reflection...');
-        break;
-      case 'event':
-        // Navigate to calendar tab
-        console.log('📅 Navigating to calendar...');
-        break;
-      case 'test':
-        console.log('🧪 Test notification tapped');
-        break;
-      default:
-        console.log('📱 Opening main app');
+    // Navigation can be handled here in the future
+  }
+
+  // Public method: Check if permissions are granted
+  async checkPermissions(): Promise<boolean> {
+    try {
+      const { status } = await Notifications.getPermissionsAsync();
+      if (status !== 'granted') {
+        console.log('⚠️ Notification permissions not granted, requesting...');
+        const { status: newStatus } = await Notifications.requestPermissionsAsync();
+        return newStatus === 'granted';
+      }
+      return true;
+    } catch (error) {
+      console.error('❌ Error checking permissions:', error);
+      return false;
     }
   }
 
-  // Schedule a local notification
-  async scheduleLocalNotification(notificationData: NotificationData, triggerSeconds: number = 5): Promise<string | null> {
+  // Send local notification immediately (for testing and quick notifications)
+  async sendLocalNotification(notificationData: NotificationData): Promise<string | null> {
     try {
+      // Ensure permissions are granted
+      const hasPermission = await this.checkPermissions();
+      if (!hasPermission) {
+        console.error('❌ Cannot send notification: permissions not granted');
+        throw new Error('Notification permissions not granted');
+      }
+
+      // Ensure Android channel is set up
+      if (Platform.OS === 'android') {
+        await Notifications.setNotificationChannelAsync('default', {
+          name: 'default',
+          importance: Notifications.AndroidImportance.MAX,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: '#FF231F7C',
+          sound: 'default',
+        });
+      }
+
+      console.log('📤 Sending local notification:', notificationData.title, notificationData.body);
+
       const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
-          title: 'Guru Darshan',
+          title: notificationData.title || 'Spiritual Wisdom',
           body: notificationData.body,
           data: {
             type: notificationData.type,
@@ -183,37 +193,42 @@ class NotificationService {
           },
           sound: 'default',
         },
-        trigger: {
-          seconds: triggerSeconds,
-        } as Notifications.TimeIntervalTriggerInput,
+        trigger: null, // null means send immediately
       });
 
-      console.log('📅 Local notification scheduled:', notificationId);
+      console.log('✅ Local notification sent successfully! ID:', notificationId);
       return notificationId;
     } catch (error) {
-      console.error('❌ Error scheduling local notification:', error);
-      return null;
+      console.error('❌ Error sending local notification:', error);
+      throw error; // Re-throw so caller can handle it
     }
   }
 
-  // Send push notification (for testing - normally done by server)
-  async sendTestPushNotification(): Promise<boolean> {
-    if (!this.expoPushToken) {
-      console.log('❌ No push token available');
-      return false;
+  // Send push notification to all users (requires backend or Expo push service)
+  async sendPushNotification(notificationData: NotificationData, pushTokens: string[]): Promise<boolean> {
+    if (!pushTokens || pushTokens.length === 0) {
+      console.log('📱 Using LOCAL notification (works immediately, no backend needed)');
+      try {
+        const notificationId = await this.sendLocalNotification(notificationData);
+        return notificationId !== null;
+      } catch (error) {
+        console.error('❌ Failed to send local notification:', error);
+        return false;
+      }
     }
 
     try {
-      const message = {
-        to: this.expoPushToken,
+      const messages = pushTokens.map(token => ({
+        to: token,
         sound: 'default',
-        title: 'Guru Darshan',
-        body: 'Test notification from your spiritual app!',
-        data: { 
-          type: 'test',
-          timestamp: new Date().toISOString()
+        title: notificationData.title || 'Spiritual Wisdom',
+        body: notificationData.body,
+        data: {
+          type: notificationData.type,
+          ...notificationData.data,
+          timestamp: new Date().toISOString(),
         },
-      };
+      }));
 
       const response = await fetch('https://exp.host/--/api/v2/push/send', {
         method: 'POST',
@@ -222,56 +237,80 @@ class NotificationService {
           'Accept-encoding': 'gzip, deflate',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(message),
+        body: JSON.stringify(messages),
       });
 
       const result = await response.json();
-      console.log('📤 Push notification sent:', result);
+      console.log('📤 Push notifications sent:', result);
       
+      // Check if at least one notification was sent successfully
+      if (Array.isArray(result.data)) {
+        return result.data.some((item: any) => item.status === 'ok');
+      }
       return result.data?.status === 'ok';
     } catch (error) {
       console.error('❌ Error sending push notification:', error);
-      return false;
+      // Fallback to local notification
+      return (await this.sendLocalNotification(notificationData)) !== null;
     }
   }
 
-  // Send daily quote notification
-  async sendDailyQuoteNotification(quote: string, author: string): Promise<boolean> {
-    if (!this.expoPushToken) {
-      console.log('❌ No push token available');
-      return false;
-    }
+  // Helper method: Send notification for new quote
+  async notifyNewQuote(quoteText: string, author: string, pushTokens: string[] = []): Promise<boolean> {
+    const truncatedQuote = quoteText.length > 60 ? quoteText.substring(0, 57) + '...' : quoteText;
+    return await this.sendPushNotification(
+      {
+        type: 'quote',
+        title: '📚 New Daily Wisdom',
+        body: `"${truncatedQuote}" - ${author}`,
+        data: { quote: quoteText, author },
+      },
+      pushTokens
+    );
+  }
 
-    try {
-      const message = {
-        to: this.expoPushToken,
-        sound: 'default',
-        title: 'Guru Darshan',
-        body: `Daily Wisdom: "${quote}" - ${author}`,
-        data: { 
-          type: 'quote',
-          quote,
-          author,
-          timestamp: new Date().toISOString()
-        },
-      };
+  // Helper method: Send notification for new video
+  async notifyNewVideo(videoTitle: string, pushTokens: string[] = []): Promise<boolean> {
+    return await this.sendPushNotification(
+      {
+        type: 'video',
+        title: '🎥 New Spiritual Video',
+        body: `New video available: ${videoTitle}`,
+        data: { title: videoTitle },
+      },
+      pushTokens
+    );
+  }
 
-      const response = await fetch('https://exp.host/--/api/v2/push/send', {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Accept-encoding': 'gzip, deflate',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(message),
-      });
+  // Helper method: Send notification for new event
+  async notifyNewEvent(eventTitle: string, eventDate: string, pushTokens: string[] = []): Promise<boolean> {
+    const date = new Date(eventDate).toLocaleDateString();
+    return await this.sendPushNotification(
+      {
+        type: 'event',
+        title: '📅 New Event',
+        body: `${eventTitle} - ${date}`,
+        data: { title: eventTitle, date: eventDate },
+      },
+      pushTokens
+    );
+  }
 
-      const result = await response.json();
-      return result.data?.status === 'ok';
-    } catch (error) {
-      console.error('❌ Error sending daily quote notification:', error);
-      return false;
-    }
+  // Helper method: Send general notification
+  async notifyGeneral(message: string, pushTokens: string[] = []): Promise<boolean> {
+    return await this.sendPushNotification(
+      {
+        type: 'general',
+        title: '🙏 Spiritual Wisdom',
+        body: message,
+      },
+      pushTokens
+    );
+  }
+
+  // Get current push token
+  getPushToken(): string | null {
+    return this.expoPushToken;
   }
 
   // Get stored push token
@@ -284,11 +323,6 @@ class NotificationService {
     }
   }
 
-  // Get current push token
-  getPushToken(): string | null {
-    return this.expoPushToken;
-  }
-
   // Clean up listeners
   cleanup(): void {
     if (this.notificationListener) {
@@ -298,50 +332,8 @@ class NotificationService {
       this.responseListener.remove();
     }
   }
-
-  // Schedule daily notifications (for future use)
-  async scheduleDailyQuoteReminder(): Promise<void> {
-    try {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: 'Guru Darshan',
-          body: 'Daily Spiritual Wisdom Awaits - Your morning quote is ready to inspire your day',
-          data: { type: 'quote' },
-        },
-        trigger: {
-          hour: 7,
-          minute: 0,
-          repeats: true,
-        } as Notifications.CalendarTriggerInput,
-      });
-
-      console.log('📅 Daily quote reminder scheduled for 7:00 AM');
-    } catch (error) {
-      console.error('❌ Error scheduling daily reminder:', error);
-    }
-  }
-
-  async scheduleEveningReflection(): Promise<void> {
-    try {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: 'Guru Darshan',
-          body: 'Evening Reflection Time - Take a moment to reflect on today\'s spiritual journey',
-          data: { type: 'reflection' },
-        },
-        trigger: {
-          hour: 20,
-          minute: 0,
-          repeats: true,
-        } as Notifications.CalendarTriggerInput,
-      });
-
-      console.log('📅 Evening reflection scheduled for 8:00 PM');
-    } catch (error) {
-      console.error('❌ Error scheduling evening reflection:', error);
-    }
-  }
 }
 
 export const notificationService = new NotificationService();
 export default notificationService;
+

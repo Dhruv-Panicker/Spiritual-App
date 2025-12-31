@@ -1,50 +1,41 @@
-# Welcome to your Expo app 👋
+# Phase 0: Minimal Working App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This is the absolute minimal version of the app that should build successfully.
 
-## Get started
+## Dependencies
+- expo: ~52.0.0
+- expo-router: ~3.5.23
+- react: 18.3.1
+- react-native: 0.76.3
 
-1. Install dependencies
+**No native modules** - this should build without any issues.
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Setup
 
 ```bash
-npm run reset-project
+cd PHASE_0_MINIMAL
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Test Build
 
-## Learn more
+```bash
+# For iOS Simulator
+eas build --profile simulator --platform ios
 
-To learn more about developing your project with Expo, look at the following resources:
+# Or for development
+npm start
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Success Criteria
 
-## Join the community
+✅ `npm install` completes without errors
+✅ `npm start` runs successfully
+✅ EAS build completes successfully
+✅ App installs and runs on simulator
+✅ Displays "Spiritual App - Phase 0" screen
 
-Join our community of developers creating universal apps.
+## Next Phase
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Once this builds successfully, we can move to Phase 1 (Navigation).
+
