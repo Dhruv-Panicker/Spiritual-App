@@ -5,12 +5,16 @@ import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Configure how notifications should be handled when the app is running
+// IMPORTANT: This ensures notifications show even when app is in foreground
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
+  handleNotification: async (notification) => {
+    console.log('🔔 Notification received in handler:', notification.request.content.title);
+    return {
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    };
+  },
 });
 
 interface NotificationData {
@@ -27,28 +31,38 @@ class NotificationService {
   private initialized = false;
 
   async initialize(): Promise<void> {
-    if (this.initialized) return;
+    if (this.initialized) {
+      console.log('🔔 Notification service already initialized, skipping...');
+      return;
+    }
 
     try {
       console.log('🔔 Initializing notification service...');
       
       // Request permissions
       const hasPermission = await this.requestPermissions();
+      console.log('  Permission result:', hasPermission);
       
       if (hasPermission) {
         // Get push token
+        console.log('  Registering for push notifications...');
         await this.registerForPushNotifications();
         
         // Set up listeners
+        console.log('  Setting up notification listeners...');
         this.setupNotificationListeners();
         
         console.log('✅ Notification service initialized successfully');
         this.initialized = true;
       } else {
-        console.log('⚠️ Notification permissions denied');
+        console.log('⚠️ Notification permissions denied - local notifications may still work');
+        // Even without permissions, we can still mark as initialized for local notifications
+        this.initialized = true;
       }
     } catch (error) {
       console.error('❌ Failed to initialize notifications:', error);
+      // Mark as initialized even on error so we can still try local notifications
+      this.initialized = true;
     }
   }
 
@@ -147,13 +161,32 @@ class NotificationService {
   // Public method: Check if permissions are granted
   async checkPermissions(): Promise<boolean> {
     try {
-      const { status } = await Notifications.getPermissionsAsync();
-      if (status !== 'granted') {
-        console.log('⚠️ Notification permissions not granted, requesting...');
-        const { status: newStatus } = await Notifications.requestPermissionsAsync();
-        return newStatus === 'granted';
+      console.log('🔍 Checking notification permissions...');
+      const { status, canAskAgain } = await Notifications.getPermissionsAsync();
+      console.log('  Current status:', status);
+      
+      if (status === 'granted') {
+        console.log('✅ Permissions already granted');
+        return true;
       }
-      return true;
+      
+      if (status === 'denied' && !canAskAgain) {
+        console.log('❌ Permissions denied and cannot ask again - user must enable in settings');
+        return false;
+      }
+      
+      console.log('⚠️ Permissions not granted, requesting...');
+      const { status: newStatus } = await Notifications.requestPermissionsAsync({
+        ios: {
+          allowAlert: true,
+          allowBadge: true,
+          allowSound: true,
+          allowAnnouncements: false,
+        },
+      });
+      
+      console.log('  New status after request:', newStatus);
+      return newStatus === 'granted';
     } catch (error) {
       console.error('❌ Error checking permissions:', error);
       return false;
@@ -163,43 +196,74 @@ class NotificationService {
   // Send local notification immediately (for testing and quick notifications)
   async sendLocalNotification(notificationData: NotificationData): Promise<string | null> {
     try {
+      console.log('📤 Preparing to send local notification...');
+      console.log('  Title:', notificationData.title);
+      console.log('  Body:', notificationData.body);
+      console.log('  Type:', notificationData.type || 'general');
+      console.log('  Platform:', Platform.OS);
+      
       // Ensure permissions are granted
+      console.log('🔍 Checking permissions...');
       const hasPermission = await this.checkPermissions();
+      console.log('  Permission status:', hasPermission);
+      
       if (!hasPermission) {
-        console.error('❌ Cannot send notification: permissions not granted');
-        throw new Error('Notification permissions not granted');
+        const errorMsg = 'Notification permissions not granted';
+        console.error('❌ Cannot send notification:', errorMsg);
+        throw new Error(errorMsg);
       }
 
       // Ensure Android channel is set up
       if (Platform.OS === 'android') {
+        console.log('📱 Setting up Android notification channel...');
         await Notifications.setNotificationChannelAsync('default', {
           name: 'default',
           importance: Notifications.AndroidImportance.MAX,
           vibrationPattern: [0, 250, 250, 250],
           lightColor: '#FF231F7C',
           sound: 'default',
+          enableVibrate: true,
+          enableLights: true,
         });
+        console.log('✅ Android channel set up');
       }
 
-      console.log('📤 Sending local notification:', notificationData.title, notificationData.body);
+      // For iOS, ensure we have proper configuration
+      if (Platform.OS === 'ios') {
+        console.log('📱 iOS platform - ensuring proper notification setup...');
+      }
 
+      console.log('📤 Scheduling notification with trigger: immediate...');
+
+      // Try immediate trigger first (works better on iOS)
       const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
           title: notificationData.title || 'Spiritual Wisdom',
           body: notificationData.body,
+          sound: 'default',
+          badge: 1,
           data: {
-            type: notificationData.type,
+            type: notificationData.type || 'general',
             ...notificationData.data,
           },
-          sound: 'default',
         },
-        trigger: null, // null means send immediately
+        trigger: null, // null = immediate (iOS handles this better with our handler)
       });
 
-      console.log('✅ Local notification sent successfully! ID:', notificationId);
+      console.log('✅ Local notification scheduled successfully!');
+      console.log('  Notification ID:', notificationId);
+      console.log('  Platform:', Platform.OS);
+      console.log('  Trigger: immediate (null)');
+      
       return notificationId;
-    } catch (error) {
-      console.error('❌ Error sending local notification:', error);
+    } catch (error: any) {
+      const errorMsg = error?.message || error?.toString() || 'Unknown error';
+      console.error('❌ Error sending local notification:', errorMsg);
+      console.error('  Error type:', error?.constructor?.name);
+      if (error?.stack) {
+        console.error('  Stack trace:', error.stack);
+      }
+      console.error('  Full error:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
       throw error; // Re-throw so caller can handle it
     }
   }

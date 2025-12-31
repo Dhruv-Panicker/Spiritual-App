@@ -34,6 +34,13 @@ export interface Event {
   type: 'meditation' | 'teaching' | 'celebration' | 'retreat';
 }
 
+export interface PushToken {
+  email: string;
+  pushToken: string;
+  platform: string;
+  lastUpdated: string;
+}
+
 class GoogleSheetsService {
   private webhookUrl: string;
   private SHEET_ID: string;
@@ -42,7 +49,8 @@ class GoogleSheetsService {
 
   constructor() {
     // Google Apps Script Web App URL for logging user logins
-    this.webhookUrl = 'https://script.google.com/macros/s/AKfycbxnRGkIBfWhKeY1iQeSU6O3lFk89wr1jOIZRfKZwcXRldEBbif6EbBCUGRw0vFUFMet/exec';
+    this.webhookUrl = 'https://script.google.com/macros/s/AKfycbyhTOL6-nlTWt2v_pxj6gWJtOYwqBKffXmiOvsVryDJF03_WxdG-33aAuHogAvRTVIc/exec';
+    
     
     // Google Sheet ID and API key for reading quotes
     this.SHEET_ID = '1AfDkX6REafycGuXG7kRz0jDzoQgqDty3QayuIZJEPng';
@@ -434,6 +442,86 @@ class GoogleSheetsService {
     } catch (error) {
       console.error('❌ Error adding event:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Save or update user's push token in Google Sheets
+   * This is called when user logs in
+   */
+  async savePushToken(email: string, pushToken: string): Promise<boolean> {
+    try {
+      if (!email || !pushToken) {
+        console.error('❌ Cannot save push token: email or token is missing', { email, hasToken: !!pushToken });
+        return false;
+      }
+
+      const payload = {
+        action: 'savePushToken',
+        data: {
+          email: email,
+          pushToken: pushToken,
+          platform: Platform.OS,
+          lastUpdated: new Date().toISOString()
+        }
+      };
+
+
+      const response = await fetch(this.webhookUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+
+      
+      // Log locally for debugging
+      console.log('=== PUSH TOKEN SAVE ATTEMPT ===');
+      console.log('Email:', email);
+      console.log('Push Token:', pushToken);
+      console.log('Platform:', Platform.OS);
+      console.log('Timestamp:', new Date().toISOString());
+      console.log('================================');
+      
+      return true;
+    } catch (error) {
+      console.error('❌ Error saving push token:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      return false;
+    }
+  }
+
+  /**
+   * Get all push tokens from Google Sheets
+   * This is called when admin wants to send notifications to all users
+   */
+  async getPushTokens(): Promise<string[]> {
+    try {
+      console.log('📖 Loading push tokens from Google Sheets...');
+
+      const rows = await this.readSheet('pushTokens');
+
+      if (!rows.length || rows.length === 0) {
+        console.log('⚠️ No push tokens found in sheet');
+        return [];
+      }
+
+      // First row is headers, skip it
+      const [, ...dataRows] = rows;
+
+      // Extract push tokens (assuming format: [email, pushToken, platform, lastUpdated])
+      const tokens = dataRows
+        .map((row) => row[1]) // pushToken is in column 2 (index 1)
+        .filter((token) => token && token.trim().length > 0);
+
+      console.log(`✅ Loaded ${tokens.length} push tokens from Google Sheets`);
+      return tokens;
+    } catch (error) {
+      console.error('❌ Error getting push tokens:', error);
+      // If sheet doesn't exist, return empty array
+      return [];
     }
   }
 }

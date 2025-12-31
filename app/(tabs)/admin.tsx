@@ -22,6 +22,7 @@ import { useQuotes } from '@/contexts/QuotesContext';
 import { useVideos } from '@/contexts/VideosContext';
 import { useEvents } from '@/contexts/EventsContext';
 import { notificationService } from '@/services/notificationService';
+import { googleSheetsService } from '@/services/googleSheetsService';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
 
 const { width } = Dimensions.get('window');
@@ -82,13 +83,27 @@ export default function AdminScreen() {
     setActiveTab(tab);
   };
 
-  // Get push tokens from all users
-  // For now, returning empty array to test LOCAL NOTIFICATIONS first
-  // Local notifications work immediately on the device that triggers them
+  // Get push tokens from all users stored in Google Sheets
   const getPushTokens = async (): Promise<string[]> => {
-    // TODO: Later we'll fetch from Google Sheets
-    // For now, empty array = use local notifications
-    return [];
+    try {
+      // Get all push tokens from Google Sheets
+      const tokens = await googleSheetsService.getPushTokens();
+      
+      if (tokens.length === 0) {
+        console.log('⚠️ No push tokens found in Google Sheets, using local notification');
+        // Fallback: if no tokens in sheets, use local token (for testing)
+        const localToken = await notificationService.getStoredPushToken();
+        return localToken ? [localToken] : [];
+      }
+      
+      console.log(`✅ Found ${tokens.length} push tokens from Google Sheets`);
+      return tokens;
+    } catch (error) {
+      console.error('❌ Error getting push tokens from Google Sheets:', error);
+      // Fallback to local token
+      const localToken = await notificationService.getStoredPushToken();
+      return localToken ? [localToken] : [];
+    }
   };
 
   const handleQuoteSubmit = async () => {
@@ -560,8 +575,9 @@ export default function AdminScreen() {
     setIsSendingNotification(true);
 
     try {
-      // Check permissions first
+
       const hasPermission = await notificationService.checkPermissions();
+
       if (!hasPermission) {
         Alert.alert(
           'Permissions Required',
@@ -572,23 +588,53 @@ export default function AdminScreen() {
         return;
       }
 
+      // Get push tokens
+      console.log('🔍 Fetching push tokens from Google Sheets...');
       const pushTokens = await getPushTokens();
-      console.log('📤 Sending notification with tokens:', pushTokens.length);
+      console.log(`📋 Found ${pushTokens.length} push token(s)`);
       
+      if (pushTokens.length > 0) {
+        console.log('  Tokens (first 30 chars each):');
+        pushTokens.forEach((token, index) => {
+          console.log(`    ${index + 1}. ${token.substring(0, 30)}...`);
+        });
+      }
+      
+      // Send notification
+      console.log('📤 Sending notification...');
       const success = await notificationService.notifyGeneral(notificationMessage.trim(), pushTokens);
       
       if (success) {
-        Alert.alert('Success', '✅ Notification sent! Check your notification tray.');
+        console.log('✅ Notification sent successfully!');
+        
+        // Show immediate alert for testing + notification
+        Alert.alert(
+          '✅ Notification Sent!', 
+          `"${notificationMessage.trim()}"\n\nThe notification has been sent. On iOS:\n\n• If app is in FOREGROUND: Check the alert above or minimize the app\n• If app is in BACKGROUND: Check notification center (swipe down)\n• Lock your phone to see it on lock screen\n\n💡 Tip: Minimize the app or lock your phone to see the notification banner.`,
+          [{ text: 'OK' }]
+        );
         setNotificationMessage('');
       } else {
-        Alert.alert('Error', 'Failed to send notification. Please check console for details.');
+        console.error('❌ Notification send returned false');
+        Alert.alert(
+          'Notification Scheduled',
+          'Notification was scheduled but may not have sent successfully.\n\nPlease try:\n• Minimize the app and check notification center\n• Lock your phone to see on lock screen\n• Verify notifications are enabled in iOS Settings',
+          [{ text: 'OK' }]
+        );
+        setNotificationMessage('');
       }
     } catch (error: any) {
-      const errorMessage = error?.message || 'Unknown error';
+      const errorMessage = error?.message || error?.toString() || 'Unknown error';
       console.error('❌ Error sending notification:', error);
+      console.error('  Error type:', error?.constructor?.name);
+      console.error('  Error message:', errorMessage);
+      console.error('  Full error:', JSON.stringify(error, null, 2));
+      
+      // Show detailed error in alert
       Alert.alert(
-        'Error', 
-        `Failed to send notification: ${errorMessage}\n\nMake sure notifications are enabled in device settings.`
+        'Error Sending Notification', 
+        `Failed to send notification.\n\nError: ${errorMessage}\n\nPlease check:\n1. Notifications are enabled in device settings\n2. Internet connection is available\n3. Try again in a moment`,
+        [{ text: 'OK' }]
       );
     } finally {
       setIsSendingNotification(false);
