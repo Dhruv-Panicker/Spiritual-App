@@ -50,4 +50,7 @@ build/
 *.tgz
 .yarn-integrity
 
+# Testing
+coverage/
+
 app-example
