@@ -24,7 +24,11 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.spiritualapp.gurudarshan"
+      "package": "com.spiritualapp.gurudarshan",
+      "permissions": [
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -39,6 +43,14 @@
           "icon": "./assets/images/icon.png",
           "color": "#FF6B35",
           "defaultChannel": "default"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "kotlinVersion": "2.0.21"
+          }
         }
       ]
     ],
