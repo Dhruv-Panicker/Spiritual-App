@@ -75,6 +75,15 @@ function TabLayoutContent() {
         }}
       />
       <Tabs.Screen
+        name="prayer"
+        options={{
+          title: 'Prayer',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'heart' : 'heart-outline'} size={28} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="admin"
         options={{
           href: adminTabHref, // null completely hides the tab from tab bar
