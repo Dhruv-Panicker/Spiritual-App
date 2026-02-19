@@ -15,9 +15,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.spiritualapp.gurudarshan",
-      "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
-      }
+      "infoPlist": { "ITSAppUsesNonExemptEncryption": false }
     },
     "android": {
       "adaptiveIcon": {
@@ -25,10 +23,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.spiritualapp.gurudarshan",
-      "permissions": [
-        "RECEIVE_BOOT_COMPLETED",
-        "VIBRATE"
-      ]
+      "permissions": ["RECEIVE_BOOT_COMPLETED", "VIBRATE"]
     },
     "web": {
       "bundler": "metro",
@@ -37,30 +32,12 @@
     },
     "plugins": [
       "expo-router",
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/images/icon.png",
-          "color": "#FF6B35",
-          "defaultChannel": "default"
-        }
-      ],
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "kotlinVersion": "2.0.21"
-          }
-        }
-      ]
+      ["expo-notifications", { "icon": "./assets/images/icon.png", "color": "#FF6B35", "defaultChannel": "default" }],
+      ["expo-build-properties", { "android": { "kotlinVersion": "2.0.21" } }]
     ],
-    "experiments": {
-      "typedRoutes": true
-    },
+    "experiments": { "typedRoutes": true },
     "extra": {
-      "eas": {
-        "projectId": "0a61bbdb-728e-4e8e-8f64-74d6790183b0"
-      }
+      "eas": { "projectId": "0a61bbdb-728e-4e8e-8f64-74d6790183b0" }
     }
   }
 }

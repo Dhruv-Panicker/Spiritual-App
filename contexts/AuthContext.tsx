@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { googleSheetsService } from '../services/googleSheetsService';
 import { notificationService } from '../services/notificationService';
+import { env } from '../config/env';
 
 export interface User {
   id: string;
@@ -67,14 +68,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         throw new Error('Invalid email or password');
       }
 
-      // Hardcoded admin emails
-      const ADMIN_EMAILS = [
-        'dhru.panicker@gmail.com',
-        'apparanddhruv@gmail.com'
-      ];
-
-      // Check if user is admin based on email
-      const isAdmin = ADMIN_EMAILS.includes(email.toLowerCase());
+      // Check if user is admin based on email (from environment configuration)
+      const isAdmin = env.adminEmails.includes(email.toLowerCase());
 
       // Extract name from email (first part before @)
       const name = email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());

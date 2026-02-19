@@ -2,12 +2,21 @@ import { Share, Platform } from 'react-native';
 import { Quote } from '../contexts/QuotesContext';
 import { Video } from '../contexts/VideosContext';
 import { Event } from '../contexts/EventsContext';
+import { env } from '@/config/env';
 
 class ShareService {
-  private appName = 'Spiritual Wisdom';
-  private appStoreLink = 'https://apps.apple.com/app/spiritual-wisdom';
-  private playStoreLink = 'https://play.google.com/store/apps/details?id=com.spiritualwisdom';
-  private webAppLink = 'https://spiritualwisdom.app';
+  private get appName(): string {
+    return env.appName || 'Spiritual Wisdom';
+  }
+  private get appStoreLink(): string {
+    return env.appStoreLink || 'https://apps.apple.com/app/spiritual-wisdom';
+  }
+  private get playStoreLink(): string {
+    return env.playStoreLink || 'https://play.google.com/store/apps/details?id=com.spiritualwisdom';
+  }
+  private get webAppLink(): string {
+    return env.webAppLink || 'https://spiritualwisdom.app';
+  }
 
   async shareQuote(quote: Quote): Promise<void> {
     try {

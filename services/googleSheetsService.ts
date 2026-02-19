@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { env } from '@/config/env';
 
 export interface UserLoginData {
   email: string;
@@ -48,14 +49,16 @@ class GoogleSheetsService {
   private BASE_URL: string;
 
   constructor() {
-    // Google Apps Script Web App URL for logging user logins
-    this.webhookUrl = 'https://script.google.com/macros/s/AKfycbyhTOL6-nlTWt2v_pxj6gWJtOYwqBKffXmiOvsVryDJF03_WxdG-33aAuHogAvRTVIc/exec';
-    
-    
-    // Google Sheet ID and API key for reading quotes
-    this.SHEET_ID = '1AfDkX6REafycGuXG7kRz0jDzoQgqDty3QayuIZJEPng';
-    this.API_KEY = 'AIzaSyB2BKuT1V0MGR6GXtaJL73j0KDONZpW454';
+    // Load configuration from environment variables
+    this.webhookUrl = env.googleAppsScriptWebhookUrl;
+    this.SHEET_ID = env.googleSheetId;
+    this.API_KEY = env.googleSheetsApiKey;
     this.BASE_URL = `https://sheets.googleapis.com/v4/spreadsheets/${this.SHEET_ID}/values`;
+    
+    // Validate that required config is present
+    if (!this.webhookUrl || !this.SHEET_ID || !this.API_KEY) {
+      console.error('❌ Missing required Google Sheets configuration. Please check your environment variables.');
+    }
   }
 
   /**

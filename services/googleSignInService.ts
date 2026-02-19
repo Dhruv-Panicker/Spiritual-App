@@ -2,6 +2,7 @@ import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { env } from '@/config/env';
 
 // Complete the auth session for better UX
 WebBrowser.maybeCompleteAuthSession();
@@ -17,9 +18,13 @@ export interface GoogleUser {
 }
 
 class GoogleSignInService {
-  private clientId = '185946107624-ubrvasfi7tbaf71nmv8nijp3t6t15sn5.apps.googleusercontent.com';
+  private clientId: string;
   
   constructor() {
+    this.clientId = env.googleOAuthClientId || '';
+    if (!this.clientId) {
+      console.warn('⚠️ Google OAuth Client ID not configured');
+    }
     console.log('🔧 Google Sign-In service initialized');
   }
 
