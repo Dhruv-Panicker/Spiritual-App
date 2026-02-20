@@ -54,6 +54,9 @@ export const env = {
       .filter(email => email.length > 0);
   })(),
 
+  // Prayer: email where all prayers are sent (default below)
+  prayerRecipientEmail: getEnvVar('PRAYER_RECIPIENT_EMAIL', 'noreply.gurudevapp@gmail.com'),
+
   // Share / app links (optional; defaults used if not set)
   appName: getEnvVar('APP_NAME', 'Spiritual Wisdom'),
   appStoreLink: getEnvVar('APP_STORE_LINK', 'https://apps.apple.com/app/spiritual-wisdom'),

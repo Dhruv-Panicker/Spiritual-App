@@ -42,6 +42,20 @@ export interface PushToken {
   lastUpdated: string;
 }
 
+export interface PrayerSubmissionData {
+  name: string;
+  dateOfBirth: string;
+  city: string;
+  country: string;
+  phone: string;
+  email: string;
+  prayer: string;
+  hasPhoto: boolean;
+  /** Base64-encoded image for email attachment (when user added a photo) */
+  photoBase64?: string | null;
+  photoMimeType?: string;
+}
+
 class GoogleSheetsService {
   private webhookUrl: string;
   private SHEET_ID: string;
@@ -526,6 +540,58 @@ class GoogleSheetsService {
       // If sheet doesn't exist, return empty array
       return [];
     }
+  }
+
+  /**
+   * Submit a prayer: sends data to Apps Script which emails the prayer to the recipient
+   * and sends a confirmation email to the user. Returns { success: true } or throws.
+   */
+  async submitPrayer(data: PrayerSubmissionData, recipientEmail: string): Promise<{ success: true }> {
+    const payload: Record<string, unknown> = {
+      action: 'submitPrayer',
+      data: {
+        name: data.name,
+        dateOfBirth: data.dateOfBirth,
+        city: data.city,
+        country: data.country,
+        phone: data.phone,
+        email: data.email,
+        prayer: data.prayer,
+        hasPhoto: data.hasPhoto,
+      },
+      recipientEmail,
+    };
+    if (data.photoBase64) {
+      (payload.data as Record<string, unknown>).photoBase64 = data.photoBase64;
+      (payload.data as Record<string, unknown>).photoMimeType = data.photoMimeType || 'image/jpeg';
+    }
+
+    const response = await fetch(this.webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const text = await response.text();
+    if (!response.ok) {
+      console.error('❌ Prayer submission HTTP error:', response.status, text);
+      throw new Error(text || `Request failed (${response.status})`);
+    }
+
+    let json: { success?: boolean; error?: string };
+    try {
+      json = JSON.parse(text);
+    } catch {
+      console.error('❌ Prayer submission: invalid JSON response', text);
+      throw new Error('Invalid response from server');
+    }
+
+    if (json.success !== true) {
+      const msg = json.error || 'Prayer submission failed';
+      throw new Error(msg);
+    }
+
+    return { success: true };
   }
 }
 

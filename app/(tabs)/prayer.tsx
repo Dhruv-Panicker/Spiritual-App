@@ -18,7 +18,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
+import { googleSheetsService } from '@/services/googleSheetsService';
+import { env } from '@/config/env';
 
 const { height: screenHeight } = Dimensions.get('window');
 const PRAYER_MAX_LENGTH = 3000;
@@ -100,12 +103,40 @@ export default function PrayerScreen() {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     setIsSubmitting(true);
+    const userEmail = email.trim();
     try {
-      // TODO: send to backend (name, dateOfBirth: `${dobDay}/${dobMonth}/${dobYear}`, city, country, photoUri, phone: `${phoneAreaCode} ${phoneNumber}`, email, prayer)
-      await new Promise((r) => setTimeout(r, 800));
+      let photoBase64: string | null = null;
+      let photoMimeType = 'image/jpeg';
+      if (photoUri && Platform.OS !== 'web') {
+        try {
+          photoBase64 = await FileSystem.readAsStringAsync(photoUri, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          if (photoUri.toLowerCase().includes('.png')) photoMimeType = 'image/png';
+        } catch (e) {
+          console.warn('Could not read photo as base64:', e);
+        }
+      }
+      await googleSheetsService.submitPrayer(
+        {
+          name: name.trim(),
+          dateOfBirth: `${dobDay.trim()}/${dobMonth.trim()}/${dobYear.trim()}`,
+          city: city.trim(),
+          country: country.trim(),
+          phone: `${phoneAreaCode.trim()} ${phoneNumber.trim()}`.trim(),
+          email: userEmail,
+          prayer: prayer.trim(),
+          hasPhoto: !!photoUri,
+          ...(photoBase64 && { photoBase64, photoMimeType }),
+        },
+        env.prayerRecipientEmail
+      );
+      if (Platform.OS !== 'web') {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
       Alert.alert(
         'Prayer sent',
-        'Your prayer has been submitted. May Gurudev\'s blessings be with you.',
+        `Your prayer has been submitted. A confirmation email has been sent to ${userEmail}. May Gurudev's blessings be with you.`,
         [{ text: 'OK' }]
       );
       setName('');
@@ -119,11 +150,9 @@ export default function PrayerScreen() {
       setPhoneNumber('');
       setEmail('');
       setPrayer('');
-      if (Platform.OS !== 'web') {
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
     } catch (e) {
-      Alert.alert('Error', 'Something went wrong. Please try again.');
+      const message = e instanceof Error ? e.message : 'Something went wrong. Please try again.';
+      Alert.alert('Error', message);
     } finally {
       setIsSubmitting(false);
     }
