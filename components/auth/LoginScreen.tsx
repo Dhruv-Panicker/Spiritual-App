@@ -16,7 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { SPIRITUAL_COLORS, SPIRITUAL_TYPOGRAPHY } from '@/constants/SpiritualColors';
 
 export const LoginScreen: React.FC = () => {
-  const { login, loginWithGoogle, isLoading } = useAuth();
+  const { login, isLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -33,21 +33,6 @@ export const LoginScreen: React.FC = () => {
       Alert.alert('Login Failed', errorMessage);
       console.error('Login error:', error);
     }
-  };
-
-  const handleGoogleSignIn = async () => {
-    Alert.alert(
-      'Coming Soon',
-      'Google Sign-in is temporarily disabled. Please use email/password login.',
-      [{ text: 'OK' }]
-    );
-    // Temporarily disabled
-    // try {
-    //   await loginWithGoogle();
-    // } catch (error) {
-    //   const errorMessage = error instanceof Error ? error.message : 'Sign-in failed';
-    //   Alert.alert('Sign-In Error', errorMessage);
-    // }
   };
 
   return (
@@ -103,24 +88,8 @@ export const LoginScreen: React.FC = () => {
                 </TouchableOpacity>
               </View>
 
-              <View style={styles.divider}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>OR</Text>
-                <View style={styles.dividerLine} />
-              </View>
-
-              <TouchableOpacity
-                style={[styles.googleButton, isLoading && styles.buttonDisabled]}
-                onPress={handleGoogleSignIn}
-                disabled={isLoading}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.googleButtonText}>Continue with Google</Text>
-              </TouchableOpacity>
-
               <Text style={styles.infoText}>
-                Phase 3 - Authentication{'\n'}
-                Sign in with email/password (Google Sign-in coming soon)
+                Sign in with your email and password.
               </Text>
             </View>
           </View>
@@ -196,37 +165,6 @@ const styles = StyleSheet.create({
   },
   loginButtonText: {
     color: SPIRITUAL_COLORS.primaryForeground,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    marginVertical: 24,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: SPIRITUAL_COLORS.border,
-  },
-  dividerText: {
-    marginHorizontal: 16,
-    color: SPIRITUAL_COLORS.textMuted,
-    fontSize: 14,
-  },
-  googleButton: {
-    backgroundColor: '#4285F4', // Google blue
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 12,
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 56,
-  },
-  googleButtonText: {
-    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },

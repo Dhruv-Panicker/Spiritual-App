@@ -14,7 +14,6 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   isLoading: boolean;
 }
@@ -172,11 +171,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const loginWithGoogle = async () => {
-    // Google Sign-in is temporarily disabled - will be re-implemented later
-    throw new Error('Google Sign-in is temporarily disabled. Please use email/password login.');
-  };
-
   const logout = async () => {
     console.log('=== USER LOGOUT ===');
     console.log('User logging out:', user?.email);
@@ -200,7 +194,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const value: AuthContextType = {
     user,
     login,
-    loginWithGoogle,
     logout,
     isLoading
   };

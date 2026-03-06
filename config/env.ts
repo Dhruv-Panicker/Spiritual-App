@@ -41,9 +41,6 @@ export const env = {
   googleSheetId: getEnvVar('GOOGLE_SHEET_ID'),
   googleAppsScriptWebhookUrl: getEnvVar('GOOGLE_APPS_SCRIPT_WEBHOOK_URL'),
   
-  // Google OAuth Configuration
-  googleOAuthClientId: getEnvVar('GOOGLE_OAUTH_CLIENT_ID'),
-  
   // Admin Configuration
   adminEmails: (() => {
     const emailsStr = getEnvVar('ADMIN_EMAILS');
