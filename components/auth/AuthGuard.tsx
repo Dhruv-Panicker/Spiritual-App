@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { LoginScreen } from './LoginScreen';
+import { AuthFlow } from './AuthFlow';
 import { SPIRITUAL_COLORS } from '@/constants/SpiritualColors';
 
 interface AuthGuardProps {
@@ -23,7 +23,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   }
 
   if (!user) {
-    return <LoginScreen />;
+    return <AuthFlow />;
   }
 
   return <>{children}</>;

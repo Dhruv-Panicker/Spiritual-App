@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -15,23 +14,29 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { SPIRITUAL_COLORS, SPIRITUAL_TYPOGRAPHY } from '@/constants/SpiritualColors';
 
-export const LoginScreen: React.FC = () => {
+interface LoginScreenProps {
+  /** When provided, show a link to go to sign-up flow */
+  onGoToSignUp?: () => void;
+}
+
+export const LoginScreen: React.FC<LoginScreenProps> = ({ onGoToSignUp }) => {
   const { login, isLoading } = useAuth();
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please enter both email and password.');
+    const trimmed = email.trim();
+    if (!trimmed) {
+      setError('Please enter your email address.');
       return;
     }
-
+    setError(null);
     try {
-      await login(email, password);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Login failed';
-      Alert.alert('Login Failed', errorMessage);
-      console.error('Login error:', error);
+      await login(trimmed);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Login failed';
+      setError(message === 'UNVERIFIED_USER' ? 'UNVERIFIED_USER' : message);
+      console.error('Login error:', err);
     }
   };
 
@@ -52,27 +57,34 @@ export const LoginScreen: React.FC = () => {
 
               <View style={styles.form}>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, error ? styles.inputError : null]}
                   placeholder="Email"
                   placeholderTextColor={SPIRITUAL_COLORS.textMuted}
                   value={email}
-                  onChangeText={setEmail}
+                  onChangeText={(t) => { setEmail(t); setError(null); }}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoComplete="email"
                   editable={!isLoading}
                 />
-
-                <TextInput
-                  style={styles.input}
-                  placeholder="Password"
-                  placeholderTextColor={SPIRITUAL_COLORS.textMuted}
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                  autoComplete="password"
-                  editable={!isLoading}
-                />
+                {error ? (
+                  <View style={styles.errorBox}>
+                    <Text style={styles.errorText}>
+                      {error === 'UNVERIFIED_USER'
+                        ? 'You are an unverified user and have not signed up yet. Please sign up to continue.'
+                        : error}
+                    </Text>
+                    {onGoToSignUp && error === 'UNVERIFIED_USER' ? (
+                      <TouchableOpacity
+                        style={styles.goToSignUpButton}
+                        onPress={onGoToSignUp}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={styles.goToSignUpButtonText}>Go to Sign up</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                ) : null}
 
                 <TouchableOpacity
                   style={[styles.loginButton, isLoading && styles.buttonDisabled]}
@@ -85,11 +97,17 @@ export const LoginScreen: React.FC = () => {
                   ) : (
                     <Text style={styles.loginButtonText}>Login</Text>
                   )}
-                </TouchableOpacity>
-              </View>
+              </TouchableOpacity>
+            </View>
+
+            {onGoToSignUp ? (
+              <TouchableOpacity style={styles.signUpLink} onPress={onGoToSignUp} activeOpacity={0.7}>
+                <Text style={styles.signUpLinkText}>Don't have an account? Sign up</Text>
+              </TouchableOpacity>
+            ) : null}
 
               <Text style={styles.infoText}>
-                Sign in with your email and password.
+                Sign in with your email.
               </Text>
             </View>
           </View>
@@ -149,6 +167,36 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: SPIRITUAL_COLORS.border,
   },
+  inputError: {
+    borderColor: SPIRITUAL_COLORS.spiritualRed,
+  },
+  errorText: {
+    fontSize: 14,
+    color: SPIRITUAL_COLORS.spiritualRed,
+    marginBottom: 12,
+  },
+  errorBox: {
+    width: '100%',
+    backgroundColor: '#FDE8E8',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: SPIRITUAL_COLORS.spiritualRed,
+  },
+  goToSignUpButton: {
+    backgroundColor: SPIRITUAL_COLORS.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginTop: 12,
+    alignItems: 'center',
+  },
+  goToSignUpButtonText: {
+    color: SPIRITUAL_COLORS.primaryForeground,
+    fontSize: 15,
+    fontWeight: '600',
+  },
   loginButton: {
     backgroundColor: SPIRITUAL_COLORS.primary,
     paddingVertical: 16,
@@ -167,6 +215,16 @@ const styles = StyleSheet.create({
     color: SPIRITUAL_COLORS.primaryForeground,
     fontSize: 16,
     fontWeight: '600',
+  },
+  signUpLink: {
+    marginTop: 20,
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  signUpLinkText: {
+    fontSize: 15,
+    color: SPIRITUAL_COLORS.primary,
+    fontWeight: '500',
   },
   infoText: {
     marginTop: 30,

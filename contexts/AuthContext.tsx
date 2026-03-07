@@ -13,7 +13,10 @@ export interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<void>;
+  /** Log in with email only; checks userbase. No password. */
+  login: (email: string) => Promise<void>;
+  /** Complete sign-up after 2FA verification; adds user to userbase with verified=yes */
+  completeSignUp: (email: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
   isLoading: boolean;
 }
@@ -57,115 +60,75 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const login = async (email: string, password: string) => {
+  /** Shared: set user session, persist, log login, save push token in background */
+  const logUserIn = async (email: string, name: string) => {
+    const normalizedEmail = email.trim().toLowerCase();
+    const isAdmin = env.adminEmails.includes(normalizedEmail);
+    const userObj: User = {
+      id: normalizedEmail,
+      name: name.trim() || normalizedEmail.split('@')[0].replace(/[._]/g, ' '),
+      email: normalizedEmail,
+      isAdmin,
+    };
+    setUser(userObj);
+    await AsyncStorage.setItem('spiritual-app-user', JSON.stringify(userObj));
+    googleSheetsService.logUserLogin({
+      email: userObj.email,
+      name: userObj.name,
+      loginTime: new Date().toISOString(),
+      isAdmin: userObj.isAdmin,
+    }).catch(() => {});
+    (async () => {
+      try {
+        await notificationService.initialize();
+        let attempt = 0;
+        const trySaveToken = async (): Promise<void> => {
+          attempt++;
+          const pushToken = notificationService.getPushToken() || await notificationService.getStoredPushToken();
+          if (pushToken) {
+            await googleSheetsService.savePushToken(userObj.email, pushToken);
+            return;
+          }
+          if (attempt < 10) setTimeout(() => trySaveToken(), 2000);
+        };
+        setTimeout(() => trySaveToken(), 3000);
+      } catch (_) {}
+    })();
+  };
+
+  const completeSignUp = async (email: string, name: string) => {
     setIsLoading(true);
     try {
-      console.log('🔐 Starting email/password login...');
-
-      // Basic validation
-      if (!email.includes('@') || password.length < 3) {
-        throw new Error('Invalid email or password');
+      const normalizedEmail = email.trim().toLowerCase();
+      if (!normalizedEmail || !normalizedEmail.includes('@')) {
+        throw new Error('Invalid email');
       }
+      const displayName = (name || '').trim() || normalizedEmail.split('@')[0].replace(/[._]/g, ' ');
+      await logUserIn(normalizedEmail, displayName);
+      await googleSheetsService.addToUserbase(normalizedEmail, displayName);
+    } catch (error) {
+      console.error('completeSignUp error:', error);
+      throw error instanceof Error ? error : new Error('Sign-up failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      // Check if user is admin based on email (from environment configuration)
-      const isAdmin = env.adminEmails.includes(email.toLowerCase());
-
-      // Extract name from email (first part before @)
-      const name = email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-
-      console.log('=== USER LOGIN ATTEMPT ===');
-      console.log('Email:', email);
-      console.log('Is Admin:', isAdmin);
-      console.log('Login Time:', new Date().toISOString());
-      console.log('==========================');
-
-      const user: User = {
-        id: email, // Use email as ID for now
-        name: name,
-        email: email,
-        isAdmin
-      };
-
-      setUser(user);
-      await AsyncStorage.setItem('spiritual-app-user', JSON.stringify(user));
-
-      // Log user login to Google Sheets (non-blocking)
-      googleSheetsService.logUserLogin({
-        email: user.email,
-        name: user.name,
-        loginTime: new Date().toISOString(),
-        isAdmin: user.isAdmin
-      }).catch(error => {
-        console.log('Failed to log to Google Sheets:', error);
-        // This is non-blocking - login continues regardless
-      });
-
-      // Save push token to Google Sheets (non-blocking)
-      // This allows admin to send notifications to this user later
-      // Note: Notification service should already be initialized in app/_layout.tsx
-      (async () => {
-        try {
-          console.log('🔔 Preparing to save push token for user:', user.email);
-          
-          // Ensure notification service is initialized (it may already be from app/_layout.tsx)
-          console.log('  Ensuring notification service is initialized...');
-          await notificationService.initialize();
-          
-          // Wait a bit longer for token to be ready, then try multiple times
-          const maxAttempts = 10; // Increased attempts
-          let attempt = 0;
-          
-          const trySaveToken = async (): Promise<void> => {
-            attempt++;
-            console.log(`🔄 Attempt ${attempt}/${maxAttempts} to get push token...`);
-            
-            let pushToken = notificationService.getPushToken();
-            console.log('  Current token from service:', pushToken ? pushToken.substring(0, 30) + '...' : 'null');
-            
-            if (!pushToken) {
-              // Try stored token
-              console.log('  Token not available, checking stored token...');
-              pushToken = await notificationService.getStoredPushToken();
-              console.log('  Stored token:', pushToken ? pushToken.substring(0, 30) + '...' : 'null');
-            }
-            
-            if (pushToken) {
-              console.log('🎫 Found push token! Saving to Google Sheets...');
-              console.log('  Email:', user.email);
-              const saved = await googleSheetsService.savePushToken(user.email, pushToken);
-              if (saved) {
-                console.log('✅ Push token saved successfully to Google Sheets');
-              } else {
-                console.error('❌ Failed to save push token to Google Sheets');
-              }
-              return;
-            }
-            
-            // If no token yet and we have more attempts, try again
-            if (attempt < maxAttempts) {
-              const delay = 2000; // Wait 2 seconds between attempts
-              console.log(`  No token yet, waiting ${delay}ms before next attempt...`);
-              setTimeout(trySaveToken, delay);
-            } else {
-              console.error('❌ Could not get push token after', maxAttempts, 'attempts');
-            }
-          };
-          
-          // Start trying after a longer delay to ensure initialization is complete
-          console.log('  Waiting 3 seconds before first attempt...');
-          setTimeout(trySaveToken, 3000);
-        } catch (err: any) {
-          console.error('❌ Failed to save push token:', err);
-          console.error('  Error message:', err?.message);
-          console.error('  Error stack:', err?.stack);
-        }
-      })();
-
-      console.log('✅ Login successful');
-
+  const login = async (email: string) => {
+    setIsLoading(true);
+    try {
+      const normalizedEmail = email.trim().toLowerCase();
+      if (!normalizedEmail || !normalizedEmail.includes('@')) {
+        throw new Error('Please enter a valid email address.');
+      }
+      const result = await googleSheetsService.checkUserInUserbase(normalizedEmail);
+      if (!result.exists) {
+        throw new Error('UNVERIFIED_USER');
+      }
+      await logUserIn(normalizedEmail, result.name || normalizedEmail.split('@')[0]);
     } catch (error) {
       console.error('Login error:', error);
-      throw new Error(error instanceof Error ? error.message : 'Authentication failed');
+      throw error instanceof Error ? error : new Error('Login failed');
     } finally {
       setIsLoading(false);
     }
@@ -194,6 +157,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const value: AuthContextType = {
     user,
     login,
+    completeSignUp,
     logout,
     isLoading
   };

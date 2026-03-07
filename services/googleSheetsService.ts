@@ -593,6 +593,76 @@ class GoogleSheetsService {
 
     return { success: true };
   }
+
+  /**
+   * Add a verified user to the userbase sheet. Called after 2FA sign-up.
+   * Webhook appends row: [user email, user name, verified (yes/no)].
+   */
+  async addToUserbase(email: string, name: string): Promise<boolean> {
+    try {
+      const payload = {
+        action: 'addToUserbase',
+        data: {
+          email: email.trim().toLowerCase(),
+          name: (name || '').trim() || email.split('@')[0],
+          verified: 'yes',
+        },
+      };
+      const response = await fetch(this.webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const text = await response.text();
+      let json: { success?: boolean; error?: string } = {};
+      try {
+        json = text ? JSON.parse(text) : {};
+      } catch (_) {}
+      if (!response.ok || json.success !== true) {
+        console.error('addToUserbase failed:', json.error || response.status);
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error('❌ addToUserbase error:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Check if email exists in userbase sheet. Used for passwordless login.
+   * Returns { exists: true, name: string } or { exists: false }.
+   */
+  async checkUserInUserbase(email: string): Promise<{ exists: boolean; name?: string }> {
+    try {
+      const payload = {
+        action: 'checkUserInUserbase',
+        data: { email: email.trim().toLowerCase() },
+      };
+      const response = await fetch(this.webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const text = await response.text();
+      let json: { exists?: boolean; name?: string; error?: string } = {};
+      try {
+        json = text ? JSON.parse(text) : {};
+      } catch (_) {
+        return { exists: false };
+      }
+      if (!response.ok) {
+        return { exists: false };
+      }
+      if (json.exists === true && json.name != null) {
+        return { exists: true, name: String(json.name) };
+      }
+      return { exists: false };
+    } catch (error) {
+      console.error('❌ checkUserInUserbase error:', error);
+      return { exists: false };
+    }
+  }
 }
 
 export const googleSheetsService = new GoogleSheetsService();
