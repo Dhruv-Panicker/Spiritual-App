@@ -175,7 +175,7 @@ export default function PrayerScreen() {
             {/* Hero / Banner section */}
             <View style={styles.heroContainer}>
               <Image
-                source={require('@/assets/images/om-symbol.png')}
+                source={require('@/assets/images/om_logo_transparent.png')}
                 style={styles.heroImage}
                 resizeMode="cover"
               />

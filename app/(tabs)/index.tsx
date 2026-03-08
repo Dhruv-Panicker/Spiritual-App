@@ -2,6 +2,7 @@ import React from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -108,9 +109,11 @@ export default function HomeScreen() {
           <View style={styles.header}>
             <View style={styles.headerTop}>
               <View style={styles.headerLeft}>
-                <View style={styles.omContainer}>
-                  <Text style={styles.omSymbol}>ॐ</Text>
-                </View>
+                <Image
+                  source={require('@/assets/images/om_logo_transparent.png')}
+                  style={styles.omLogo}
+                  resizeMode="contain"
+                />
               </View>
               <TouchableOpacity
                 style={styles.logoutButton}
@@ -232,19 +235,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: SPIRITUAL_COLORS.primary,
   },
-  omContainer: {
+  omLogo: {
     width: 80,
     height: 80,
-    borderRadius: 40,
-    backgroundColor: SPIRITUAL_COLORS.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...SPIRITUAL_SHADOWS.divine,
-  },
-  omSymbol: {
-    fontSize: 36,
-    color: SPIRITUAL_COLORS.primaryForeground,
-    fontWeight: 'bold',
   },
   welcomeText: {
     fontSize: 28,

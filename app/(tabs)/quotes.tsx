@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
+  Image,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
@@ -52,9 +53,11 @@ const QuoteCard: React.FC<{ quote: Quote }> = ({ quote }) => {
   return (
     <View style={styles.quoteCard}>
       <View style={styles.quoteHeader}>
-        <View style={styles.omContainer}>
-          <Text style={styles.omSymbol}>ॐ</Text>
-        </View>
+        <Image
+          source={require('@/assets/images/om_logo_transparent.png')}
+          style={styles.omQuoteLogo}
+          resizeMode="contain"
+        />
         <Text style={styles.date}>{formatDate(quote.dateAdded)}</Text>
       </View>
 
@@ -135,9 +138,11 @@ export default function QuotesScreen() {
       <LinearGradient colors={SPIRITUAL_GRADIENTS.peace} style={styles.gradient}>
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.omHeaderContainer}>
-            <Text style={styles.omHeaderSymbol}>ॐ</Text>
-          </View>
+          <Image
+            source={require('@/assets/images/om_logo_transparent.png')}
+            style={styles.omHeaderLogo}
+            resizeMode="contain"
+          />
           <Text style={[styles.headerTitle, SPIRITUAL_TYPOGRAPHY.spiritualHeading]}>
             Daily Wisdom
           </Text>
@@ -190,20 +195,10 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     paddingHorizontal: 20,
   },
-  omHeaderContainer: {
+  omHeaderLogo: {
     width: 60,
     height: 60,
-    borderRadius: 30,
-    backgroundColor: SPIRITUAL_COLORS.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
     marginBottom: 16,
-    ...SPIRITUAL_SHADOWS.divine,
-  },
-  omHeaderSymbol: {
-    fontSize: 28,
-    color: SPIRITUAL_COLORS.primaryForeground,
-    fontWeight: 'bold',
   },
   headerTitle: {
     fontSize: 28,
@@ -238,18 +233,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  omContainer: {
+  omQuoteLogo: {
     width: 32,
     height: 32,
-    borderRadius: 16,
-    backgroundColor: SPIRITUAL_COLORS.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  omSymbol: {
-    fontSize: 16,
-    color: SPIRITUAL_COLORS.primaryForeground,
-    fontWeight: 'bold',
   },
   date: {
     fontSize: 12,

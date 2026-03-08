@@ -82,7 +82,7 @@ export default function GurudevScreen() {
           {/* Hero Section */}
           <View style={styles.heroContainer}>
             <Image
-              source={require('@/assets/images/om-symbol.png')}
+              source={require('@/assets/images/om_logo_transparent.png')}
               style={styles.heroImage}
               resizeMode="cover"
             />
@@ -91,10 +91,10 @@ export default function GurudevScreen() {
               style={styles.heroOverlay}
             />
             <View style={styles.heroContent}>
-              <Animated.View style={[styles.omContainer, { transform: [{ scale: pulseAnim }] }]}>
+              <Animated.View style={[styles.omLogoWrap, { transform: [{ scale: pulseAnim }] }]}>
                 <Image
-                  source={require('@/assets/images/om-symbol.png')}
-                  style={styles.omSymbol}
+                  source={require('@/assets/images/om_logo_transparent.png')}
+                  style={styles.omLogo}
                   resizeMode="contain"
                 />
               </Animated.View>
@@ -144,7 +144,7 @@ export default function GurudevScreen() {
               >
                 <Animated.View style={[styles.teachingsOmContainer, { transform: [{ scale: pulseAnim }] }]}>
                   <Image
-                    source={require('@/assets/images/om-symbol.png')}
+                    source={require('@/assets/images/om_logo_transparent.png')}
                     style={styles.teachingsOm}
                     resizeMode="contain"
                   />
@@ -236,13 +236,12 @@ const styles = StyleSheet.create({
     right: 24,
     alignItems: 'center',
   },
-  omContainer: {
+  omLogoWrap: {
     marginBottom: 16,
   },
-  omSymbol: {
+  omLogo: {
     width: 48,
     height: 48,
-    tintColor: SPIRITUAL_COLORS.omGold,
   },
   heroTitle: {
     fontSize: 32,
