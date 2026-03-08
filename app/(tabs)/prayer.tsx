@@ -346,7 +346,7 @@ export default function PrayerScreen() {
                     <Ionicons
                       name="send"
                       size={20}
-                      color={mandatoryFilled ? SPIRITUAL_COLORS.primaryForeground : SPIRITUAL_COLORS.textMuted}
+                      color={mandatoryFilled ? SPIRITUAL_COLORS.primaryForeground : SPIRITUAL_COLORS.foreground}
                     />
                     <Text
                       style={[
@@ -544,9 +544,12 @@ const styles = StyleSheet.create({
   },
   submitButtonEnabled: {
     backgroundColor: SPIRITUAL_COLORS.primary,
+    borderWidth: 0,
   },
   submitButtonDisabled: {
-    backgroundColor: SPIRITUAL_COLORS.accent,
+    backgroundColor: 'rgba(193,127,60,0.12)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(193,127,60,0.35)',
   },
   submitButtonText: {
     fontSize: 17,
@@ -554,6 +557,6 @@ const styles = StyleSheet.create({
     color: SPIRITUAL_COLORS.primaryForeground,
   },
   submitButtonTextDisabled: {
-    color: SPIRITUAL_COLORS.textMuted,
+    color: SPIRITUAL_COLORS.foreground,
   },
 });
