@@ -1,6 +1,14 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
-import { SPIRITUAL_COLORS, SPIRITUAL_TYPOGRAPHY } from '@/constants/SpiritualColors';
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS } from '@/constants/SpiritualColors';
 
 interface WelcomeScreenProps {
   onSignUp: () => void;
@@ -9,77 +17,175 @@ interface WelcomeScreenProps {
 
 export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onSignUp, onLogIn }) => {
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <View style={styles.content}>
-          <Text style={styles.title}>Spiritual App</Text>
-          <Text style={styles.subtitle}>Welcome to Your Spiritual Journey</Text>
-          <TouchableOpacity
-            style={styles.signUpButton}
-            onPress={onSignUp}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.signUpButtonText}>Sign Up</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.logInLink} onPress={onLogIn} activeOpacity={0.7}>
-            <Text style={styles.logInLinkText}>Already have an account? Log in</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </SafeAreaView>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={SPIRITUAL_GRADIENTS.peace}
+        style={styles.gradient}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Title block */}
+          <View style={styles.titleBlock}>
+            <Text style={styles.titleLine1}>Sri Sidheshwar</Text>
+            <Text style={styles.titleLine2}>SiddhGuru</Text>
+          </View>
+
+          {/* Gurudev image – circular container with image clipped to circle */}
+          <View style={styles.imageWrap}>
+            <View style={styles.circleContainer}>
+              <Image
+                source={require('@/assets/images/gurudev-main-image.png')}
+                style={styles.gurudevImage}
+                resizeMode="cover"
+              />
+            </View>
+          </View>
+
+          {/* Bottom panel: Sign up / Log in */}
+          <View style={styles.panel}>
+            <TouchableOpacity
+              style={styles.signUpButton}
+              onPress={onSignUp}
+              activeOpacity={0.9}
+            >
+              <LinearGradient
+                colors={[SPIRITUAL_COLORS.primary, SPIRITUAL_COLORS.secondary]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.signUpGradient}
+              >
+                <Text style={styles.signUpButtonText}>Sign Up</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.logInButton}
+              onPress={onLogIn}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.logInButtonText}>
+                Already have an account? <Text style={styles.logInBold}>Log in</Text>
+              </Text>
+            </TouchableOpacity>
+
+            <Text style={styles.footerTagline}>
+              Sri SiddhGuru · Vedic Wisdom · Ancient Path
+            </Text>
+          </View>
+        </ScrollView>
+      </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: SPIRITUAL_COLORS.background,
-  },
   container: {
     flex: 1,
+  },
+  gradient: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingTop: 88,
+    paddingHorizontal: 24,
+    paddingBottom: 48,
+  },
+  titleBlock: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  titleLine1: {
+    fontSize: 11,
+    letterSpacing: 3.5,
+    textTransform: 'uppercase',
+    color: SPIRITUAL_COLORS.accent,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  titleLine2: {
+    fontSize: 34,
+    fontWeight: '700',
+    color: SPIRITUAL_COLORS.foreground,
+    letterSpacing: 0.5,
+    lineHeight: 40,
+  },
+  imageWrap: {
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    marginBottom: 8,
   },
-  content: {
+  circleContainer: {
+    width: 340,
+    height: 340,
+    borderRadius: 170,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'rgba(193,127,60,0.25)',
+    backgroundColor: 'rgba(255,255,255,0.3)',
+  },
+  gurudevImage: {
     width: '100%',
-    maxWidth: 400,
+    height: '100%',
+  },
+  panel: {
+    marginTop: 24,
+    backgroundColor: 'rgba(255,255,255,0.6)',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    borderWidth: 1,
+    borderBottomWidth: 0,
+    borderColor: 'rgba(193,127,60,0.15)',
+    paddingVertical: 28,
+    paddingHorizontal: 24,
     alignItems: 'center',
-  },
-  title: {
-    ...SPIRITUAL_TYPOGRAPHY.spiritualHeading,
-    fontSize: 36,
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: SPIRITUAL_COLORS.textMuted,
-    marginBottom: 48,
-    textAlign: 'center',
   },
   signUpButton: {
-    backgroundColor: SPIRITUAL_COLORS.primary,
-    paddingVertical: 16,
-    paddingHorizontal: 48,
-    borderRadius: 12,
     width: '100%',
+    borderRadius: 14,
+    overflow: 'hidden',
+    marginBottom: 14,
+    shadowColor: '#8b4513',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  signUpGradient: {
+    paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 56,
   },
   signUpButtonText: {
     color: SPIRITUAL_COLORS.primaryForeground,
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0.8,
   },
-  logInLink: {
-    marginTop: 24,
-    paddingVertical: 8,
+  logInButton: {
+    width: '100%',
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: 'rgba(193,127,60,0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  logInLinkText: {
-    fontSize: 15,
-    color: SPIRITUAL_COLORS.primary,
-    fontWeight: '500',
+  logInButtonText: {
+    color: SPIRITUAL_COLORS.secondary,
+    fontSize: 14,
+    letterSpacing: 0.3,
+  },
+  logInBold: {
+    fontWeight: '700',
+  },
+  footerTagline: {
+    fontSize: 10,
+    color: 'rgba(139,69,19,0.5)',
+    letterSpacing: 0.5,
+    marginTop: 20,
+    textAlign: 'center',
   },
 });

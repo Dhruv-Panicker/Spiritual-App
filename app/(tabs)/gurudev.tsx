@@ -79,10 +79,10 @@ export default function GurudevScreen() {
           showsVerticalScrollIndicator={false}
           bounces={true}
         >
-          {/* Hero Section */}
+          {/* Hero Section - Gurudev profile image backdrop */}
           <View style={styles.heroContainer}>
             <Image
-              source={require('@/assets/images/om_logo_transparent.png')}
+              source={require('@/assets/images/gurudev-profile-image.png')}
               style={styles.heroImage}
               resizeMode="cover"
             />
@@ -219,8 +219,6 @@ const styles = StyleSheet.create({
   heroImage: {
     width: '100%',
     height: '100%',
-    tintColor: SPIRITUAL_COLORS.omGold,
-    opacity: 0.3,
   },
   heroOverlay: {
     position: 'absolute',

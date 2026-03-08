@@ -9,13 +9,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  SafeAreaView,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '@/contexts/AuthContext';
-import { SPIRITUAL_COLORS, SPIRITUAL_TYPOGRAPHY } from '@/constants/SpiritualColors';
+import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS } from '@/constants/SpiritualColors';
 
 interface LoginScreenProps {
-  /** When provided, show a link to go to sign-up flow */
   onGoToSignUp?: () => void;
 }
 
@@ -41,127 +40,153 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onGoToSignUp }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        style={styles.keyboardAvoidingView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <ScrollView 
-          contentContainerStyle={styles.scrollContainer}
-          keyboardShouldPersistTaps="handled"
+    <View style={styles.container}>
+      <LinearGradient colors={SPIRITUAL_GRADIENTS.peace} style={styles.gradient}>
+        <KeyboardAvoidingView
+          style={styles.keyboardView}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-          <View style={styles.container}>
-            <View style={styles.content}>
-              <Text style={styles.title}>Spiritual App</Text>
-              <Text style={styles.subtitle}>Welcome to Your Spiritual Journey</Text>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Title – match Welcome */}
+            <View style={styles.titleBlock}>
+              <Text style={styles.titleLine1}>Sri Sidheshwar</Text>
+              <Text style={styles.titleLine2}>SiddhGuru</Text>
+            </View>
 
-              <View style={styles.form}>
-                <TextInput
-                  style={[styles.input, error ? styles.inputError : null]}
-                  placeholder="Email"
-                  placeholderTextColor={SPIRITUAL_COLORS.textMuted}
-                  value={email}
-                  onChangeText={(t) => { setEmail(t); setError(null); }}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoComplete="email"
-                  editable={!isLoading}
-                />
-                {error ? (
-                  <View style={styles.errorBox}>
-                    <Text style={styles.errorText}>
-                      {error === 'UNVERIFIED_USER'
-                        ? 'You are an unverified user and have not signed up yet. Please sign up to continue.'
-                        : error}
-                    </Text>
-                    {onGoToSignUp && error === 'UNVERIFIED_USER' ? (
-                      <TouchableOpacity
-                        style={styles.goToSignUpButton}
-                        onPress={onGoToSignUp}
-                        activeOpacity={0.8}
-                      >
-                        <Text style={styles.goToSignUpButtonText}>Go to Sign up</Text>
-                      </TouchableOpacity>
-                    ) : null}
-                  </View>
-                ) : null}
+            {/* Login panel – same style as Welcome bottom panel */}
+            <View style={styles.panel}>
+              <Text style={styles.panelLabel}>Log in</Text>
 
-                <TouchableOpacity
-                  style={[styles.loginButton, isLoading && styles.buttonDisabled]}
-                  onPress={handleLogin}
-                  disabled={isLoading}
-                  activeOpacity={0.8}
+              <TextInput
+                style={[styles.input, error ? styles.inputError : null]}
+                placeholder="Email"
+                placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+                value={email}
+                onChangeText={(t) => { setEmail(t); setError(null); }}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                editable={!isLoading}
+              />
+
+              {error ? (
+                <View style={styles.errorBox}>
+                  <Text style={styles.errorText}>
+                    {error === 'UNVERIFIED_USER'
+                      ? 'You are an unverified user and have not signed up yet. Please sign up to continue.'
+                      : error}
+                  </Text>
+                  {onGoToSignUp && error === 'UNVERIFIED_USER' ? (
+                    <TouchableOpacity
+                      style={styles.goToSignUpButton}
+                      onPress={onGoToSignUp}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={styles.goToSignUpButtonText}>Go to Sign up</Text>
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+              ) : null}
+
+              <TouchableOpacity
+                style={[styles.loginButton, isLoading && styles.buttonDisabled]}
+                onPress={handleLogin}
+                disabled={isLoading}
+                activeOpacity={0.9}
+              >
+                <LinearGradient
+                  colors={[SPIRITUAL_COLORS.primary, SPIRITUAL_COLORS.secondary]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.loginButtonGradient}
                 >
                   {isLoading ? (
                     <ActivityIndicator color={SPIRITUAL_COLORS.primaryForeground} />
                   ) : (
-                    <Text style={styles.loginButtonText}>Login</Text>
+                    <Text style={styles.loginButtonText}>Log in</Text>
                   )}
+                </LinearGradient>
               </TouchableOpacity>
+
+              {onGoToSignUp ? (
+                <TouchableOpacity
+                  style={styles.signUpLink}
+                  onPress={onGoToSignUp}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.signUpLinkText}>
+                    Don't have an account? <Text style={styles.signUpLinkBold}>Sign up</Text>
+                  </Text>
+                </TouchableOpacity>
+              ) : null}
             </View>
 
-            {onGoToSignUp ? (
-              <TouchableOpacity style={styles.signUpLink} onPress={onGoToSignUp} activeOpacity={0.7}>
-                <Text style={styles.signUpLinkText}>Don't have an account? Sign up</Text>
-              </TouchableOpacity>
-            ) : null}
-
-              <Text style={styles.infoText}>
-                Sign in with your email.
-              </Text>
-            </View>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+            <Text style={styles.footerTagline}>
+              Sri SiddhGuru · Vedic Wisdom · Ancient Path
+            </Text>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: SPIRITUAL_COLORS.background,
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
-  scrollContainer: {
+  container: { flex: 1 },
+  gradient: { flex: 1 },
+  keyboardView: { flex: 1 },
+  scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
+    paddingTop: 88,
+    paddingHorizontal: 24,
+    paddingBottom: 48,
   },
-  container: {
-    flex: 1,
-    justifyContent: 'center',
+  titleBlock: {
     alignItems: 'center',
+    marginBottom: 28,
   },
-  content: {
-    width: '100%',
-    maxWidth: 400,
-    alignItems: 'center',
+  titleLine1: {
+    fontSize: 11,
+    letterSpacing: 3.5,
+    textTransform: 'uppercase',
+    color: SPIRITUAL_COLORS.accent,
+    fontWeight: '600',
+    marginBottom: 4,
   },
-  title: {
-    ...SPIRITUAL_TYPOGRAPHY.spiritualHeading,
-    fontSize: 36,
-    marginBottom: 10,
-    textAlign: 'center',
+  titleLine2: {
+    fontSize: 34,
+    fontWeight: '700',
+    color: SPIRITUAL_COLORS.foreground,
+    letterSpacing: 0.5,
+    lineHeight: 40,
   },
-  subtitle: {
-    fontSize: 16,
-    color: SPIRITUAL_COLORS.textMuted,
-    marginBottom: 40,
-    textAlign: 'center',
+  panel: {
+    backgroundColor: 'rgba(255,255,255,0.6)',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    borderWidth: 1,
+    borderBottomWidth: 0,
+    borderColor: 'rgba(193,127,60,0.15)',
+    paddingVertical: 28,
+    paddingHorizontal: 24,
   },
-  form: {
-    width: '100%',
-    marginBottom: 20,
+  panelLabel: {
+    fontSize: 12,
+    color: SPIRITUAL_COLORS.accent,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: 16,
   },
   input: {
     width: '100%',
     padding: 16,
-    backgroundColor: SPIRITUAL_COLORS.input || SPIRITUAL_COLORS.cardBackground,
+    backgroundColor: 'rgba(255,255,255,0.9)',
     borderRadius: 12,
-    marginBottom: 16,
+    marginBottom: 12,
     fontSize: 16,
     color: SPIRITUAL_COLORS.foreground,
     borderWidth: 1,
@@ -169,11 +194,6 @@ const styles = StyleSheet.create({
   },
   inputError: {
     borderColor: SPIRITUAL_COLORS.spiritualRed,
-  },
-  errorText: {
-    fontSize: 14,
-    color: SPIRITUAL_COLORS.spiritualRed,
-    marginBottom: 12,
   },
   errorBox: {
     width: '100%',
@@ -184,10 +204,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: SPIRITUAL_COLORS.spiritualRed,
   },
+  errorText: {
+    fontSize: 14,
+    color: SPIRITUAL_COLORS.spiritualRed,
+    marginBottom: 12,
+  },
   goToSignUpButton: {
     backgroundColor: SPIRITUAL_COLORS.primary,
     paddingVertical: 12,
-    paddingHorizontal: 20,
     borderRadius: 10,
     marginTop: 12,
     alignItems: 'center',
@@ -198,39 +222,48 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   loginButton: {
-    backgroundColor: SPIRITUAL_COLORS.primary,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 12,
     width: '100%',
+    borderRadius: 14,
+    overflow: 'hidden',
+    marginBottom: 14,
+    shadowColor: '#8b4513',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  loginButtonGradient: {
+    paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 56,
-    marginTop: 8,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
   },
   loginButtonText: {
     color: SPIRITUAL_COLORS.primaryForeground,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: 0.8,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   signUpLink: {
-    marginTop: 20,
-    paddingVertical: 8,
     alignItems: 'center',
+    paddingVertical: 12,
   },
   signUpLinkText: {
-    fontSize: 15,
-    color: SPIRITUAL_COLORS.primary,
-    fontWeight: '500',
+    color: SPIRITUAL_COLORS.secondary,
+    fontSize: 14,
+    letterSpacing: 0.3,
   },
-  infoText: {
-    marginTop: 30,
-    fontSize: 12,
-    color: SPIRITUAL_COLORS.textMuted,
+  signUpLinkBold: {
+    fontWeight: '700',
+  },
+  footerTagline: {
+    fontSize: 10,
+    color: 'rgba(139,69,19,0.5)',
+    letterSpacing: 0.5,
+    marginTop: 24,
     textAlign: 'center',
   },
 });
-
