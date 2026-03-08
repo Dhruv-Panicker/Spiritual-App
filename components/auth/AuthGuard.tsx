@@ -24,6 +24,14 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
 
   const showOverlay = isLoading || isTransitioningOut;
 
+  // When user logs out, reset so we show AuthFlow (welcome/login) again
+  useEffect(() => {
+    if (!user) {
+      setShowMainApp(false);
+      setIsTransitioningOut(false);
+    }
+  }, [user]);
+
   // Fade in when overlay is first shown (loading)
   useEffect(() => {
     if (showOverlay && !isTransitioningOut) {

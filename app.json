@@ -4,11 +4,11 @@
     "slug": "spiritual-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/app-icon.png",
     "scheme": "guru-darshan",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/images/splash-icon.png",
+      "image": "./assets/images/app-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -19,7 +19,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/app-icon.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.spiritualapp.gurudarshan",
@@ -28,11 +28,11 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/app-icon.png"
     },
     "plugins": [
       "expo-router",
-      ["expo-notifications", { "icon": "./assets/images/icon.png", "color": "#FF6B35", "defaultChannel": "default" }],
+      ["expo-notifications", { "icon": "./assets/images/app-icon.png", "color": "#c17f3c", "defaultChannel": "default" }],
       ["expo-build-properties", { "android": { "kotlinVersion": "2.0.21" } }]
     ],
     "experiments": { "typedRoutes": true },

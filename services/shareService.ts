@@ -68,6 +68,10 @@ class ShareService {
         shareText += `📍 Location: ${event.location}\n`;
       }
       
+      if (event.link) {
+        shareText += `🔗 More info: ${event.link}\n`;
+      }
+      
       shareText += `\n📝 ${event.description}\n\n`;
       shareText += `🙏 Stay connected with more spiritual events and teachings in the ${this.appName} app\n`;
       shareText += `📱 Download now: ${this.getDownloadLink()}`;

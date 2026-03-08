@@ -141,7 +141,7 @@ export default function HomeScreen() {
             <View style={styles.headerTop}>
               <View style={styles.headerLeft}>
                 <Image
-                  source={require('@/assets/images/om_logo_transparent.png')}
+                  source={require('@/assets/images/sri-siddhguru-logo.png')}
                   style={styles.omLogo}
                   resizeMode="contain"
                 />

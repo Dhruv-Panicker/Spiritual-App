@@ -33,6 +33,7 @@ export interface Event {
   description: string;
   location?: string;
   type: 'meditation' | 'teaching' | 'celebration' | 'retreat';
+  link?: string;
 }
 
 export interface PushToken {
@@ -371,8 +372,8 @@ class GoogleSheetsService {
 
   /**
    * Get events from Google Sheets
-   * Reads from the 'events' sheet in Google Sheets
-   * Expected columns: [id, title, date, time, description, location, type]
+   * Reads from the 'events' sheet
+   * Expected columns: [id, title, date, time, description, location, type, link]
    */
   async getEvents(): Promise<Event[]> {
     try {
@@ -385,25 +386,29 @@ class GoogleSheetsService {
         return [];
       }
       
-      // First row is headers, skip it
-      const [headers, ...dataRows] = rows;
-      console.log('📋 Sheet headers:', headers);
+      // If first row looks like a header (id/title etc.), skip it; otherwise use all rows as data
+      const firstCell = (rows[0][0] != null && rows[0][0] !== '') ? String(rows[0][0]).trim().toLowerCase() : '';
+      const isHeaderRow = firstCell === 'id' || firstCell === 'title' || firstCell === 'event id' || firstCell === '' || /^[a-z\s]+$/.test(firstCell) && !firstCell.startsWith('event_');
+      const dataRows = isHeaderRow ? rows.slice(1) : rows;
+      
+      console.log('📋 First row treated as', isHeaderRow ? 'header (skipped)' : 'data');
       console.log(`📊 Found ${dataRows.length} event rows`);
       
       const events: Event[] = dataRows.map((row, index) => {
-        // Map columns: [id, title, date, time, description, location, type]
-        const event: Event = {
-          id: row[0] || `event_${index + 1}`,
-          title: row[1] || '',
-          date: row[2] || '',
-          time: row[3] || '',
-          description: row[4] || '',
-          location: row[5] || undefined,
-          type: (row[6] || 'meditation') as Event['type']
+        const rawType = (row[6] != null && row[6] !== '') ? String(row[6]).trim().toLowerCase() : 'meditation';
+        const validTypes: Event['type'][] = ['meditation', 'teaching', 'celebration', 'retreat'];
+        const type: Event['type'] = validTypes.includes(rawType as Event['type']) ? (rawType as Event['type']) : 'meditation';
+        return {
+          id: (row[0] != null && row[0] !== '') ? String(row[0]).trim() : `event_${index + 1}`,
+          title: (row[1] != null && row[1] !== '') ? String(row[1]).trim() : '',
+          date: (row[2] != null && row[2] !== '') ? String(row[2]).trim() : '',
+          time: (row[3] != null && row[3] !== '') ? String(row[3]).trim() : '',
+          description: (row[4] != null && row[4] !== '') ? String(row[4]).trim() : '',
+          location: (row[5] != null && row[5] !== '') ? String(row[5]).trim() : undefined,
+          type,
+          link: (row[7] != null && row[7] !== '') ? String(row[7]).trim() : undefined,
         };
-        
-        return event;
-      }).filter(event => event.title.trim().length > 0 && event.date.trim().length > 0);
+      }).filter(event => event.title.length > 0 && event.date.length > 0);
       
       console.log(`✅ Loaded ${events.length} events from Google Sheets`);
       return events;
@@ -432,7 +437,8 @@ class GoogleSheetsService {
         newEvent.time,
         newEvent.description,
         newEvent.location || '',
-        newEvent.type
+        newEvent.type,
+        newEvent.link || '',
       ];
 
       // Send to Google Sheets via webhook (Apps Script)

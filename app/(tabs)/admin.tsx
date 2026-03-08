@@ -68,6 +68,7 @@ export default function AdminScreen() {
   const [eventTime, setEventTime] = useState('');
   const [eventDescription, setEventDescription] = useState('');
   const [eventLocation, setEventLocation] = useState('');
+  const [eventLink, setEventLink] = useState('');
   const [eventType, setEventType] = useState<'meditation' | 'teaching' | 'celebration' | 'retreat'>('teaching');
   const [isSubmittingEvent, setIsSubmittingEvent] = useState(false);
   const [sendEventNotification, setSendEventNotification] = useState(true);
@@ -240,6 +241,7 @@ export default function AdminScreen() {
         time: eventTime.trim(),
         description: eventDescription.trim(),
         location: eventLocation.trim() || undefined,
+        link: eventLink.trim() || undefined,
         type: eventType,
       };
 
@@ -263,6 +265,7 @@ export default function AdminScreen() {
       setEventTime('');
       setEventDescription('');
       setEventLocation('');
+      setEventLink('');
       setEventType('teaching');
 
       // Refresh events
@@ -504,6 +507,20 @@ export default function AdminScreen() {
               placeholderTextColor={SPIRITUAL_COLORS.textMuted}
               value={eventLocation}
               onChangeText={setEventLocation}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Link (Optional)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="https://example.com/event"
+              placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+              value={eventLink}
+              onChangeText={setEventLink}
+              keyboardType="url"
+              autoCapitalize="none"
+              autoCorrect={false}
             />
           </View>
 

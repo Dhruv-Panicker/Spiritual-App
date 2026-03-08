@@ -10,16 +10,19 @@ import {
   Modal,
   ActivityIndicator,
   Platform,
+  Linking,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
 import { useEvents, type MonthData, type Event } from '@/contexts/EventsContext';
 import { shareService } from '@/services/shareService';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS, SPIRITUAL_TYPOGRAPHY } from '@/constants/SpiritualColors';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const TAB_BAR_HEIGHT = 90;
+const MONTH_MODAL_MAX_HEIGHT = screenHeight - 140;
 
 export default function CalendarScreen() {
   const {
@@ -31,44 +34,34 @@ export default function CalendarScreen() {
     loading,
   } = useEvents();
 
+  // Single modal: either month list or event detail (avoids stacking modals and unresponsive state)
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalView, setModalView] = useState<'month' | 'event'>('month');
   const [selectedMonth, setSelectedMonth] = useState<MonthData | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [isMonthModalOpen, setIsMonthModalOpen] = useState(false);
-  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
 
-  const handleMonthPress = async (monthData: MonthData) => {
+  const openMonthModal = (monthData: MonthData) => {
     if (Platform.OS !== 'web') {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     setSelectedMonth(monthData);
-    setIsMonthModalOpen(true);
+    setModalView('month');
+    setModalVisible(true);
   };
 
-  const handleEventPress = async (event: Event) => {
+  const openEventDetail = (event: Event) => {
     if (Platform.OS !== 'web') {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    // Close month modal first, then open event modal after a brief delay
-    if (isMonthModalOpen) {
-      setIsMonthModalOpen(false);
-      // Small delay to ensure month modal closes before event modal opens
-      setTimeout(() => {
-        setSelectedEvent(event);
-        setIsEventModalOpen(true);
-      }, 100);
-    } else {
-      setSelectedEvent(event);
-      setIsEventModalOpen(true);
-    }
+    setSelectedEvent(event);
+    setModalView('event');
+    setModalVisible(true);
   };
 
-  const closeMonthModal = () => {
-    setIsMonthModalOpen(false);
+  const closeModal = () => {
+    setModalVisible(false);
+    setModalView('month');
     setSelectedMonth(null);
-  };
-
-  const closeEventModal = () => {
-    setIsEventModalOpen(false);
     setSelectedEvent(null);
   };
 
@@ -83,7 +76,26 @@ export default function CalendarScreen() {
     }
   };
 
-  const cardWidth = (screenWidth - 60) / 2; // 2 columns with padding
+  const handleSeeMore = async (event: Event) => {
+    const url = event.link?.trim();
+    if (!url) return;
+    if (Platform.OS !== 'web') {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    try {
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert('Cannot open link', 'This link could not be opened.');
+      }
+    } catch (err) {
+      console.error('Error opening event link:', err);
+      Alert.alert('Error', 'Could not open the link.');
+    }
+  };
+
+  const cardWidth = (screenWidth - 60) / 2;
 
   if (loading) {
     return (
@@ -114,7 +126,7 @@ export default function CalendarScreen() {
           {/* Header */}
           <View style={styles.header}>
             <Text style={[SPIRITUAL_TYPOGRAPHY.spiritualHeading, styles.title]}>
-              Sacred Calendar
+              Calendar of Events
             </Text>
             <Text style={styles.subtitle}>Upcoming events and teachings</Text>
           </View>
@@ -134,7 +146,7 @@ export default function CalendarScreen() {
                   <TouchableOpacity
                     key={event.id}
                     style={styles.currentMonthEventCard}
-                    onPress={() => handleEventPress(event)}
+                    onPress={() => openEventDetail(event)}
                     activeOpacity={0.8}
                   >
                     <View style={[styles.eventBadge, getEventTypeBadgeStyle(event.type), styles.currentMonthEventBadge]}>
@@ -169,7 +181,7 @@ export default function CalendarScreen() {
               <TouchableOpacity
                 key={monthData.month}
                 style={[styles.monthCard, { width: cardWidth }]}
-                onPress={() => handleMonthPress(monthData)}
+                onPress={() => openMonthModal(monthData)}
                 activeOpacity={0.8}
               >
                 <View style={styles.monthCardContent}>
@@ -209,184 +221,147 @@ export default function CalendarScreen() {
           </View>
         </ScrollView>
 
-        {/* Month Events Modal */}
+        {/* Single modal: month list or event detail */}
         <Modal
-          visible={isMonthModalOpen}
+          visible={modalVisible}
           animationType="slide"
-          transparent={true}
-          onRequestClose={closeMonthModal}
+          transparent
+          onRequestClose={closeModal}
         >
           <View style={styles.modalOverlay}>
-            <BlurView intensity={20} style={styles.blurOverlay}>
-              <TouchableOpacity
-                style={StyleSheet.absoluteFill}
-                activeOpacity={1}
-                onPress={closeMonthModal}
-              />
-              <View style={styles.modalContainer}>
-                <View style={styles.modalHeader}>
-                  <Text style={[SPIRITUAL_TYPOGRAPHY.spiritualHeading, styles.modalTitle]}>
-                    {selectedMonth?.month} {selectedMonth?.year}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={closeMonthModal}
-                    style={styles.closeButton}
-                  >
-                    <Ionicons name="close" size={24} color={SPIRITUAL_COLORS.foreground} />
-                  </TouchableOpacity>
-                </View>
-
-                <ScrollView style={styles.modalContent}>
-                  {selectedMonth?.events.length ? (
-                    selectedMonth.events.map((event) => (
-                      <TouchableOpacity
-                        key={event.id}
-                        style={styles.eventCard}
-                        onPress={() => handleEventPress(event)}
-                        activeOpacity={0.8}
-                      >
-                        <View style={styles.eventCardHeader}>
-                          <Text style={styles.eventTitle}>{event.title}</Text>
-                          <View style={[styles.eventBadge, getEventTypeBadgeStyle(event.type)]}>
-                            <Text style={styles.eventBadgeText}>{event.type}</Text>
-                          </View>
-                        </View>
-
-                        <View style={styles.eventDetails}>
-                          <View style={styles.eventDetailRow}>
-                            <Ionicons name="calendar" size={16} color={SPIRITUAL_COLORS.primary} />
-                            <Text style={styles.eventDetailText}>
-                              {new Date(event.date).toLocaleDateString()}
-                            </Text>
-                          </View>
-                          <View style={styles.eventDetailRow}>
-                            <Ionicons name="time" size={16} color={SPIRITUAL_COLORS.primary} />
-                            <Text style={styles.eventDetailText}>{event.time}</Text>
-                          </View>
-                          {event.location && (
-                            <View style={styles.eventDetailRow}>
-                              <Ionicons name="location" size={16} color={SPIRITUAL_COLORS.primary} />
-                              <Text style={styles.eventDetailText}>{event.location}</Text>
-                            </View>
-                          )}
-                        </View>
-
-                        {/* Share button in event card */}
-                        <TouchableOpacity
-                          style={styles.eventCardShareButton}
-                          onPress={(e) => {
-                            e.stopPropagation();
-                            handleShareEvent(event);
-                          }}
-                          activeOpacity={0.7}
-                        >
-                          <Ionicons name="share-outline" size={18} color={SPIRITUAL_COLORS.primary} />
-                          <Text style={styles.eventCardShareText}>Share</Text>
-                        </TouchableOpacity>
-                      </TouchableOpacity>
-                    ))
-                  ) : (
-                    <Text style={styles.noEventsMessage}>No events this month</Text>
-                  )}
-                </ScrollView>
-              </View>
-            </BlurView>
-          </View>
-        </Modal>
-
-        {/* Event Detail Modal */}
-        <Modal
-          visible={isEventModalOpen}
-          animationType="slide"
-          transparent={true}
-          onRequestClose={closeEventModal}
-        >
-          <View style={styles.modalOverlay}>
-            <BlurView intensity={20} style={styles.blurOverlay}>
-              <TouchableOpacity
-                style={StyleSheet.absoluteFill}
-                activeOpacity={1}
-                onPress={closeEventModal}
-              />
-              <View style={styles.eventModalContainer}>
-                <View style={styles.modalHeader}>
-                  <Text style={[SPIRITUAL_TYPOGRAPHY.spiritualHeading, styles.eventModalTitle]}>
-                    {selectedEvent?.title}
-                  </Text>
-                  <View style={styles.modalHeaderActions}>
-                    {selectedEvent && (
-                      <TouchableOpacity
-                        onPress={() => handleShareEvent(selectedEvent)}
-                        style={styles.shareEventButton}
-                        activeOpacity={0.7}
-                      >
-                        <Ionicons name="share-outline" size={22} color={SPIRITUAL_COLORS.primary} />
-                      </TouchableOpacity>
-                    )}
-                    <TouchableOpacity
-                      onPress={closeEventModal}
-                      style={styles.closeButton}
-                      activeOpacity={0.7}
-                    >
+            <TouchableOpacity
+              style={StyleSheet.absoluteFill}
+              activeOpacity={1}
+              onPress={closeModal}
+            />
+            <View style={styles.modalContentWrapper} pointerEvents="box-none">
+              {modalView === 'month' && selectedMonth && (
+                <View style={[styles.modalContainer, styles.monthModalContainer]}>
+                  <View style={styles.modalHeader}>
+                    <Text style={[SPIRITUAL_TYPOGRAPHY.spiritualHeading, styles.modalTitle]}>
+                      {selectedMonth.month} {selectedMonth.year}
+                    </Text>
+                    <TouchableOpacity onPress={closeModal} style={styles.closeButton} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
                       <Ionicons name="close" size={24} color={SPIRITUAL_COLORS.foreground} />
                     </TouchableOpacity>
                   </View>
+                  <ScrollView style={styles.modalScroll} contentContainerStyle={styles.monthModalScrollContent} showsVerticalScrollIndicator={true}>
+                    {selectedMonth.events.length ? (
+                      selectedMonth.events.map((event) => (
+                        <TouchableOpacity
+                          key={event.id}
+                          style={styles.eventCard}
+                          onPress={() => openEventDetail(event)}
+                          activeOpacity={0.8}
+                        >
+                          <View style={styles.eventCardHeader}>
+                            <Text style={styles.eventTitle}>{event.title}</Text>
+                            <View style={[styles.eventBadge, getEventTypeBadgeStyle(event.type)]}>
+                              <Text style={styles.eventBadgeText}>{event.type}</Text>
+                            </View>
+                          </View>
+                          <View style={styles.eventDetails}>
+                            <View style={styles.eventDetailRow}>
+                              <Ionicons name="calendar" size={16} color={SPIRITUAL_COLORS.primary} />
+                              <Text style={styles.eventDetailText}>{new Date(event.date).toLocaleDateString()}</Text>
+                            </View>
+                            <View style={styles.eventDetailRow}>
+                              <Ionicons name="time" size={16} color={SPIRITUAL_COLORS.primary} />
+                              <Text style={styles.eventDetailText}>{event.time}</Text>
+                            </View>
+                            {event.location ? (
+                              <View style={styles.eventDetailRow}>
+                                <Ionicons name="location" size={16} color={SPIRITUAL_COLORS.primary} />
+                                <Text style={styles.eventDetailText}>{event.location}</Text>
+                              </View>
+                            ) : null}
+                          </View>
+                          {event.link?.trim() ? (
+                            <TouchableOpacity
+                              style={styles.seeMoreButton}
+                              onPress={(e) => { e.stopPropagation(); handleSeeMore(event); }}
+                              activeOpacity={0.7}
+                            >
+                              <Text style={styles.seeMoreButtonText}>See more</Text>
+                              <Ionicons name="open-outline" size={18} color={SPIRITUAL_COLORS.primaryForeground} />
+                            </TouchableOpacity>
+                          ) : null}
+                          <TouchableOpacity
+                            style={styles.eventCardShareButton}
+                            onPress={(e) => { e.stopPropagation(); handleShareEvent(event); }}
+                            activeOpacity={0.7}
+                          >
+                            <Ionicons name="share-outline" size={18} color={SPIRITUAL_COLORS.primary} />
+                            <Text style={styles.eventCardShareText}>Share</Text>
+                          </TouchableOpacity>
+                        </TouchableOpacity>
+                      ))
+                    ) : (
+                      <Text style={styles.noEventsMessage}>No events this month</Text>
+                    )}
+                  </ScrollView>
                 </View>
+              )}
 
-                <ScrollView style={styles.modalContent}>
-                  {selectedEvent && (
+              {modalView === 'event' && selectedEvent && (
+                <View style={[styles.modalContainer, styles.eventModalContainer]}>
+                  <View style={styles.modalHeader}>
+                    <Text style={[SPIRITUAL_TYPOGRAPHY.spiritualHeading, styles.eventModalTitle]} numberOfLines={1}>
+                      {selectedEvent.title}
+                    </Text>
+                    <View style={styles.modalHeaderActions}>
+                      <TouchableOpacity onPress={() => handleShareEvent(selectedEvent)} style={styles.shareEventButton} activeOpacity={0.7}>
+                        <Ionicons name="share-outline" size={22} color={SPIRITUAL_COLORS.primary} />
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={closeModal} style={styles.closeButton} activeOpacity={0.7} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                        <Ionicons name="close" size={24} color={SPIRITUAL_COLORS.foreground} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                  <ScrollView style={styles.modalScroll} contentContainerStyle={styles.modalScrollContent} showsVerticalScrollIndicator={true}>
                     <View style={styles.eventDetailContainer}>
                       <View style={[styles.eventBadge, getEventTypeBadgeStyle(selectedEvent.type), styles.eventBadgeLarge]}>
                         <Text style={styles.eventBadgeText}>{selectedEvent.type}</Text>
                       </View>
-
                       <View style={styles.eventDetailsSection}>
                         <View style={styles.eventDetailRow}>
                           <Ionicons name="calendar" size={20} color={SPIRITUAL_COLORS.primary} />
-                          <Text style={styles.eventDetailTextLarge}>
-                            {new Date(selectedEvent.date).toLocaleDateString()}
-                          </Text>
+                          <Text style={styles.eventDetailTextLarge}>{new Date(selectedEvent.date).toLocaleDateString()}</Text>
                         </View>
                         <View style={styles.eventDetailRow}>
                           <Ionicons name="time" size={20} color={SPIRITUAL_COLORS.primary} />
                           <Text style={styles.eventDetailTextLarge}>{selectedEvent.time}</Text>
                         </View>
-                        {selectedEvent.location && (
+                        {selectedEvent.location ? (
                           <View style={styles.eventDetailRow}>
                             <Ionicons name="location" size={20} color={SPIRITUAL_COLORS.primary} />
                             <Text style={styles.eventDetailTextLarge}>{selectedEvent.location}</Text>
                           </View>
-                        )}
+                        ) : null}
                       </View>
-
                       <View style={styles.descriptionSection}>
                         <Text style={styles.descriptionTitle}>Description</Text>
                         <Text style={styles.descriptionText}>
-                          {selectedEvent.description || 'No description available.'}
+                          {selectedEvent.description && selectedEvent.description.trim() ? selectedEvent.description : 'No description available.'}
                         </Text>
                       </View>
-
-                      {/* Share button at bottom of event details */}
-                      {selectedEvent && (
-                        <TouchableOpacity
-                          style={styles.shareButtonContainer}
-                          onPress={() => handleShareEvent(selectedEvent)}
-                          activeOpacity={0.8}
-                        >
-                          <LinearGradient
-                            colors={SPIRITUAL_GRADIENTS.meditation as any}
-                            style={styles.shareButtonGradient}
-                          >
-                            <Ionicons name="share-outline" size={20} color={SPIRITUAL_COLORS.primaryForeground} />
-                            <Text style={styles.shareButtonText}>Share Event</Text>
-                          </LinearGradient>
+                      {selectedEvent.link?.trim() ? (
+                        <TouchableOpacity style={styles.seeMoreButtonLarge} onPress={() => handleSeeMore(selectedEvent)} activeOpacity={0.8}>
+                          <Text style={styles.seeMoreButtonTextLarge}>See more</Text>
+                          <Ionicons name="open-outline" size={20} color={SPIRITUAL_COLORS.primaryForeground} />
                         </TouchableOpacity>
-                      )}
+                      ) : null}
+                      <TouchableOpacity style={styles.shareButtonContainer} onPress={() => handleShareEvent(selectedEvent)} activeOpacity={0.8}>
+                        <LinearGradient colors={SPIRITUAL_GRADIENTS.meditation as [string, string]} style={styles.shareButtonGradient}>
+                          <Ionicons name="share-outline" size={20} color={SPIRITUAL_COLORS.primaryForeground} />
+                          <Text style={styles.shareButtonText}>Share Event</Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
                     </View>
-                  )}
-                </ScrollView>
-              </View>
-            </BlurView>
+                  </ScrollView>
+                </View>
+              )}
+            </View>
           </View>
         </Modal>
       </LinearGradient>
@@ -576,33 +551,34 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
-    paddingVertical: 60,
+    paddingTop: 48,
+    paddingBottom: TAB_BAR_HEIGHT + 24,
     paddingHorizontal: 16,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  blurOverlay: {
+  modalContentWrapper: {
     flex: 1,
     justifyContent: 'center',
-    paddingVertical: 60,
     paddingHorizontal: 16,
-    position: 'relative',
   },
   modalContainer: {
     backgroundColor: SPIRITUAL_COLORS.cardBackground,
     borderRadius: 20,
     maxHeight: screenHeight * 0.8,
     ...SPIRITUAL_SHADOWS.divine,
-    marginVertical: 20,
+    overflow: 'hidden',
+  },
+  monthModalContainer: {
+    maxHeight: MONTH_MODAL_MAX_HEIGHT,
     flex: 1,
-    zIndex: 1000,
   },
   eventModalContainer: {
     backgroundColor: SPIRITUAL_COLORS.cardBackground,
     borderRadius: 20,
+    height: screenHeight * 0.85,
     maxHeight: screenHeight * 0.85,
     ...SPIRITUAL_SHADOWS.divine,
     overflow: 'hidden',
-    zIndex: 1000,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -638,16 +614,50 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    backgroundColor: SPIRITUAL_COLORS.accent,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: SPIRITUAL_COLORS.primary,
+    backgroundColor: 'transparent',
     gap: 6,
   },
   eventCardShareText: {
     fontSize: 14,
     fontWeight: '600',
     color: SPIRITUAL_COLORS.primary,
+  },
+  seeMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    backgroundColor: SPIRITUAL_COLORS.primary,
+    gap: 6,
+  },
+  seeMoreButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: SPIRITUAL_COLORS.primaryForeground,
+  },
+  seeMoreButtonLarge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    backgroundColor: SPIRITUAL_COLORS.primary,
+    gap: 8,
+  },
+  seeMoreButtonTextLarge: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: SPIRITUAL_COLORS.primaryForeground,
   },
   shareButtonContainer: {
     marginTop: 24,
@@ -666,6 +676,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: SPIRITUAL_COLORS.primaryForeground,
+  },
+  modalScroll: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  monthModalScrollContent: {
+    paddingBottom: 24,
+  },
+  modalScrollContent: {
+    paddingBottom: 24,
+    flexGrow: 1,
   },
   modalContent: {
     flex: 1,
