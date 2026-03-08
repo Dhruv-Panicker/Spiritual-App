@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,15 +8,19 @@ import {
   TouchableOpacity,
   Dimensions,
   Platform,
+  Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
+import { useQuotes } from '@/contexts/QuotesContext';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
 
 const { width: screenWidth } = Dimensions.get('window');
+
+const ROTATE_QUOTE_INTERVAL_MS = 5000;
 
 interface FeatureCardProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -34,23 +38,52 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, onP
   };
 
   return (
-    <TouchableOpacity style={styles.featureCard} onPress={handlePress} activeOpacity={0.8}>
-      <LinearGradient
-        colors={[SPIRITUAL_COLORS.cardBackground, SPIRITUAL_COLORS.accent]}
-        style={styles.featureCardGradient}
-      >
-        <View style={styles.featureIconContainer}>
-          <Ionicons name={icon} size={32} color={SPIRITUAL_COLORS.primary} />
+    <TouchableOpacity style={styles.featureCard} onPress={handlePress} activeOpacity={0.85}>
+      <View style={styles.featureCardInner}>
+        <View style={styles.featureAccent} />
+        <View style={styles.featureIconWrap}>
+          <Ionicons name={icon} size={26} color={SPIRITUAL_COLORS.primary} />
         </View>
         <Text style={styles.featureTitle}>{title}</Text>
         <Text style={styles.featureDescription}>{description}</Text>
-      </LinearGradient>
+      </View>
     </TouchableOpacity>
   );
 };
 
 export default function HomeScreen() {
   const { user, logout } = useAuth();
+  const { quotes } = useQuotes();
+  const [quoteIndex, setQuoteIndex] = useState(0);
+  const [fadeAnim] = useState(() => new Animated.Value(1));
+
+  const threeRecentQuotes = React.useMemo(() => {
+    const sorted = [...quotes].sort((a, b) =>
+      (b.dateAdded || '').localeCompare(a.dateAdded || '')
+    );
+    return sorted.slice(0, 3);
+  }, [quotes]);
+
+  useEffect(() => {
+    if (threeRecentQuotes.length < 2) return;
+    const interval = setInterval(() => {
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }).start(() => {
+        setQuoteIndex((i) => (i + 1) % threeRecentQuotes.length);
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }).start();
+      });
+    }, ROTATE_QUOTE_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [threeRecentQuotes.length, fadeAnim]);
+
+  const currentQuote = threeRecentQuotes[quoteIndex];
 
   const handleLogout = () => {
     if (Platform.OS !== 'web') {
@@ -64,33 +97,31 @@ export default function HomeScreen() {
       icon: 'book-outline' as const,
       title: 'Daily Quotes',
       description: 'Discover wisdom through sacred teachings and spiritual insights',
-      onPress: () => {
-        router.push('/(tabs)/quotes');
-      },
+      onPress: () => router.push('/(tabs)/quotes'),
     },
     {
       icon: 'calendar-outline' as const,
-      title: 'Sacred Calendar',
+      title: 'Calendar',
       description: 'Stay connected with spiritual events and celebrations',
-      onPress: () => {
-        router.push('/(tabs)/calendar');
-      },
+      onPress: () => router.push('/(tabs)/calendar'),
     },
     {
       icon: 'play-circle-outline' as const,
-      title: 'Divine Videos',
+      title: "Gurudev's Videos",
       description: 'Experience spiritual guidance through sacred video content',
-      onPress: () => {
-        router.push('/(tabs)/videos');
-      },
+      onPress: () => router.push('/(tabs)/videos'),
+    },
+    {
+      icon: 'person-outline' as const,
+      title: 'About Gurudev',
+      description: "Connect with the teachings of Sri Sidheshwar BrahmRISHI",
+      onPress: () => router.push('/(tabs)/gurudev'),
     },
     {
       icon: 'heart-outline' as const,
-      title: 'Gurudev Wisdom',
-      description: 'Connect with the teachings of Sri Sidheshwar Tirth Brahmarshi Ji',
-      onPress: () => {
-        router.push('/(tabs)/gurudev');
-      },
+      title: 'Send Prayer',
+      description: 'Share your prayers and intentions with the community',
+      onPress: () => router.push('/(tabs)/prayer' as never),
     },
   ];
 
@@ -105,7 +136,7 @@ export default function HomeScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {/* Header Section */}
+          {/* Header: OM logo + Logout */}
           <View style={styles.header}>
             <View style={styles.headerTop}>
               <View style={styles.headerLeft}>
@@ -120,68 +151,81 @@ export default function HomeScreen() {
                 onPress={handleLogout}
                 activeOpacity={0.7}
               >
-                <Ionicons name="log-out-outline" size={24} color={SPIRITUAL_COLORS.primary} />
+                <Ionicons name="log-out-outline" size={20} color={SPIRITUAL_COLORS.primary} />
                 <Text style={styles.logoutText}>Logout</Text>
               </TouchableOpacity>
             </View>
-            <Text style={styles.welcomeText}>
-              Namaste, {user?.name || 'Spiritual Seeker'}
-            </Text>
-            <Text style={styles.subtitle}>
-              May your path be illuminated with divine wisdom
-            </Text>
           </View>
 
-          {/* Daily Blessing Card */}
-          <View style={styles.blessingCard}>
-            <LinearGradient
-              colors={SPIRITUAL_GRADIENTS.divine}
-              style={styles.blessingGradient}
-            >
-              <View style={styles.blessingContent}>
-                <Ionicons name="sunny-outline" size={24} color={SPIRITUAL_COLORS.primaryForeground} />
-                <Text style={styles.blessingText}>
-                  "सर्वे भवन्तु सुखिनः सर्वे सन्तु निरामयाः"
-                </Text>
-                <Text style={styles.blessingTranslation}>
-                  May all beings be happy, may all beings be healthy
-                </Text>
-              </View>
-            </LinearGradient>
-          </View>
-
-          {/* Features Grid */}
-          <View style={styles.featuresSection}>
-            <Text style={styles.sectionTitle}>Explore Spiritual Path</Text>
-            <View style={styles.featuresGrid}>
-              {features.map((feature, index) => (
-                <FeatureCard
-                  key={index}
-                  icon={feature.icon}
-                  title={feature.title}
-                  description={feature.description}
-                  onPress={feature.onPress}
-                />
-              ))}
-            </View>
-          </View>
-
-          {/* Spiritual Quote Section */}
-          <View style={styles.quoteSection}>
-            <View style={styles.quoteCard}>
-              <Text style={styles.quoteText}>
-                "When you connect with the silence within you, that is when you can make sense of the disturbance going on around you."
+          {/* Hero: SIDDGURU / Sri Sidheshwar BrahmRISHI / description */}
+          <View style={styles.hero}>
+            <Text style={styles.heroMainTitle}>SIDDGURU</Text>
+            <Text style={styles.heroSubTitle}>Sri Sidheshwar BrahmRISHI</Text>
+            <View style={styles.heroDescriptionWrap}>
+              <Text style={styles.heroDescription}>
+                Transforming Lives With the Supreme Power of Vedic Science
               </Text>
-              <Text style={styles.quoteAuthor}>- Ancient Wisdom</Text>
             </View>
           </View>
 
-          {/* Footer Blessing */}
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>
-              🙏 हरे कृष्ण हरे राम 🙏
-            </Text>
+          {/* Divider */}
+          <Text style={styles.divider}>— ✦ —</Text>
+
+          {/* Daily Quotes – shloka-style card, rotating 3 most recent */}
+          <View style={styles.dailyQuotesCard}>
+            <View style={styles.dailyQuotesAccent} />
+            <Text style={styles.dailyQuotesLabel}>☀ Daily Quotes</Text>
+            {currentQuote ? (
+              <>
+                <Animated.View style={[styles.quoteContent, { opacity: fadeAnim }]}>
+                  <Text style={styles.dailyQuoteText}>{currentQuote.text}</Text>
+                  <Text style={styles.dailyQuoteAuthor}>— {currentQuote.author}</Text>
+                </Animated.View>
+                {threeRecentQuotes.length > 1 && (
+                  <View style={styles.dots}>
+                    {threeRecentQuotes.map((_, i) => (
+                      <View
+                        key={i}
+                        style={[
+                          styles.dot,
+                          i === quoteIndex && styles.dotActive,
+                        ]}
+                      />
+                    ))}
+                  </View>
+                )}
+              </>
+            ) : (
+              <Text style={styles.dailyQuotePlaceholder}>
+                No quotes yet. Add some in Daily Quotes.
+              </Text>
+            )}
           </View>
+
+          {/* Explore the Path – 5 boxes */}
+          <Text style={styles.sectionTitle}>Explore the Path</Text>
+          <View style={styles.featuresGrid}>
+            {features.map((feature, index) => (
+              <FeatureCard
+                key={index}
+                icon={feature.icon}
+                title={feature.title}
+                description={feature.description}
+                onPress={feature.onPress}
+              />
+            ))}
+          </View>
+
+          {/* Gurudev Says */}
+          <View style={styles.gurudevSaysCard}>
+            <Text style={styles.gurudevSaysLabel}>Gurudev Says</Text>
+            <Text style={styles.gurudevSaysText}>
+              When you connect with the silence within you, that is when you can make sense of the disturbance going on around you.
+            </Text>
+            <Text style={styles.gurudevSaysAuthor}>— Sri Sidheshwar BrahmRISHI</Text>
+          </View>
+
+          <View style={styles.footerSpacer} />
         </ScrollView>
       </LinearGradient>
     </View>
@@ -199,97 +243,160 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 100, // Space for tab bar
+    paddingBottom: 100,
+    paddingHorizontal: 20,
   },
   header: {
-    alignItems: 'center',
-    paddingTop: 60,
-    paddingBottom: 30,
-    paddingHorizontal: 20,
+    paddingTop: 56,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(139,69,19,0.12)',
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
-    marginBottom: 20,
   },
   headerLeft: {
     flex: 1,
     alignItems: 'flex-start',
   },
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: SPIRITUAL_COLORS.cardBackground,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: SPIRITUAL_COLORS.border,
-    ...SPIRITUAL_SHADOWS.card,
-  },
-  logoutText: {
-    marginLeft: 6,
-    fontSize: 14,
-    fontWeight: '600',
-    color: SPIRITUAL_COLORS.primary,
-  },
   omLogo: {
     width: 80,
     height: 80,
   },
-  welcomeText: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: SPIRITUAL_COLORS.foreground,
-    textAlign: 'center',
-    marginBottom: 8,
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: 'rgba(139,69,19,0.25)',
   },
-  subtitle: {
+  logoutText: {
+    marginLeft: 6,
+    fontSize: 12,
+    fontWeight: '600',
+    color: SPIRITUAL_COLORS.primary,
+    letterSpacing: 0.5,
+  },
+  hero: {
+    paddingTop: 24,
+    paddingBottom: 8,
+    alignItems: 'center',
+  },
+  heroMainTitle: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: SPIRITUAL_COLORS.foreground,
+    letterSpacing: 1,
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  heroSubTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: SPIRITUAL_COLORS.accent,
+    letterSpacing: 0.5,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  heroDescriptionWrap: {
+    borderLeftWidth: 2,
+    borderLeftColor: 'rgba(193,127,60,0.4)',
+    paddingLeft: 12,
+    alignSelf: 'stretch',
+    marginHorizontal: 8,
+  },
+  heroDescription: {
+    fontSize: 14,
+    color: SPIRITUAL_COLORS.textMuted,
+    fontStyle: 'italic',
+    lineHeight: 22,
+    textAlign: 'center',
+  },
+  divider: {
+    textAlign: 'center',
+    color: 'rgba(139,69,19,0.3)',
     fontSize: 16,
+    marginVertical: 18,
+    letterSpacing: 6,
+  },
+  dailyQuotesCard: {
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(193,127,60,0.2)',
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    marginBottom: 24,
+    overflow: 'hidden',
+    ...SPIRITUAL_SHADOWS.card,
+  },
+  dailyQuotesAccent: {
+    position: 'absolute',
+    top: 0,
+    left: 20,
+    right: 20,
+    height: 2,
+    backgroundColor: SPIRITUAL_COLORS.primary,
+    borderRadius: 1,
+  },
+  dailyQuotesLabel: {
+    fontSize: 10,
+    color: SPIRITUAL_COLORS.accent,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  quoteContent: {
+    minHeight: 60,
+  },
+  dailyQuoteText: {
+    fontSize: 16,
+    color: '#5a2d0c',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 8,
+    fontWeight: '600',
+  },
+  dailyQuoteAuthor: {
+    fontSize: 12,
     color: SPIRITUAL_COLORS.textMuted,
     textAlign: 'center',
     fontStyle: 'italic',
   },
-  blessingCard: {
-    marginHorizontal: 20,
-    marginBottom: 30,
-    borderRadius: 16,
-    ...SPIRITUAL_SHADOWS.divine,
-  },
-  blessingGradient: {
-    borderRadius: 16,
-    padding: 20,
-  },
-  blessingContent: {
-    alignItems: 'center',
-  },
-  blessingText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: SPIRITUAL_COLORS.primaryForeground,
-    textAlign: 'center',
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  blessingTranslation: {
+  dailyQuotePlaceholder: {
     fontSize: 14,
-    color: SPIRITUAL_COLORS.primaryForeground,
+    color: SPIRITUAL_COLORS.textMuted,
     textAlign: 'center',
     fontStyle: 'italic',
-    opacity: 0.9,
   },
-  featuresSection: {
-    paddingHorizontal: 20,
-    marginBottom: 30,
+  dots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 14,
+  },
+  dot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: 'rgba(193,127,60,0.25)',
+  },
+  dotActive: {
+    width: 18,
+    backgroundColor: SPIRITUAL_COLORS.primary,
   },
   sectionTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '700',
     color: SPIRITUAL_COLORS.foreground,
-    marginBottom: 20,
-    textAlign: 'center',
+    marginBottom: 14,
   },
   featuresGrid: {
     flexDirection: 'row',
@@ -297,73 +404,76 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   featureCard: {
-    width: (screenWidth - 60) / 2,
-    marginBottom: 16,
-    borderRadius: 16,
+    width: (screenWidth - 52) / 2,
+    marginBottom: 12,
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  featureCardInner: {
+    backgroundColor: 'rgba(255,255,255,0.65)',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(193,127,60,0.18)',
+    paddingVertical: 16,
+    paddingHorizontal: 14,
+    minHeight: 120,
+    position: 'relative',
     ...SPIRITUAL_SHADOWS.card,
   },
-  featureCardGradient: {
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-    minHeight: 140,
+  featureAccent: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: 3,
+    height: '40%',
+    backgroundColor: 'rgba(193,127,60,0.5)',
+    borderTopLeftRadius: 14,
   },
-  featureIconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: SPIRITUAL_COLORS.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  featureTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: SPIRITUAL_COLORS.foreground,
-    textAlign: 'center',
+  featureIconWrap: {
     marginBottom: 8,
   },
+  featureTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: SPIRITUAL_COLORS.foreground,
+    marginBottom: 4,
+  },
   featureDescription: {
-    fontSize: 12,
+    fontSize: 11,
     color: SPIRITUAL_COLORS.textMuted,
-    textAlign: 'center',
     lineHeight: 16,
   },
-  quoteSection: {
-    paddingHorizontal: 20,
-    marginBottom: 30,
+  gurudevSaysCard: {
+    marginTop: 24,
+    borderRadius: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(193,127,60,0.2)',
   },
-  quoteCard: {
-    backgroundColor: SPIRITUAL_COLORS.cardBackground,
-    borderRadius: 16,
-    padding: 20,
-    borderLeftWidth: 4,
-    borderLeftColor: SPIRITUAL_COLORS.secondary,
-    ...SPIRITUAL_SHADOWS.peaceful,
+  gurudevSaysLabel: {
+    fontSize: 10,
+    color: SPIRITUAL_COLORS.accent,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: 8,
+    textAlign: 'center',
   },
-  quoteText: {
-    fontSize: 16,
-    color: SPIRITUAL_COLORS.foreground,
-    fontStyle: 'italic',
-    lineHeight: 24,
-    marginBottom: 12,
-  },
-  quoteAuthor: {
+  gurudevSaysText: {
     fontSize: 14,
-    color: SPIRITUAL_COLORS.primary,
-    fontWeight: '600',
-    textAlign: 'right',
+    color: '#5a2d0c',
+    fontStyle: 'italic',
+    lineHeight: 22,
+    textAlign: 'center',
   },
-  footer: {
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 20,
+  gurudevSaysAuthor: {
+    fontSize: 11,
+    color: SPIRITUAL_COLORS.accent,
+    marginTop: 8,
+    textAlign: 'center',
   },
-  footerText: {
-    fontSize: 18,
-    color: SPIRITUAL_COLORS.primary,
-    fontWeight: '600',
+  footerSpacer: {
+    height: 24,
   },
 });

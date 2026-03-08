@@ -1,99 +1,99 @@
-// SPIRITUAL COLOR PALETTE
+// Spiritual color palette – Siddguru / Vedic-inspired (brown, copper, cream)
+// Replaces previous saffron theme globally.
 export const SPIRITUAL_COLORS = {
-  // Primary Saffron Colors
-  primary: '#FF6B35',           // Rich saffron orange
-  primaryGlow: '#FFA366',       // Lighter saffron for glows
-  primaryForeground: '#FDF8F3', // Light cream for text on primary
-  
-  // Background Colors  
-  background: '#FDF8F3',        // Warm ivory white
-  cardBackground: '#FEFCF8',    // Cream white with subtle warmth
-  
-  // Text Colors
-  foreground: '#2D1810',        // Deep earth brown
-  textMuted: '#8E6A5B',         // Warm gray
-  
-  // Secondary Colors
-  secondary: '#D4AF37',         // Deep ceremonial gold
-  secondaryForeground: '#2D1810',
-  
-  // Accent Colors
-  accent: '#F4E4C1',           // Light saffron accent
-  accentForeground: '#2D1810',
-  
-  // Spiritual Elements
-  spiritualRed: '#D32F2F',     // Temple red
-  omGold: '#DAA520',           // Om symbol gold
-  
-  // Border and Input
-  border: '#E8D5B7',           // Subtle warm border
-  input: '#F9F3E9',            // Input background
-  
-  // Tab Navigation
-  tabBackground: '#FDF8F3',
-  tabForeground: '#2D1810', 
-  tabActive: '#FF6B35',
-  tabActiveForeground: '#FEFCF8',
+  // Primary – copper / saddle brown
+  primary: '#c17f3c',
+  primaryGlow: '#d4955c',
+  primaryForeground: '#fdf6ec',
+
+  // Background
+  background: '#fdf6ec',
+  cardBackground: 'rgba(255,255,255,0.9)',
+
+  // Text
+  foreground: '#3d1f0a',
+  textMuted: '#8b6a4a',
+
+  // Secondary – deeper brown
+  secondary: '#8b4513',
+  secondaryForeground: '#fdf6ec',
+
+  // Accent – warm brown
+  accent: '#b5651d',
+  accentForeground: '#3d1f0a',
+
+  // UI
+  spiritualRed: '#c41e1e',
+  omGold: '#c17f3c',
+
+  // Border and input
+  border: 'rgba(193,127,60,0.25)',
+  input: 'rgba(255,255,255,0.9)',
+
+  // Tab navigation
+  tabBackground: '#fdf6ec',
+  tabForeground: '#3d1f0a',
+  tabActive: '#c17f3c',
+  tabActiveForeground: '#fdf6ec',
 };
 
-// GRADIENTS for LinearGradient component
+// Gradients (cream / tan / copper)
 export const SPIRITUAL_GRADIENTS = {
-  divine: ['#FF6B35', '#D4AF37'],      // Primary to secondary
-  peace: ['#FDF8F3', '#F4E4C1'],       // Background to accent  
-  meditation: ['#FFA366', '#FF6B35'],   // Light to primary
-  sunset: ['#FF6B35', '#FFE5D9'],       // Primary to very light
+  divine: ['#c17f3c', '#8b4513'],
+  peace: ['#fdf6ec', '#f5e6d0'],
+  meditation: ['#d4955c', '#c17f3c'],
+  sunset: ['#c17f3c', '#f5e6d0'],
 };
 
-// SHADOWS for React Native
+// Shadows – brown-based
 export const SPIRITUAL_SHADOWS = {
   peaceful: {
-    shadowColor: '#FF6B35',
+    shadowColor: '#8b4513',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 4,
   },
   divine: {
-    shadowColor: '#D4AF37', 
+    shadowColor: '#8b4513',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.2,
     shadowRadius: 20,
     elevation: 8,
   },
   card: {
-    shadowColor: '#FF6B35',
+    shadowColor: '#8b4513',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
     elevation: 3,
-  }
+  },
 };
 
-// TYPOGRAPHY
+// Typography
 export const SPIRITUAL_TYPOGRAPHY = {
   quoteText: {
     fontSize: 18,
     lineHeight: 28,
     fontStyle: 'italic' as const,
     textAlign: 'center' as const,
-    color: '#2D1810',
+    color: '#3d1f0a',
   },
   spiritualHeading: {
     fontSize: 24,
     fontWeight: 'bold' as const,
-    color: '#2D1810',
+    color: '#3d1f0a',
   },
   author: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#FF6B35',
+    color: '#c17f3c',
     textAlign: 'right' as const,
   },
   reflection: {
     fontSize: 14,
-    color: '#5D4037',
+    color: '#5a2d0c',
     fontStyle: 'italic' as const,
     lineHeight: 20,
-  }
+  },
 };
-
