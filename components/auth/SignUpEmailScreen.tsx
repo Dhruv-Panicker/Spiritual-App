@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SPIRITUAL_COLORS, SPIRITUAL_TYPOGRAPHY } from '@/constants/SpiritualColors';
 import { twoFactorService } from '@/services/twoFactorService';
+import { googleSheetsService } from '@/services/googleSheetsService';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -51,10 +52,17 @@ export const SignUpEmailScreen: React.FC<SignUpEmailScreenProps> = ({ onBack, on
     if (!validate()) return;
     setIsLoading(true);
     setError(null);
+    const trimmedEmail = email.trim().toLowerCase();
     try {
-      const result = await twoFactorService.sendVerificationCode(email.trim());
+      const { exists } = await googleSheetsService.checkUserInUserbase(trimmedEmail);
+      if (exists) {
+        setError('This email is already in use. Please enter a different email or log in.');
+        setIsLoading(false);
+        return;
+      }
+      const result = await twoFactorService.sendVerificationCode(trimmedEmail);
       if (result.success) {
-        onCodeSent(email.trim().toLowerCase(), name.trim());
+        onCodeSent(trimmedEmail, name.trim());
       } else {
         setError(result.error || 'Could not send code. Please try again.');
       }
