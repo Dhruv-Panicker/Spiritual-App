@@ -310,7 +310,7 @@ export default function AdminScreen() {
             <Text style={styles.label}>Author *</Text>
             <TextInput
               style={styles.input}
-              placeholder="e.g., Gurudev, Buddha, Rumi..."
+              placeholder="e.g., Siddhguru, Buddha, Rumi..."
               placeholderTextColor={SPIRITUAL_COLORS.textMuted}
               value={quoteAuthor}
               onChangeText={setQuoteAuthor}

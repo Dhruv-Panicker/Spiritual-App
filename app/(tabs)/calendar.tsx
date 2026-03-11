@@ -185,6 +185,10 @@ export default function CalendarScreen() {
                     <Ionicons name="time-outline" size={14} color="rgba(255,255,255,0.9)" />
                     <Text style={styles.heroMetaText}>{nextEvent.time}</Text>
                   </View>
+                  <View style={styles.heroMetaRow}>
+                    <Ionicons name="location-outline" size={14} color="rgba(255,255,255,0.9)" />
+                    <Text style={styles.heroMetaText} numberOfLines={1}>{nextEvent.location?.trim() || '—'}</Text>
+                  </View>
                 </View>
               </LinearGradient>
             </TouchableOpacity>
@@ -222,6 +226,10 @@ export default function CalendarScreen() {
                       </View>
                     </View>
                     <Text style={styles.eventPillTitle} numberOfLines={2}>{event.title}</Text>
+                    <View style={styles.eventPillLocationRow}>
+                      <Ionicons name="location-outline" size={12} color={SPIRITUAL_COLORS.textMuted} />
+                      <Text style={styles.eventPillLocationText} numberOfLines={1}>{event.location?.trim() || '—'}</Text>
+                    </View>
                   </View>
                   <View style={styles.eventPillRight}>
                     <Text style={styles.eventPillDate}>{formatEventDate(event.date).split(',')[0]}</Text>
@@ -312,6 +320,10 @@ export default function CalendarScreen() {
                                 <Text style={[styles.eventPillBadgeText, { color: pill.text }]}>{event.type}</Text>
                               </View>
                               <Text style={styles.eventPillTitle}>{event.title}</Text>
+                              <View style={styles.eventPillLocationRow}>
+                                <Ionicons name="location-outline" size={12} color={SPIRITUAL_COLORS.textMuted} />
+                                <Text style={styles.eventPillLocationText} numberOfLines={1}>{event.location?.trim() || '—'}</Text>
+                              </View>
                             </View>
                             <View style={styles.eventPillRight}>
                               <Text style={styles.eventPillDate}>{formatEventDate(event.date).split(',')[0]}</Text>
@@ -511,6 +523,7 @@ const styles = StyleSheet.create({
   },
   heroMeta: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 16,
   },
   heroMetaRow: {
@@ -612,6 +625,17 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: SPIRITUAL_COLORS.foreground,
+  },
+  eventPillLocationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+  },
+  eventPillLocationText: {
+    fontSize: 11,
+    color: SPIRITUAL_COLORS.textMuted,
+    flex: 1,
   },
   eventPillRight: {
     alignItems: 'flex-end',

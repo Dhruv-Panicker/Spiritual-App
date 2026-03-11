@@ -16,6 +16,28 @@ import { useQuotes, Quote } from '@/contexts/QuotesContext';
 import { shareService } from '@/services/shareService';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS, SPIRITUAL_TYPOGRAPHY } from '@/constants/SpiritualColors';
 
+const TAG_COLORS: { bg: string; text: string }[] = [
+  { bg: '#c17f3c', text: '#fff' },
+  { bg: '#a67c52', text: '#fff' },
+  { bg: '#a0522d', text: '#fff' },
+  { bg: '#b07d62', text: '#fff' },
+  { bg: '#b5651d', text: '#fff' },
+  { bg: '#8b6914', text: '#fff' },
+  { bg: '#9a7b4f', text: '#fff' },
+  { bg: '#5c4033', text: '#fff' },
+];
+
+function getTagColor(category: string): { bg: string; text: string } {
+  const normalized = (category || 'general').trim().toLowerCase();
+  let hash = 0;
+  for (let i = 0; i < normalized.length; i++) {
+    hash = (hash << 5) - hash + normalized.charCodeAt(i);
+    hash |= 0;
+  }
+  const index = Math.abs(hash) % TAG_COLORS.length;
+  return TAG_COLORS[index];
+}
+
 const QuoteCard: React.FC<{ quote: Quote }> = ({ quote }) => {
   const [isLiked, setIsLiked] = useState(false);
 
@@ -69,11 +91,14 @@ const QuoteCard: React.FC<{ quote: Quote }> = ({ quote }) => {
         — {quote.author}
       </Text>
 
-      {quote.category && (
-        <View style={styles.categoryBadge}>
-          <Text style={styles.categoryText}>{quote.category}</Text>
-        </View>
-      )}
+      {quote.category && (() => {
+        const { bg, text } = getTagColor(quote.category);
+        return (
+          <View style={[styles.categoryBadge, { backgroundColor: bg }]}>
+            <Text style={[styles.categoryText, { color: text }]}>{quote.category}</Text>
+          </View>
+        );
+      })()}
 
       {quote.reflection && (
         <View style={styles.reflectionContainer}>
@@ -249,7 +274,6 @@ const styles = StyleSheet.create({
   },
   categoryBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: SPIRITUAL_COLORS.accent,
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
@@ -258,7 +282,6 @@ const styles = StyleSheet.create({
   categoryText: {
     fontSize: 12,
     fontWeight: '600',
-    color: SPIRITUAL_COLORS.foreground,
   },
   reflectionContainer: {
     backgroundColor: SPIRITUAL_COLORS.accent,

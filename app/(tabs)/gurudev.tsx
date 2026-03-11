@@ -61,7 +61,7 @@ export default function GurudevScreen() {
     try {
       await Share.share({
         message: shareText,
-        title: 'Meet Our Gurudev',
+        title: 'Meet Our Siddhguru',
       });
     } catch (error) {
       console.error('Error sharing app:', error);
@@ -79,7 +79,7 @@ export default function GurudevScreen() {
           showsVerticalScrollIndicator={false}
           bounces={true}
         >
-          {/* Hero Section - Gurudev profile image backdrop */}
+          {/* Hero Section - Siddhguru profile image backdrop */}
           <View style={styles.heroContainer}>
             <Image
               source={require('@/assets/images/gurudev-profile-image.png')}
@@ -98,7 +98,7 @@ export default function GurudevScreen() {
                   resizeMode="contain"
                 />
               </Animated.View>
-              <Text style={styles.heroTitle}>Gurudev</Text>
+              <Text style={styles.heroTitle}>Siddhguru</Text>
               <Text style={styles.heroSubtitle}>A beacon of wisdom and compassion</Text>
             </View>
           </View>
@@ -110,7 +110,7 @@ export default function GurudevScreen() {
               <View style={styles.dropCapContainer}>
                 <Text style={styles.dropCap}>I</Text>
                 <Text style={styles.introText}>
-                  n the sacred tradition of spiritual awakening, our beloved Gurudev stands as a living embodiment of divine wisdom and unconditional love. For over three decades, he has dedicated his life to guiding souls on their journey toward inner peace and self-realization.
+                  n the sacred tradition of spiritual awakening, our beloved Siddhguru stands as a living embodiment of divine wisdom and unconditional love. For over three decades, he has dedicated his life to guiding souls on their journey toward inner peace and self-realization.
                 </Text>
               </View>
             </View>
@@ -118,7 +118,7 @@ export default function GurudevScreen() {
             {/* Biography Content */}
             <View style={styles.biographySection}>
               <Text style={styles.bodyText}>
-                Born into a family of spiritual seekers, Gurudev's path was illuminated from an early age. His profound understanding of ancient Vedantic teachings, combined with a deep compassion for all beings, has touched millions of hearts across the globe.
+                Born into a family of spiritual seekers, Siddhguru's path was illuminated from an early age. His profound understanding of ancient Vedantic teachings, combined with a deep compassion for all beings, has touched millions of hearts across the globe.
               </Text>
 
               {/* Quote Section */}
@@ -126,11 +126,11 @@ export default function GurudevScreen() {
                 <Text style={styles.quoteText}>
                   "The purpose of life is not to be happy, but to be useful, to be honorable, to be compassionate, to have it make some difference that you have lived and lived well."
                 </Text>
-                <Text style={styles.quoteAuthor}>— Gurudev</Text>
+                <Text style={styles.quoteAuthor}>— Siddhguru</Text>
               </View>
 
               <Text style={styles.bodyText}>
-                Through his teachings, Gurudev emphasizes the practical application of spiritual principles in daily life. His approach bridges the ancient wisdom of the East with the practical needs of modern living, making profound truths accessible to seekers from all walks of life.
+                Through his teachings, Siddhguru emphasizes the practical application of spiritual principles in daily life. His approach bridges the ancient wisdom of the East with the practical needs of modern living, making profound truths accessible to seekers from all walks of life.
               </Text>
 
               <Text style={styles.bodyText}>
@@ -167,7 +167,7 @@ export default function GurudevScreen() {
               </LinearGradient>
 
               <Text style={styles.bodyText}>
-                Today, Gurudev's mission continues to expand, reaching new generations of seekers through technology while maintaining the timeless essence of spiritual transmission. His message remains simple yet profound: {' '}
+                Today, Siddhguru's mission continues to expand, reaching new generations of seekers through technology while maintaining the timeless essence of spiritual transmission. His message remains simple yet profound: {' '}
                 <Text style={styles.emphasizedText}>
                   "Find the divine within yourself, and you will see it everywhere."
                 </Text>

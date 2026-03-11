@@ -68,7 +68,7 @@ function TabLayoutContent() {
       <Tabs.Screen
         name="gurudev"
         options={{
-          title: 'Gurudev',
+          title: 'Siddhguru',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'person' : 'person-outline'} size={28} color={color} />
           ),

@@ -1,6 +1,6 @@
 # Spiritual App
 
-A React Native (Expo) app for spiritual content and community: quotes, videos, event calendar, prayers, and Gurudev information. Data is backed by Google Sheets and a Google Apps Script web app for auth and write operations.
+A React Native (Expo) app for spiritual content and community: quotes, videos, event calendar, prayers, and Siddhguru information. Data is backed by Google Sheets and a Google Apps Script web app for auth and write operations.
 
 ## Features
 
@@ -9,7 +9,7 @@ A React Native (Expo) app for spiritual content and community: quotes, videos, e
 - **Quotes:** Browse and (admin) manage quotes sourced from the sheet.
 - **Videos:** Browse and (admin) manage video entries with links.
 - **Calendar:** Events from the sheet: hero card, “All Upcoming Events” list, “Browse by Month” grid, month and event detail bottom sheets, and “See more” links for event URLs.
-- **Gurudev:** Information and media about the teacher.
+- **Siddhguru:** Information and media about the teacher.
 - **Prayer:** Submit prayer requests; sent via the webhook to a configurable recipient.
 - **Admin:** Content and event management (quotes, videos, events including event links). Gated by admin email list.
 - **Push:** Expo Notifications; device tokens can be registered via the webhook for future use.

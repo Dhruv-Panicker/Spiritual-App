@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,8 @@ import {
   TouchableOpacity,
   Dimensions,
   Platform,
-  Animated,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -19,17 +20,29 @@ import { useQuotes } from '@/contexts/QuotesContext';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
 
 const { width: screenWidth } = Dimensions.get('window');
+const QUOTE_CARD_PADDING = 80;
+const quotePageWidth = screenWidth - QUOTE_CARD_PADDING;
 
 const ROTATE_QUOTE_INTERVAL_MS = 5000;
+
+const TILE_THEME_COLORS = [
+  '#c17f3c', // copper / amber – Daily Quotes
+  '#a67c52', // warm pastel tan – Calendar
+  '#a0522d', // sienna / rust – Videos
+  '#b07d62', // dusty rose-brown – About Siddhguru
+  '#b5651d', // warm brown-red (accent) – Send Prayer
+] as const;
 
 interface FeatureCardProps {
   icon: keyof typeof Ionicons.glyphMap;
   title: string;
   description: string;
   onPress: () => void;
+  fullWidth?: boolean;
+  accentColor: string;
 }
 
-const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, onPress }) => {
+const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, onPress, fullWidth, accentColor }) => {
   const handlePress = () => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -38,13 +51,13 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, onP
   };
 
   return (
-    <TouchableOpacity style={styles.featureCard} onPress={handlePress} activeOpacity={0.85}>
+    <TouchableOpacity style={[styles.featureCard, fullWidth && styles.featureCardFullWidth]} onPress={handlePress} activeOpacity={0.85}>
       <View style={styles.featureCardInner}>
-        <View style={styles.featureAccent} />
+        <View style={[styles.featureAccent, { backgroundColor: accentColor }]} />
         <View style={styles.featureIconWrap}>
-          <Ionicons name={icon} size={26} color={SPIRITUAL_COLORS.primary} />
+          <Ionicons name={icon} size={26} color={accentColor} />
         </View>
-        <Text style={styles.featureTitle}>{title}</Text>
+        <Text style={[styles.featureTitle, { color: accentColor }]}>{title}</Text>
         <Text style={styles.featureDescription}>{description}</Text>
       </View>
     </TouchableOpacity>
@@ -55,7 +68,8 @@ export default function HomeScreen() {
   const { user, logout } = useAuth();
   const { quotes } = useQuotes();
   const [quoteIndex, setQuoteIndex] = useState(0);
-  const [fadeAnim] = useState(() => new Animated.Value(1));
+  const quoteScrollRef = useRef<ScrollView>(null);
+  const isUserScrolling = useRef(false);
 
   const threeRecentQuotes = React.useMemo(() => {
     const sorted = [...quotes].sort((a, b) =>
@@ -67,23 +81,16 @@ export default function HomeScreen() {
   useEffect(() => {
     if (threeRecentQuotes.length < 2) return;
     const interval = setInterval(() => {
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 400,
-        useNativeDriver: true,
-      }).start(() => {
-        setQuoteIndex((i) => (i + 1) % threeRecentQuotes.length);
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }).start();
+      if (isUserScrolling.current) return;
+      const next = (quoteIndex + 1) % threeRecentQuotes.length;
+      setQuoteIndex(next);
+      quoteScrollRef.current?.scrollTo({
+        x: next * quotePageWidth,
+        animated: true,
       });
     }, ROTATE_QUOTE_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [threeRecentQuotes.length, fadeAnim]);
-
-  const currentQuote = threeRecentQuotes[quoteIndex];
+  }, [threeRecentQuotes.length, quoteIndex]);
 
   const handleLogout = () => {
     if (Platform.OS !== 'web') {
@@ -98,30 +105,36 @@ export default function HomeScreen() {
       title: 'Daily Quotes',
       description: 'Discover wisdom through sacred teachings and spiritual insights',
       onPress: () => router.push('/(tabs)/quotes'),
+      accentColor: TILE_THEME_COLORS[0],
     },
     {
       icon: 'calendar-outline' as const,
       title: 'Calendar',
       description: 'Stay connected with spiritual events and celebrations',
       onPress: () => router.push('/(tabs)/calendar'),
+      accentColor: TILE_THEME_COLORS[1],
     },
     {
       icon: 'play-circle-outline' as const,
-      title: "Gurudev's Videos",
+      title: "Siddhguru's Videos",
       description: 'Experience spiritual guidance through sacred video content',
       onPress: () => router.push('/(tabs)/videos'),
+      accentColor: TILE_THEME_COLORS[2],
     },
     {
       icon: 'person-outline' as const,
-      title: 'About Gurudev',
-      description: "Connect with the teachings of Sri Sidheshwar BrahmRISHI",
+      title: 'About Siddhguru',
+      description: "Connect with the teachings of Sri Sidheshwar Brahmrishi",
       onPress: () => router.push('/(tabs)/gurudev'),
+      accentColor: TILE_THEME_COLORS[3],
     },
     {
       icon: 'heart-outline' as const,
       title: 'Send Prayer',
       description: 'Share your prayers and intentions with the community',
       onPress: () => router.push('/(tabs)/prayer' as never),
+      fullWidth: true,
+      accentColor: TILE_THEME_COLORS[4],
     },
   ];
 
@@ -141,7 +154,7 @@ export default function HomeScreen() {
             <View style={styles.headerTop}>
               <View style={styles.headerLeft}>
                 <Image
-                  source={require('@/assets/images/sri-siddhguru-logo.png')}
+                  source={require('@/assets/images/om_logo_transparent.png')}
                   style={styles.omLogo}
                   resizeMode="contain"
                 />
@@ -157,13 +170,13 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {/* Hero: SIDDGURU / Sri Sidheshwar BrahmRISHI / description */}
+          {/* Hero: SIDDGURU / Sri Sidheshwar Brahmrishi / description */}
           <View style={styles.hero}>
-            <Text style={styles.heroMainTitle}>SIDDGURU</Text>
-            <Text style={styles.heroSubTitle}>Sri Sidheshwar BrahmRISHI</Text>
+            <Text style={styles.heroMainTitle}>SIDDHGURU</Text>
+            <Text style={styles.heroSubTitle}>Sri Sidheshwar Brahmrishi</Text>
             <View style={styles.heroDescriptionWrap}>
               <Text style={styles.heroDescription}>
-                Transforming Lives With the Supreme Power of Vedic Science
+                An enlightened master dedicated to lifting your consciousness
               </Text>
             </View>
           </View>
@@ -171,34 +184,56 @@ export default function HomeScreen() {
           {/* Divider */}
           <Text style={styles.divider}>— ✦ —</Text>
 
-          {/* Daily Quotes – shloka-style card, rotating 3 most recent */}
+          {/* Daily Quotes – shloka-style card, swipable + auto-rotate */}
           <View style={styles.dailyQuotesCard}>
             <View style={styles.dailyQuotesAccent} />
             <Text style={styles.dailyQuotesLabel}>☀ Daily Quotes</Text>
-            {currentQuote ? (
-              <>
-                <Animated.View style={[styles.quoteContent, { opacity: fadeAnim }]}>
-                  <Text style={styles.dailyQuoteText}>{currentQuote.text}</Text>
-                  <Text style={styles.dailyQuoteAuthor}>— {currentQuote.author}</Text>
-                </Animated.View>
-                {threeRecentQuotes.length > 1 && (
-                  <View style={styles.dots}>
-                    {threeRecentQuotes.map((_, i) => (
-                      <View
-                        key={i}
-                        style={[
-                          styles.dot,
-                          i === quoteIndex && styles.dotActive,
-                        ]}
-                      />
-                    ))}
-                  </View>
-                )}
-              </>
-            ) : (
+            {threeRecentQuotes.length === 0 ? (
               <Text style={styles.dailyQuotePlaceholder}>
                 No quotes yet. Add some in Daily Quotes.
               </Text>
+            ) : threeRecentQuotes.length === 1 ? (
+              <View style={[styles.quoteContent, styles.quotePage]}>
+                <Text style={styles.dailyQuoteText}>{threeRecentQuotes[0].text}</Text>
+                <Text style={styles.dailyQuoteAuthor}>— {threeRecentQuotes[0].author}</Text>
+              </View>
+            ) : (
+              <>
+                <ScrollView
+                  ref={quoteScrollRef}
+                  horizontal
+                  pagingEnabled
+                  showsHorizontalScrollIndicator={false}
+                  onScrollBeginDrag={() => { isUserScrolling.current = true; }}
+                  onMomentumScrollEnd={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
+                    const x = e.nativeEvent.contentOffset.x;
+                    const index = Math.round(x / quotePageWidth);
+                    setQuoteIndex(Math.min(index, threeRecentQuotes.length - 1));
+                    isUserScrolling.current = false;
+                  }}
+                  scrollEventThrottle={16}
+                  decelerationRate="fast"
+                  contentContainerStyle={styles.quoteScrollContent}
+                >
+                  {threeRecentQuotes.map((q, i) => (
+                    <View key={i} style={[styles.quotePage, { width: quotePageWidth }]}>
+                      <Text style={styles.dailyQuoteText}>{q.text}</Text>
+                      <Text style={styles.dailyQuoteAuthor}>— {q.author}</Text>
+                    </View>
+                  ))}
+                </ScrollView>
+                <View style={styles.dots}>
+                  {threeRecentQuotes.map((_, i) => (
+                    <View
+                      key={i}
+                      style={[
+                        styles.dot,
+                        i === quoteIndex && styles.dotActive,
+                      ]}
+                    />
+                  ))}
+                </View>
+              </>
             )}
           </View>
 
@@ -212,17 +247,19 @@ export default function HomeScreen() {
                 title={feature.title}
                 description={feature.description}
                 onPress={feature.onPress}
+                fullWidth={feature.fullWidth}
+                accentColor={feature.accentColor}
               />
             ))}
           </View>
 
-          {/* Gurudev Says */}
+          {/* Siddhguru Says */}
           <View style={styles.gurudevSaysCard}>
-            <Text style={styles.gurudevSaysLabel}>Gurudev Says</Text>
+            <Text style={styles.gurudevSaysLabel}>Siddhguru Says</Text>
             <Text style={styles.gurudevSaysText}>
               When you connect with the silence within you, that is when you can make sense of the disturbance going on around you.
             </Text>
-            <Text style={styles.gurudevSaysAuthor}>— Sri Sidheshwar BrahmRISHI</Text>
+            <Text style={styles.gurudevSaysAuthor}>— Sri Sidheshwar Brahmrishi</Text>
           </View>
 
           <View style={styles.footerSpacer} />
@@ -356,6 +393,12 @@ const styles = StyleSheet.create({
   quoteContent: {
     minHeight: 60,
   },
+  quoteScrollContent: {},
+  quotePage: {
+    paddingHorizontal: 4,
+    minHeight: 60,
+    justifyContent: 'center',
+  },
   dailyQuoteText: {
     fontSize: 16,
     color: '#5a2d0c',
@@ -409,6 +452,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     overflow: 'hidden',
   },
+  featureCardFullWidth: {
+    width: '100%',
+  },
   featureCardInner: {
     backgroundColor: 'rgba(255,255,255,0.65)',
     borderRadius: 14,
@@ -426,7 +472,6 @@ const styles = StyleSheet.create({
     left: 0,
     width: 3,
     height: '40%',
-    backgroundColor: 'rgba(193,127,60,0.5)',
     borderTopLeftRadius: 14,
   },
   featureIconWrap: {
@@ -435,7 +480,6 @@ const styles = StyleSheet.create({
   featureTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: SPIRITUAL_COLORS.foreground,
     marginBottom: 4,
   },
   featureDescription: {

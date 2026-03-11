@@ -136,7 +136,7 @@ export default function PrayerScreen() {
       }
       Alert.alert(
         'Prayer sent',
-        `Your prayer has been submitted. A confirmation email has been sent to ${userEmail}. May Gurudev's blessings be with you.`,
+        `Your prayer has been submitted. A confirmation email has been sent to ${userEmail}. May Siddhguru's blessings be with you.`,
         [{ text: 'OK' }]
       );
       setName('');
@@ -184,9 +184,9 @@ export default function PrayerScreen() {
                 style={styles.heroOverlay}
               />
               <View style={styles.heroContent}>
-                <Text style={styles.heroTitle}>Send a prayer to Gurudev</Text>
+                <Text style={styles.heroTitle}>Send a prayer to Siddhguru</Text>
                 <Text style={styles.heroSubtitle}>
-                  Through this medium you can send your prayers and wishes to Gurudev. Your heartfelt
+                  Through this medium you can send your prayers and wishes to Siddhguru. Your heartfelt
                   words will be received with love and blessings.
                 </Text>
               </View>
@@ -198,7 +198,7 @@ export default function PrayerScreen() {
                 <Text style={styles.label}>Name *</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Your full name"
+                  placeholder="Person being prayed for"
                   placeholderTextColor={SPIRITUAL_COLORS.textMuted}
                   value={name}
                   onChangeText={setName}

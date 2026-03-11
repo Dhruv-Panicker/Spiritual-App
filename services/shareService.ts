@@ -24,15 +24,15 @@ class ShareService {
 
       // Add reflection if available
       if (quote.reflection) {
-        shareText += `💭 Reflection: ${quote.reflection}\n\n`;
+        shareText += `Reflection: ${quote.reflection}\n\n`;
       }
 
       // Add app download message
-      shareText += `🙏 Discover more spiritual wisdom and daily inspiration in the ${this.appName} app\n`;
-      shareText += `📱 Download now: ${this.getDownloadLink()}`;
+      shareText += `🪷 Find more to pause and reflect on in the ${this.appName} app.\n`;
+      shareText += `📱 ${this.getDownloadLink()}`;
 
       await Share.share({
-        title: 'Spiritual Wisdom Quote',
+        title: 'Quote',
         message: shareText,
       });
     } catch (error) {
@@ -44,7 +44,7 @@ class ShareService {
   async shareVideo(video: Video): Promise<void> {
     try {
       const youtubeUrl = `https://youtu.be/${video.youtubeId}`;
-      const shareText = `🎥 "${video.title}"\n\n${youtubeUrl}\n\n🙏 Discover more spiritual videos in the ${this.appName} app\n📱 Download: ${this.getDownloadLink()}`;
+      const shareText = `🎥 "${video.title}"\n\n${youtubeUrl}\n\n🪷 Find more to watch and sit with in the ${this.appName} app.\n📱 ${this.getDownloadLink()}`;
 
       await Share.share({
         title: video.title,
@@ -68,13 +68,9 @@ class ShareService {
         shareText += `📍 Location: ${event.location}\n`;
       }
       
-      if (event.link) {
-        shareText += `🔗 More info: ${event.link}\n`;
-      }
-      
       shareText += `\n📝 ${event.description}\n\n`;
-      shareText += `🙏 Stay connected with more spiritual events and teachings in the ${this.appName} app\n`;
-      shareText += `📱 Download now: ${this.getDownloadLink()}`;
+      shareText += `🪷 Find more ways to show up and connect in the ${this.appName} app.\n`;
+      shareText += `📱 ${this.getDownloadLink()}`;
 
       await Share.share({
         title: event.title,
@@ -88,7 +84,7 @@ class ShareService {
 
   async shareApp(): Promise<void> {
     try {
-      const shareText = `🙏 I found this beautiful spiritual app with daily wisdom, inspiring quotes, and sacred teachings.\n\nThought you might find it meaningful too!\n\n📱 Download ${this.appName}: ${this.getDownloadLink()}`;
+      const shareText = `🪷 Find a gentle space for daily quotes, videos, and events, something to return to.\n\n📱 ${this.getDownloadLink()}`;
 
       await Share.share({
         title: `Share ${this.appName}`,
