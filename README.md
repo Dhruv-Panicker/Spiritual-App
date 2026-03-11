@@ -83,6 +83,26 @@ A React Native (Expo) app for spiritual content and community: quotes, videos, e
 - App identity and scheme: `app.json` (name, slug, bundle IDs, splash, notifications).
 - Env injection: `app.config.js` loads `.env` and passes listed keys into `expo.extra` for runtime use. For EAS Build, configure secrets in the Expo dashboard or via `eas secret:create`.
 
+## Testing
+
+Run the full test suite with:
+
+```bash
+npm test
+```
+
+203 tests across 11 suites using `jest-expo` and React Native Testing Library. Covers:
+
+- **Services** – `googleSheetsService`, `twoFactorService`, `shareService` (data parsing, HTTP handling, error paths)
+- **Contexts** – `AuthContext`, `QuotesContext`, `VideosContext`, `EventsContext` (state, async flows, error handling)
+- **Auth components** – `WelcomeScreen`, `LoginScreen`, `SignUpEmailScreen`, `VerifyCodeScreen` (rendering, validation, user interactions, snapshots)
+
+| Command | Description |
+|---|---|
+| `npm test` | Run all tests |
+| `npm run test:watch` | Run in watch mode |
+| `npm run test:coverage` | Run with coverage report |
+
 ## License
 
 Proprietary. All rights reserved.
