@@ -11,7 +11,6 @@ import {
   ActivityIndicator,
   Platform,
   KeyboardAvoidingView,
-  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,8 +23,6 @@ import { useEvents } from '@/contexts/EventsContext';
 import { notificationService } from '@/services/notificationService';
 import { googleSheetsService } from '@/services/googleSheetsService';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
-
-const { width } = Dimensions.get('window');
 
 export default function AdminScreen() {
   const { user } = useAuth();
