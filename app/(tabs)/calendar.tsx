@@ -53,7 +53,6 @@ export default function CalendarScreen() {
   const {
     events,
     monthlyData,
-    getCurrentMonthEvents,
     monthNames,
     getEventTypeColor,
     getEventTypeBadgeStyle,
