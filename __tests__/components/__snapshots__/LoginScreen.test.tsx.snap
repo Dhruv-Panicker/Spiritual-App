@@ -1,0 +1,303 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LoginScreen snapshot matches snapshot 1`] = `
+<View
+  style={
+    {
+      "flex": 1,
+    }
+  }
+>
+  <View
+    colors={
+      [
+        "#fdf6ec",
+        "#f5e6d0",
+      ]
+    }
+    style={
+      {
+        "flex": 1,
+      }
+    }
+  >
+    <View
+      onLayout={[Function]}
+      style={
+        [
+          {
+            "flex": 1,
+          },
+          {
+            "paddingBottom": 0,
+          },
+        ]
+      }
+    >
+      <RCTScrollView
+        contentContainerStyle={
+          {
+            "flexGrow": 1,
+            "paddingBottom": 48,
+            "paddingHorizontal": 24,
+            "paddingTop": 88,
+          }
+        }
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View>
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "marginBottom": 28,
+              }
+            }
+          >
+            <Text
+              style={
+                {
+                  "color": "#b5651d",
+                  "fontSize": 11,
+                  "fontWeight": "600",
+                  "letterSpacing": 3.5,
+                  "marginBottom": 4,
+                  "textTransform": "uppercase",
+                }
+              }
+            >
+              Sri Sidheshwar
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#3d1f0a",
+                  "fontSize": 34,
+                  "fontWeight": "700",
+                  "letterSpacing": 0.5,
+                  "lineHeight": 40,
+                }
+              }
+            >
+              SiddhGuru
+            </Text>
+          </View>
+          <View
+            style={
+              {
+                "backgroundColor": "rgba(255,255,255,0.6)",
+                "borderBottomWidth": 0,
+                "borderColor": "rgba(193,127,60,0.15)",
+                "borderTopLeftRadius": 28,
+                "borderTopRightRadius": 28,
+                "borderWidth": 1,
+                "paddingHorizontal": 24,
+                "paddingVertical": 28,
+              }
+            }
+          >
+            <Text
+              style={
+                {
+                  "color": "#b5651d",
+                  "fontSize": 12,
+                  "letterSpacing": 2,
+                  "marginBottom": 16,
+                  "textTransform": "uppercase",
+                }
+              }
+            >
+              Log in
+            </Text>
+            <TextInput
+              autoCapitalize="none"
+              autoComplete="email"
+              editable={true}
+              keyboardType="email-address"
+              onChangeText={[Function]}
+              placeholder="Email"
+              placeholderTextColor="#8b6a4a"
+              style={
+                [
+                  {
+                    "backgroundColor": "rgba(255,255,255,0.9)",
+                    "borderColor": "rgba(193,127,60,0.25)",
+                    "borderRadius": 12,
+                    "borderWidth": 1,
+                    "color": "#3d1f0a",
+                    "fontSize": 16,
+                    "marginBottom": 12,
+                    "padding": 16,
+                    "width": "100%",
+                  },
+                  null,
+                ]
+              }
+              value=""
+            />
+            <View
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": false,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              onClick={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={
+                {
+                  "borderRadius": 14,
+                  "elevation": 6,
+                  "marginBottom": 14,
+                  "opacity": 1,
+                  "overflow": "hidden",
+                  "shadowColor": "#8b4513",
+                  "shadowOffset": {
+                    "height": 4,
+                    "width": 0,
+                  },
+                  "shadowOpacity": 0.35,
+                  "shadowRadius": 12,
+                  "width": "100%",
+                }
+              }
+            >
+              <View
+                colors={
+                  [
+                    "#c17f3c",
+                    "#8b4513",
+                  ]
+                }
+                end={
+                  {
+                    "x": 1,
+                    "y": 1,
+                  }
+                }
+                start={
+                  {
+                    "x": 0,
+                    "y": 0,
+                  }
+                }
+                style={
+                  {
+                    "alignItems": "center",
+                    "justifyContent": "center",
+                    "minHeight": 56,
+                    "paddingVertical": 16,
+                  }
+                }
+              >
+                <Text
+                  style={
+                    {
+                      "color": "#fdf6ec",
+                      "fontSize": 16,
+                      "fontWeight": "700",
+                      "letterSpacing": 0.8,
+                    }
+                  }
+                >
+                  Log in
+                </Text>
+              </View>
+            </View>
+            <View
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": undefined,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              onClick={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={
+                {
+                  "alignItems": "center",
+                  "opacity": 1,
+                  "paddingVertical": 12,
+                }
+              }
+            >
+              <Text
+                style={
+                  {
+                    "color": "#8b4513",
+                    "fontSize": 14,
+                    "letterSpacing": 0.3,
+                  }
+                }
+              >
+                Don't have an account? 
+                <Text
+                  style={
+                    {
+                      "fontWeight": "700",
+                    }
+                  }
+                >
+                  Sign up
+                </Text>
+              </Text>
+            </View>
+          </View>
+          <Text
+            style={
+              {
+                "color": "rgba(139,69,19,0.5)",
+                "fontSize": 10,
+                "letterSpacing": 0.5,
+                "marginTop": 24,
+                "textAlign": "center",
+              }
+            }
+          >
+            Sri SiddhGuru · Vedic Wisdom · Ancient Path
+          </Text>
+        </View>
+      </RCTScrollView>
+    </View>
+  </View>
+</View>
+`;

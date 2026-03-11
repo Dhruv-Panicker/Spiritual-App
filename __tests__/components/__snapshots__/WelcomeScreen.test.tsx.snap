@@ -1,0 +1,293 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`WelcomeScreen snapshot matches snapshot 1`] = `
+<View
+  style={
+    {
+      "flex": 1,
+    }
+  }
+>
+  <View
+    colors={
+      [
+        "#fdf6ec",
+        "#f5e6d0",
+      ]
+    }
+    style={
+      {
+        "flex": 1,
+      }
+    }
+  >
+    <RCTScrollView
+      contentContainerStyle={
+        {
+          "flexGrow": 1,
+          "paddingBottom": 48,
+          "paddingHorizontal": 24,
+          "paddingTop": 88,
+        }
+      }
+      showsVerticalScrollIndicator={false}
+    >
+      <View>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "marginBottom": 24,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#b5651d",
+                "fontSize": 11,
+                "fontWeight": "600",
+                "letterSpacing": 3.5,
+                "marginBottom": 4,
+                "textTransform": "uppercase",
+              }
+            }
+          >
+            Sri Sidheshwar
+          </Text>
+          <Text
+            style={
+              {
+                "color": "#3d1f0a",
+                "fontSize": 34,
+                "fontWeight": "700",
+                "letterSpacing": 0.5,
+                "lineHeight": 40,
+              }
+            }
+          >
+            SiddhGuru
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "justifyContent": "center",
+              "marginBottom": 8,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "backgroundColor": "rgba(255,255,255,0.3)",
+                "borderColor": "rgba(193,127,60,0.25)",
+                "borderRadius": 170,
+                "borderWidth": 2,
+                "height": 340,
+                "overflow": "hidden",
+                "width": 340,
+              }
+            }
+          >
+            <Image
+              resizeMode="cover"
+              source={
+                {
+                  "testUri": "../../../assets/images/gurudev-main-image.png",
+                }
+              }
+              style={
+                {
+                  "height": "100%",
+                  "width": "100%",
+                }
+              }
+            />
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "rgba(255,255,255,0.6)",
+              "borderBottomWidth": 0,
+              "borderColor": "rgba(193,127,60,0.15)",
+              "borderTopLeftRadius": 28,
+              "borderTopRightRadius": 28,
+              "borderWidth": 1,
+              "marginTop": 24,
+              "paddingHorizontal": 24,
+              "paddingVertical": 28,
+            }
+          }
+        >
+          <View
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "borderRadius": 14,
+                "elevation": 6,
+                "marginBottom": 14,
+                "opacity": 1,
+                "overflow": "hidden",
+                "shadowColor": "#8b4513",
+                "shadowOffset": {
+                  "height": 4,
+                  "width": 0,
+                },
+                "shadowOpacity": 0.35,
+                "shadowRadius": 12,
+                "width": "100%",
+              }
+            }
+          >
+            <View
+              colors={
+                [
+                  "#c17f3c",
+                  "#8b4513",
+                ]
+              }
+              end={
+                {
+                  "x": 1,
+                  "y": 1,
+                }
+              }
+              start={
+                {
+                  "x": 0,
+                  "y": 0,
+                }
+              }
+              style={
+                {
+                  "alignItems": "center",
+                  "justifyContent": "center",
+                  "paddingVertical": 16,
+                }
+              }
+            >
+              <Text
+                style={
+                  {
+                    "color": "#fdf6ec",
+                    "fontSize": 16,
+                    "fontWeight": "700",
+                    "letterSpacing": 0.8,
+                  }
+                }
+              >
+                Sign Up
+              </Text>
+            </View>
+          </View>
+          <View
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "borderColor": "rgba(193,127,60,0.35)",
+                "borderRadius": 14,
+                "borderWidth": 1.5,
+                "justifyContent": "center",
+                "opacity": 1,
+                "paddingVertical": 14,
+                "width": "100%",
+              }
+            }
+          >
+            <Text
+              style={
+                {
+                  "color": "#8b4513",
+                  "fontSize": 14,
+                  "letterSpacing": 0.3,
+                }
+              }
+            >
+              Already have an account? 
+              <Text
+                style={
+                  {
+                    "fontWeight": "700",
+                  }
+                }
+              >
+                Log in
+              </Text>
+            </Text>
+          </View>
+          <Text
+            style={
+              {
+                "color": "rgba(139,69,19,0.5)",
+                "fontSize": 10,
+                "letterSpacing": 0.5,
+                "marginTop": 20,
+                "textAlign": "center",
+              }
+            }
+          >
+            Sri SiddhGuru · Vedic Wisdom · Ancient Path
+          </Text>
+        </View>
+      </View>
+    </RCTScrollView>
+  </View>
+</View>
+`;
