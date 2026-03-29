@@ -1,5 +1,11 @@
+import * as Sentry from '@sentry/react-native';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+
+Sentry.init({
+  dsn: 'https://64cb5a6d7bb3c0d945609f9444e04654@o4511130079789056.ingest.us.sentry.io/4511130095648768',
+  enabled: !__DEV__,
+});
 import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider } from '@/contexts/AuthContext';

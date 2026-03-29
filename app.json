@@ -37,6 +37,7 @@
     },
     "plugins": [
       "expo-router",
+      "@sentry/react-native/expo",
       ["expo-notifications", { "icon": "./assets/images/gurudev-app-icon.png", "color": "#c17f3c", "defaultChannel": "default" }],
       ["expo-build-properties", { "android": { "kotlinVersion": "2.0.21" } }]
     ],

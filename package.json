@@ -17,6 +17,7 @@
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-navigation/bottom-tabs": "^7.4.4",
     "@react-navigation/native": "^7.1.16",
+    "@sentry/react-native": "~6.10.0",
     "expo": "~52.0.0",
     "expo-asset": "~10.0.9",
     "expo-blur": "~13.0.2",
