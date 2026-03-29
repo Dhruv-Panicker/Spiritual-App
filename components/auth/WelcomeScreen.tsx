@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Linking,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS } from '@/constants/SpiritualColors';
@@ -72,6 +73,23 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onSignUp, onLogIn 
 
             <Text style={styles.footerTagline}>
               Sri SiddhGuru · Vedic Wisdom · Ancient Path
+            </Text>
+
+            <Text style={styles.legalText}>
+              By continuing you agree to our{' '}
+              <Text
+                style={styles.legalLink}
+                onPress={() => Linking.openURL('https://doc-hosting.flycricket.io/siddhguruvar-terms-of-use/bacbd503-a1ea-4f96-91cc-c3efd01a9f99/terms')}
+              >
+                Terms of Use
+              </Text>
+              {' '}and{' '}
+              <Text
+                style={styles.legalLink}
+                onPress={() => Linking.openURL('https://doc-hosting.flycricket.io/siddhguruvar-privacy-policy/a72d3945-a61a-448e-a4ac-90176d28e8bc/privacy')}
+              >
+                Privacy Policy
+              </Text>
             </Text>
           </View>
         </ScrollView>
@@ -187,5 +205,17 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginTop: 20,
     textAlign: 'center',
+  },
+  legalText: {
+    fontSize: 10,
+    color: 'rgba(139,69,19,0.45)',
+    textAlign: 'center',
+    marginTop: 10,
+    lineHeight: 16,
+    paddingHorizontal: 8,
+  },
+  legalLink: {
+    color: SPIRITUAL_COLORS.accent,
+    textDecorationLine: 'underline',
   },
 });

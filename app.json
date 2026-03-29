@@ -15,9 +15,14 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.spiritualapp.gurudarshan",
-      "infoPlist": { "ITSAppUsesNonExemptEncryption": false }
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSPhotoLibraryUsageDescription": "Choose a photo to attach to your prayer submission."
+      }
     },
     "android": {
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/gurudev-app-icon.png",
         "backgroundColor": "#ffffff"
