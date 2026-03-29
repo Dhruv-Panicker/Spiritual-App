@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Platform,
+  Linking,
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
@@ -261,6 +262,19 @@ export default function HomeScreen() {
             </Text>
             <Text style={styles.gurudevSaysAuthor}>— Sri Sidheshwar Brahmrishi</Text>
           </View>
+
+          <View style={styles.footerSpacer} />
+
+          <TouchableOpacity
+            onPress={() =>
+              Linking.openURL(
+                `mailto:noreply.gurudevapp@gmail.com?subject=Account%20Deletion%20Request&body=Please%20delete%20my%20account%20and%20all%20associated%20data.%0A%0AMy%20email%3A%20${encodeURIComponent(user?.email ?? '')}`
+              )
+            }
+            activeOpacity={0.6}
+          >
+            <Text style={styles.deleteAccountText}>Delete my account</Text>
+          </TouchableOpacity>
 
           <View style={styles.footerSpacer} />
         </ScrollView>
@@ -519,5 +533,12 @@ const styles = StyleSheet.create({
   },
   footerSpacer: {
     height: 24,
+  },
+  deleteAccountText: {
+    fontSize: 11,
+    color: 'rgba(139,69,19,0.35)',
+    textAlign: 'center',
+    textDecorationLine: 'underline',
+    marginBottom: 8,
   },
 });

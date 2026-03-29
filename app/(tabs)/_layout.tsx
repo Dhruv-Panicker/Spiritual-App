@@ -33,6 +33,7 @@ function TabLayoutContent() {
         name="index"
         options={{
           title: 'Home',
+          tabBarAccessibilityLabel: 'Home',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'home' : 'home-outline'} size={28} color={color} />
           ),
@@ -42,6 +43,7 @@ function TabLayoutContent() {
         name="quotes"
         options={{
           title: 'Quotes',
+          tabBarAccessibilityLabel: 'Daily Quotes',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'book' : 'book-outline'} size={28} color={color} />
           ),
@@ -51,6 +53,7 @@ function TabLayoutContent() {
         name="videos"
         options={{
           title: 'Videos',
+          tabBarAccessibilityLabel: 'Videos',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'play-circle' : 'play-circle-outline'} size={28} color={color} />
           ),
@@ -60,6 +63,7 @@ function TabLayoutContent() {
         name="calendar"
         options={{
           title: 'Calendar',
+          tabBarAccessibilityLabel: 'Events Calendar',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'calendar' : 'calendar-outline'} size={28} color={color} />
           ),
@@ -69,6 +73,7 @@ function TabLayoutContent() {
         name="gurudev"
         options={{
           title: 'Siddhguru',
+          tabBarAccessibilityLabel: 'About Siddhguru',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'person' : 'person-outline'} size={28} color={color} />
           ),
@@ -78,6 +83,7 @@ function TabLayoutContent() {
         name="prayer"
         options={{
           title: 'Prayer',
+          tabBarAccessibilityLabel: 'Send a Prayer',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'heart' : 'heart-outline'} size={28} color={color} />
           ),
@@ -86,8 +92,9 @@ function TabLayoutContent() {
       <Tabs.Screen
         name="admin"
         options={{
-          href: adminTabHref, // null completely hides the tab from tab bar
+          href: adminTabHref,
           title: 'Admin',
+          tabBarAccessibilityLabel: 'Admin Panel',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'settings' : 'settings-outline'} size={28} color={color} />
           ),
