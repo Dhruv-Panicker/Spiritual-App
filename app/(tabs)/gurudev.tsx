@@ -15,9 +15,9 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
-import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS, SPIRITUAL_TYPOGRAPHY } from '@/constants/SpiritualColors';
+import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const { height: screenHeight } = Dimensions.get('window');
 
 export default function GurudevScreen() {
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -105,72 +105,25 @@ export default function GurudevScreen() {
 
           {/* Content Card */}
           <Animated.View style={[styles.contentCard, { opacity: fadeAnim }]}>
-            {/* Drop Cap Introduction */}
-            <View style={styles.introSection}>
-              <View style={styles.dropCapContainer}>
-                <Text style={styles.dropCap}>I</Text>
-                <Text style={styles.introText}>
-                  n the sacred tradition of spiritual awakening, our beloved Siddhguru stands as a living embodiment of divine wisdom and unconditional love. For over three decades, he has dedicated his life to guiding souls on their journey toward inner peace and self-realization.
-                </Text>
-              </View>
-            </View>
-
-            {/* Biography Content */}
             <View style={styles.biographySection}>
               <Text style={styles.bodyText}>
-                Born into a family of spiritual seekers, Siddhguru's path was illuminated from an early age. His profound understanding of ancient Vedantic teachings, combined with a deep compassion for all beings, has touched millions of hearts across the globe.
-              </Text>
-
-              {/* Quote Section */}
-              <View style={styles.quoteContainer}>
-                <Text style={styles.quoteText}>
-                  "The purpose of life is not to be happy, but to be useful, to be honorable, to be compassionate, to have it make some difference that you have lived and lived well."
-                </Text>
-                <Text style={styles.quoteAuthor}>— Siddhguru</Text>
-              </View>
-
-              <Text style={styles.bodyText}>
-                Through his teachings, Siddhguru emphasizes the practical application of spiritual principles in daily life. His approach bridges the ancient wisdom of the East with the practical needs of modern living, making profound truths accessible to seekers from all walks of life.
+                Siddhguru, also often known as Gurudev, spent over 50 years in deep, uninterrupted meditation and self-inquiry. That sustained focus has given him an unprecedented level of clarity about the rhythm of life and how to apply ancient wisdom to our modern challenges.
               </Text>
 
               <Text style={styles.bodyText}>
-                His ashram serves as a sanctuary where thousands come seeking solace, wisdom, and spiritual guidance. The transformative power of his presence and teachings continues to inspire a global community of practitioners committed to inner growth and service to humanity.
+                Over the past 20 years, he has travelled to 190+ countries and supported millions, uplifting them with his divine capability. He has mastered the eight ‘siddhis’ — abilities described in ancient traditions that reflect a high level of inner development and control over the mind. While these abilities are often framed in spiritual language, those who spend time with him tend to experience something more understandable: a clarity of thought and a quiet mind for the first time that is difficult to explain but easy to recognize.
               </Text>
 
-              {/* Core Teachings Section */}
-              <LinearGradient
-                colors={SPIRITUAL_GRADIENTS.meditation}
-                style={styles.teachingsContainer}
-              >
-                <Animated.View style={[styles.teachingsOmContainer, { transform: [{ scale: pulseAnim }] }]}>
-                  <Image
-                    source={require('@/assets/images/om_logo_transparent.png')}
-                    style={styles.teachingsOm}
-                    resizeMode="contain"
-                  />
-                </Animated.View>
-                <Text style={styles.teachingsTitle}>Core Teachings</Text>
-                <View style={styles.teachingsGrid}>
-                  <View style={styles.teachingItem}>
-                    <Text style={styles.teachingTitle}>Meditation</Text>
-                    <Text style={styles.teachingDesc}>The path to inner silence and self-discovery</Text>
-                  </View>
-                  <View style={styles.teachingItem}>
-                    <Text style={styles.teachingTitle}>Service</Text>
-                    <Text style={styles.teachingDesc}>Selfless action as spiritual practice</Text>
-                  </View>
-                  <View style={styles.teachingItem}>
-                    <Text style={styles.teachingTitle}>Wisdom</Text>
-                    <Text style={styles.teachingDesc}>Ancient knowledge for modern living</Text>
-                  </View>
-                </View>
-              </LinearGradient>
+              <Text style={styles.bodyText}>
+                He has advised world leaders including former presidents, prime ministers, and business leaders on navigating complex decisions during periods of uncertainty and pressure.
+              </Text>
 
               <Text style={styles.bodyText}>
-                Today, Siddhguru's mission continues to expand, reaching new generations of seekers through technology while maintaining the timeless essence of spiritual transmission. His message remains simple yet profound: {' '}
-                <Text style={styles.emphasizedText}>
-                  "Find the divine within yourself, and you will see it everywhere."
-                </Text>
+                His ashram, or monastery, is located in Tirupati, India, where all programs are offered freely. The intention is simple: to make self-development and self-upliftment accessible to anyone without barriers.
+              </Text>
+
+              <Text style={styles.bodyText}>
+                At the core of his teaching is living not for happiness, but with happiness. Some describe his teaching in spiritual terms, while others simply experience it as a way to think more clearly and live with more direction.
               </Text>
             </View>
           </Animated.View>
@@ -178,7 +131,7 @@ export default function GurudevScreen() {
           {/* Share App CTA */}
           <View style={styles.shareSection}>
             <LinearGradient
-              colors={SPIRITUAL_GRADIENTS.divine}
+              colors={['#faf5ef', '#f0e4d4']}
               style={styles.shareCard}
             >
               <Text style={styles.shareTitle}>Share the Teaching</Text>
@@ -190,7 +143,7 @@ export default function GurudevScreen() {
                 onPress={shareApp}
                 activeOpacity={0.8}
               >
-                <Ionicons name="share-outline" size={20} color={SPIRITUAL_COLORS.foreground} />
+                <Ionicons name="share-outline" size={20} color={SPIRITUAL_COLORS.primary} />
                 <Text style={styles.shareButtonText}>Share App</Text>
               </TouchableOpacity>
             </LinearGradient>
@@ -262,28 +215,6 @@ const styles = StyleSheet.create({
     padding: 24,
     ...SPIRITUAL_SHADOWS.divine,
   },
-  introSection: {
-    marginBottom: 24,
-  },
-  dropCapContainer: {
-    flexDirection: 'row',
-  },
-  dropCap: {
-    fontSize: 64,
-    fontWeight: 'bold',
-    color: SPIRITUAL_COLORS.primary,
-    lineHeight: 64,
-    marginRight: 8,
-    marginTop: 4,
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
-  },
-  introText: {
-    flex: 1,
-    fontSize: 18,
-    lineHeight: 28,
-    color: SPIRITUAL_COLORS.foreground,
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
-  },
   biographySection: {
     gap: 20,
   },
@@ -293,71 +224,6 @@ const styles = StyleSheet.create({
     color: SPIRITUAL_COLORS.foreground,
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
-  quoteContainer: {
-    backgroundColor: 'rgba(244, 228, 193, 0.3)',
-    borderRadius: 12,
-    padding: 24,
-    marginVertical: 8,
-  },
-  quoteText: {
-    ...SPIRITUAL_TYPOGRAPHY.quoteText,
-    fontSize: 18,
-    lineHeight: 28,
-    color: SPIRITUAL_COLORS.primary,
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
-  },
-  quoteAuthor: {
-    fontSize: 14,
-    color: SPIRITUAL_COLORS.textMuted,
-    textAlign: 'right',
-    marginTop: 12,
-    fontStyle: 'normal',
-  },
-  teachingsContainer: {
-    borderRadius: 12,
-    padding: 24,
-    alignItems: 'center',
-    marginVertical: 8,
-  },
-  teachingsOmContainer: {
-    marginBottom: 16,
-  },
-  teachingsOm: {
-    width: 64,
-    height: 64,
-    tintColor: SPIRITUAL_COLORS.primaryForeground,
-  },
-  teachingsTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: SPIRITUAL_COLORS.primaryForeground,
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  teachingsGrid: {
-    gap: 16,
-    width: '100%',
-  },
-  teachingItem: {
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  teachingTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: SPIRITUAL_COLORS.primaryForeground,
-    marginBottom: 4,
-  },
-  teachingDesc: {
-    fontSize: 14,
-    color: 'rgba(253, 248, 243, 0.9)',
-    textAlign: 'center',
-  },
-  emphasizedText: {
-    color: SPIRITUAL_COLORS.primary,
-    fontWeight: '600',
-    fontStyle: 'italic',
-  },
   shareSection: {
     margin: 16,
     marginTop: 24,
@@ -366,34 +232,37 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 24,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(193,127,60,0.18)',
     ...SPIRITUAL_SHADOWS.peaceful,
   },
   shareTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: SPIRITUAL_COLORS.primaryForeground,
+    color: SPIRITUAL_COLORS.foreground,
     marginBottom: 8,
     textAlign: 'center',
   },
   shareSubtitle: {
     fontSize: 16,
-    color: 'rgba(253, 248, 243, 0.9)',
+    color: SPIRITUAL_COLORS.textMuted,
     textAlign: 'center',
     marginBottom: 20,
   },
   shareButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SPIRITUAL_COLORS.secondary,
+    backgroundColor: 'rgba(255,255,255,0.75)',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,
-    ...SPIRITUAL_SHADOWS.card,
+    borderWidth: 1,
+    borderColor: 'rgba(193,127,60,0.22)',
   },
   shareButtonText: {
     marginLeft: 8,
     fontSize: 16,
     fontWeight: '600',
-    color: SPIRITUAL_COLORS.foreground,
+    color: SPIRITUAL_COLORS.primary,
   },
 });
