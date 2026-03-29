@@ -54,3 +54,4 @@ build/
 .yarn-integrity
 
 app-example
+coverage/
