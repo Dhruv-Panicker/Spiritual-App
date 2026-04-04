@@ -16,7 +16,7 @@ jest.mock('@/config/env', () => ({
     googleAppsScriptWebhookUrl: 'https://script.google.com/test',
     adminEmails: [],
     prayerRecipientEmail: 'prayer@example.com',
-    appName: 'Spiritual Wisdom',
+    appName: 'Siddhguru',
     appStoreLink: 'https://apps.apple.com/test-app',
     playStoreLink: 'https://play.google.com/test-app',
     webAppLink: 'https://test.spiritual.app',
@@ -100,7 +100,7 @@ describe('shareQuote()', () => {
     await shareService.shareQuote(mockQuote);
 
     const call = mockShare.mock.calls[0][0];
-    expect(call.message).toContain('Spiritual Wisdom');
+    expect(call.message).toContain('Siddhguru');
   });
 
   it('rethrows errors from Share.share', async () => {

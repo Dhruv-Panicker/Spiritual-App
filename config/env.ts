@@ -55,9 +55,9 @@ export const env = {
   prayerRecipientEmail: getEnvVar('PRAYER_RECIPIENT_EMAIL', 'noreply.gurudevapp@gmail.com'),
 
   // Share / app links (optional; defaults used if not set)
-  appName: getEnvVar('APP_NAME', 'Spiritual Wisdom'),
-  appStoreLink: getEnvVar('APP_STORE_LINK', 'https://apps.apple.com/app/spiritual-wisdom'),
-  playStoreLink: getEnvVar('PLAY_STORE_LINK', 'https://play.google.com/store/apps/details?id=com.spiritualwisdom'),
+  appName: getEnvVar('APP_NAME', 'Siddhguru'),
+  appStoreLink: getEnvVar('APP_STORE_LINK', 'https://apps.apple.com/app/siddhguru/id6761345708'),
+  playStoreLink: getEnvVar('PLAY_STORE_LINK', 'https://play.google.com/store/apps/details?id=com.spiritualapp.gurudarshan'),
   webAppLink: getEnvVar('WEB_APP_LINK', 'https://spiritualwisdom.app'),
 } as const;
 

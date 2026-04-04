@@ -238,7 +238,7 @@ class NotificationService {
       // Try immediate trigger first (works better on iOS)
       const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
-          title: notificationData.title || 'Spiritual Wisdom',
+          title: notificationData.title || 'Siddhguru',
           body: notificationData.body,
           sound: 'default',
           badge: 1,
@@ -285,7 +285,7 @@ class NotificationService {
       const messages = pushTokens.map(token => ({
         to: token,
         sound: 'default',
-        title: notificationData.title || 'Spiritual Wisdom',
+        title: notificationData.title || 'Siddhguru',
         body: notificationData.body,
         data: {
           type: notificationData.type,
@@ -365,7 +365,7 @@ class NotificationService {
     return await this.sendPushNotification(
       {
         type: 'general',
-        title: '🙏 Spiritual Wisdom',
+        title: '🙏 Siddhguru',
         body: message,
       },
       pushTokens
