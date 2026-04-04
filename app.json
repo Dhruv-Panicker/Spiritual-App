@@ -2,7 +2,7 @@
   "expo": {
     "name": "Siddhguru",
     "slug": "spiritual-app",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/gurudev-app-icon.png",
     "scheme": "guru-darshan",
@@ -15,7 +15,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.spiritualapp.gurudarshan",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSPhotoLibraryUsageDescription": "Choose a photo to attach to your prayer submission."
