@@ -6,10 +6,10 @@ import { env } from '@/config/env';
 
 class ShareService {
   private get appName(): string {
-    return env.appName || 'Spiritual Wisdom';
+    return env.appName || 'Siddhguru';
   }
   private get appStoreLink(): string {
-    return env.appStoreLink || 'https://apps.apple.com/app/spiritual-wisdom';
+    return env.appStoreLink || 'https://apps.apple.com/app/siddhguru/id6761345708';
   }
   private get playStoreLink(): string {
     return env.playStoreLink || 'https://play.google.com/store/apps/details?id=com.spiritualwisdom';
