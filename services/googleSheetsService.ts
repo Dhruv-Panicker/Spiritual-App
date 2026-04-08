@@ -82,7 +82,7 @@ class GoogleSheetsService {
   private async readSheet(sheetName: string, range: string = ''): Promise<any[][]> {
     try {
       const url = `${this.BASE_URL}/${sheetName}${range ? `!${range}` : ''}?key=${this.API_KEY}`;
-      console.log('📖 Reading sheet:', url);
+      console.log('📖 Reading sheet:', sheetName);
       
       const response = await fetch(url);
       
@@ -120,7 +120,7 @@ class GoogleSheetsService {
         }
       };
 
-      console.log('📤 Sending to webhook:', this.webhookUrl);
+      console.log('📤 Sending to webhook...');
 
       const response = await fetch(this.webhookUrl, {
         method: 'POST',
@@ -153,7 +153,6 @@ class GoogleSheetsService {
     console.log('Login Time:', userData.loginTime);
     console.log('Is Admin:', userData.isAdmin);
     console.log('Platform:', Platform.OS);
-    console.log('Webhook URL:', this.webhookUrl);
     console.log('========================');
   }
 
@@ -261,7 +260,7 @@ class GoogleSheetsService {
         data: data
       };
       
-      console.log('📤 Sending to Apps Script:', this.webhookUrl);
+      console.log('📤 Sending to Apps Script...');
       
       const response = await fetch(this.webhookUrl, {
         method: 'POST',
