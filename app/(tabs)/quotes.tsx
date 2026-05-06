@@ -5,7 +5,6 @@ import {
   Image,
   ScrollView,
   TouchableOpacity,
-  StyleSheet,
   ActivityIndicator,
   Platform,
 } from 'react-native';
@@ -15,7 +14,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuotes, Quote } from '@/contexts/QuotesContext';
 import { shareService } from '@/services/shareService';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS, SPIRITUAL_TYPOGRAPHY } from '@/constants/SpiritualColors';
+import { styles } from './styles/quotes.styles';
 
+// mapping of colors to categories
 const TAG_COLORS: { bg: string; text: string }[] = [
   { bg: '#c17f3c', text: '#fff' },
   { bg: '#a67c52', text: '#fff' },
@@ -32,6 +33,7 @@ function getTagColor(category: string): { bg: string; text: string } {
   let hash = 0;
   for (let i = 0; i < normalized.length; i++) {
     hash = (hash << 5) - hash + normalized.charCodeAt(i);
+    //value to signed 32 bit integer
     hash |= 0;
   }
   const index = Math.abs(hash) % TAG_COLORS.length;
@@ -196,149 +198,3 @@ export default function QuotesScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  gradient: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: SPIRITUAL_COLORS.textMuted,
-  },
-  header: {
-    alignItems: 'center',
-    paddingTop: 60,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-  },
-  omHeaderLogo: {
-    width: 60,
-    height: 60,
-    marginBottom: 16,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: SPIRITUAL_COLORS.foreground,
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: SPIRITUAL_COLORS.textMuted,
-    textAlign: 'center',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 100, // Space for tab bar
-  },
-  quoteCard: {
-    backgroundColor: SPIRITUAL_COLORS.cardBackground,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    ...SPIRITUAL_SHADOWS.card,
-  },
-  quoteHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  omQuoteLogo: {
-    width: 32,
-    height: 32,
-  },
-  date: {
-    fontSize: 12,
-    color: SPIRITUAL_COLORS.textMuted,
-  },
-  quoteText: {
-    marginBottom: 12,
-  },
-  author: {
-    marginBottom: 12,
-  },
-  categoryBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginBottom: 12,
-  },
-  categoryText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  reflectionContainer: {
-    backgroundColor: SPIRITUAL_COLORS.accent,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  reflectionLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: SPIRITUAL_COLORS.foreground,
-    marginBottom: 8,
-  },
-  reflectionText: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    gap: 12,
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    backgroundColor: SPIRITUAL_COLORS.input,
-  },
-  likedButton: {
-    backgroundColor: '#FFE5D9',
-  },
-  actionText: {
-    marginLeft: 8,
-    fontSize: 14,
-    color: SPIRITUAL_COLORS.textMuted,
-    fontWeight: '500',
-  },
-  likedText: {
-    color: SPIRITUAL_COLORS.primary,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: SPIRITUAL_COLORS.foreground,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: SPIRITUAL_COLORS.textMuted,
-    textAlign: 'center',
-  },
-});

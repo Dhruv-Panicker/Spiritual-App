@@ -1,34 +1,17 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Platform } from 'react-native';
-import { SPIRITUAL_COLORS } from '@/constants/SpiritualColors';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { useAuth } from '@/contexts/AuthContext';
+import { tabsScreenOptions } from './styles/_layout.styles';
 
 function TabLayoutContent() {
   const { user } = useAuth();
   
   // Only show admin tab if user exists and is admin
-  // When href is null, the tab is completely hidden from the tab bar
   const adminTabHref = user?.isAdmin === true ? undefined : null;
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: SPIRITUAL_COLORS.tabActive,
-        tabBarInactiveTintColor: SPIRITUAL_COLORS.textMuted,
-        tabBarStyle: {
-          backgroundColor: SPIRITUAL_COLORS.tabBackground,
-          borderTopColor: SPIRITUAL_COLORS.border,
-          ...Platform.select({
-            ios: {
-              position: 'absolute',
-            },
-            default: {},
-          }),
-        },
-        headerShown: false,
-      }}>
+    <Tabs screenOptions={tabsScreenOptions}>
       <Tabs.Screen
         name="index"
         options={{

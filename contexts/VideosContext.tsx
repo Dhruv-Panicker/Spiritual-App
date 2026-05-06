@@ -19,7 +19,7 @@ export function VideosProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       const loadedVideos = await googleSheetsService.getVideos();
       setVideos(loadedVideos);
-      console.log(`📺 Loaded ${loadedVideos.length} videos`);
+      console.log(`Loaded ${loadedVideos.length} videos`);
     } catch (error) {
       console.error('Error loading videos:', error);
     } finally {
@@ -36,7 +36,7 @@ export function VideosProvider({ children }: { children: ReactNode }) {
     try {
       const addedVideo = await googleSheetsService.addVideo(newVideo);
       setVideos(prev => [addedVideo, ...prev]);
-      console.log('✅ Video added successfully');
+      console.log('Video added successfully');
     } catch (error) {
       console.error('Error adding video:', error);
       throw error;

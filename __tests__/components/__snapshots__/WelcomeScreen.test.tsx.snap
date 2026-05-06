@@ -285,6 +285,46 @@ exports[`WelcomeScreen snapshot matches snapshot 1`] = `
           >
             Sri SiddhGuru · Vedic Wisdom · Ancient Path
           </Text>
+          <Text
+            style={
+              {
+                "color": "rgba(139,69,19,0.45)",
+                "fontSize": 10,
+                "lineHeight": 16,
+                "marginTop": 10,
+                "paddingHorizontal": 8,
+                "textAlign": "center",
+              }
+            }
+          >
+            By continuing you agree to our
+             
+            <Text
+              onPress={[Function]}
+              style={
+                {
+                  "color": "#b5651d",
+                  "textDecorationLine": "underline",
+                }
+              }
+            >
+              Terms of Use
+            </Text>
+             
+            and
+             
+            <Text
+              onPress={[Function]}
+              style={
+                {
+                  "color": "#b5651d",
+                  "textDecorationLine": "underline",
+                }
+              }
+            >
+              Privacy Policy
+            </Text>
+          </Text>
         </View>
       </View>
     </RCTScrollView>
