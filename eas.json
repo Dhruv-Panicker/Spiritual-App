@@ -1,6 +1,7 @@
 {
   "cli": {
-    "version": ">= 16.23.0"
+    "version": ">= 16.23.0",
+    "appVersionSource": "remote"
   },
   "build": {
     "development": {
@@ -31,7 +32,8 @@
     "production": {
       "autoIncrement": true,
       "ios": {
-        "simulator": false
+        "simulator": false,
+        "image": "macos-sequoia-15.5-xcode-26.0"
       },
       "android": {
         "buildType": "apk"
@@ -45,4 +47,3 @@
     "production": {}
   }
 }
-
