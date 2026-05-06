@@ -3,7 +3,6 @@ import {
   View,
   Text,
   Image,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
   Dimensions,
@@ -18,7 +17,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuotes } from '@/contexts/QuotesContext';
-import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
+import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS } from '@/constants/SpiritualColors';
+import { styles } from './styles/index.styles';
 
 const { width: screenWidth } = Dimensions.get('window');
 const QUOTE_CARD_PADDING = 80;
@@ -27,11 +27,11 @@ const quotePageWidth = screenWidth - QUOTE_CARD_PADDING;
 const ROTATE_QUOTE_INTERVAL_MS = 5000;
 
 const TILE_THEME_COLORS = [
-  '#c17f3c', // copper / amber – Daily Quotes
-  '#a67c52', // warm pastel tan – Calendar
-  '#a0522d', // sienna / rust – Videos
-  '#b07d62', // dusty rose-brown – About Siddhguru
-  '#b5651d', // warm brown-red (accent) – Send Prayer
+  '#c17f3c', // – Daily Quotes
+  '#a67c52', //  – Calendar
+  '#a0522d', // – Videos
+  '#b07d62', // – About Siddhguru
+  '#b5651d', // – Send Prayer
 ] as const;
 
 interface FeatureCardProps {
@@ -81,6 +81,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     if (threeRecentQuotes.length < 2) return;
+    //for the auto rotate of the quotes on the home screen
     const interval = setInterval(() => {
       if (isUserScrolling.current) return;
       const next = (quoteIndex + 1) % threeRecentQuotes.length;
@@ -185,7 +186,7 @@ export default function HomeScreen() {
           {/* Divider */}
           <Text style={styles.divider}>— ✦ —</Text>
 
-          {/* Daily Quotes – shloka-style card, swipable + auto-rotate */}
+          {/* Daily Quotes – swipable + auto-rotate */}
           <View style={styles.dailyQuotesCard}>
             <View style={styles.dailyQuotesAccent} />
             <Text style={styles.dailyQuotesLabel}>☀ Daily Quotes</Text>
@@ -282,263 +283,3 @@ export default function HomeScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  gradient: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 100,
-    paddingHorizontal: 20,
-  },
-  header: {
-    paddingTop: 56,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(139,69,19,0.12)',
-  },
-  headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-  },
-  headerLeft: {
-    flex: 1,
-    alignItems: 'flex-start',
-  },
-  omLogo: {
-    width: 80,
-    height: 80,
-  },
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1.5,
-    borderColor: 'rgba(139,69,19,0.25)',
-  },
-  logoutText: {
-    marginLeft: 6,
-    fontSize: 12,
-    fontWeight: '600',
-    color: SPIRITUAL_COLORS.primary,
-    letterSpacing: 0.5,
-  },
-  hero: {
-    paddingTop: 24,
-    paddingBottom: 8,
-    alignItems: 'center',
-  },
-  heroMainTitle: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: SPIRITUAL_COLORS.foreground,
-    letterSpacing: 1,
-    marginBottom: 6,
-    textAlign: 'center',
-  },
-  heroSubTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: SPIRITUAL_COLORS.accent,
-    letterSpacing: 0.5,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  heroDescriptionWrap: {
-    borderLeftWidth: 2,
-    borderLeftColor: 'rgba(193,127,60,0.4)',
-    paddingLeft: 12,
-    alignSelf: 'stretch',
-    marginHorizontal: 8,
-  },
-  heroDescription: {
-    fontSize: 14,
-    color: SPIRITUAL_COLORS.textMuted,
-    fontStyle: 'italic',
-    lineHeight: 22,
-    textAlign: 'center',
-  },
-  divider: {
-    textAlign: 'center',
-    color: 'rgba(139,69,19,0.3)',
-    fontSize: 16,
-    marginVertical: 18,
-    letterSpacing: 6,
-  },
-  dailyQuotesCard: {
-    backgroundColor: 'rgba(255,255,255,0.7)',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(193,127,60,0.2)',
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    marginBottom: 24,
-    overflow: 'hidden',
-    ...SPIRITUAL_SHADOWS.card,
-  },
-  dailyQuotesAccent: {
-    position: 'absolute',
-    top: 0,
-    left: 20,
-    right: 20,
-    height: 2,
-    backgroundColor: SPIRITUAL_COLORS.primary,
-    borderRadius: 1,
-  },
-  dailyQuotesLabel: {
-    fontSize: 10,
-    color: SPIRITUAL_COLORS.accent,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  quoteContent: {
-    minHeight: 60,
-  },
-  quoteScrollContent: {},
-  quotePage: {
-    paddingHorizontal: 4,
-    minHeight: 60,
-    justifyContent: 'center',
-  },
-  dailyQuoteText: {
-    fontSize: 16,
-    color: '#5a2d0c',
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 8,
-    fontWeight: '600',
-  },
-  dailyQuoteAuthor: {
-    fontSize: 12,
-    color: SPIRITUAL_COLORS.textMuted,
-    textAlign: 'center',
-    fontStyle: 'italic',
-  },
-  dailyQuotePlaceholder: {
-    fontSize: 14,
-    color: SPIRITUAL_COLORS.textMuted,
-    textAlign: 'center',
-    fontStyle: 'italic',
-  },
-  dots: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 6,
-    marginTop: 14,
-  },
-  dot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: 'rgba(193,127,60,0.25)',
-  },
-  dotActive: {
-    width: 18,
-    backgroundColor: SPIRITUAL_COLORS.primary,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: SPIRITUAL_COLORS.foreground,
-    marginBottom: 14,
-  },
-  featuresGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  featureCard: {
-    width: (screenWidth - 52) / 2,
-    marginBottom: 12,
-    borderRadius: 14,
-    overflow: 'hidden',
-  },
-  featureCardFullWidth: {
-    width: '100%',
-  },
-  featureCardInner: {
-    backgroundColor: 'rgba(255,255,255,0.65)',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(193,127,60,0.18)',
-    paddingVertical: 16,
-    paddingHorizontal: 14,
-    minHeight: 120,
-    position: 'relative',
-    ...SPIRITUAL_SHADOWS.card,
-  },
-  featureAccent: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: 3,
-    height: '40%',
-    borderTopLeftRadius: 14,
-  },
-  featureIconWrap: {
-    marginBottom: 8,
-  },
-  featureTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  featureDescription: {
-    fontSize: 11,
-    color: SPIRITUAL_COLORS.textMuted,
-    lineHeight: 16,
-  },
-  gurudevSaysCard: {
-    marginTop: 24,
-    borderRadius: 14,
-    paddingVertical: 16,
-    paddingHorizontal: 18,
-    backgroundColor: 'rgba(255,255,255,0.5)',
-    borderWidth: 1,
-    borderColor: 'rgba(193,127,60,0.2)',
-  },
-  gurudevSaysLabel: {
-    fontSize: 10,
-    color: SPIRITUAL_COLORS.accent,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  gurudevSaysText: {
-    fontSize: 14,
-    color: '#5a2d0c',
-    fontStyle: 'italic',
-    lineHeight: 22,
-    textAlign: 'center',
-  },
-  gurudevSaysAuthor: {
-    fontSize: 11,
-    color: SPIRITUAL_COLORS.accent,
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  footerSpacer: {
-    height: 24,
-  },
-  deleteAccountText: {
-    fontSize: 11,
-    color: 'rgba(139,69,19,0.35)',
-    textAlign: 'center',
-    textDecorationLine: 'underline',
-    marginBottom: 8,
-  },
-});

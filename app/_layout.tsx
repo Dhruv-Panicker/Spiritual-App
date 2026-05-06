@@ -24,9 +24,9 @@ export default function RootLayout() {
     (async () => {
       try {
         await notificationService.initialize();
-        console.log('✅ Notification service initialized');
+        console.log('Notification service initialized');
       } catch (error) {
-        console.error('❌ Failed to initialize notification service on app start:', error);
+        console.error('Failed to initialize notification service on app start:', error);
       }
     })();
 

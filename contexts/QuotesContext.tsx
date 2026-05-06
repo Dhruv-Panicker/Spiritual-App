@@ -36,7 +36,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     try {
       const addedQuote = await googleSheetsService.addQuote(newQuote);
       setQuotes(prev => [addedQuote, ...prev]);
-      console.log('✅ Quote added successfully');
+      console.log('Quote added successfully');
     } catch (error) {
       console.error('Error adding quote:', error);
       throw error;

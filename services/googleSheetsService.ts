@@ -72,7 +72,7 @@ class GoogleSheetsService {
     
     // Validate that required config is present
     if (!this.webhookUrl || !this.SHEET_ID || !this.API_KEY) {
-      console.error('❌ Missing required Google Sheets configuration. Please check your environment variables.');
+      console.error('Missing required Google Sheets configuration. Please check your environment variables.');
     }
   }
 
@@ -82,21 +82,23 @@ class GoogleSheetsService {
   private async readSheet(sheetName: string, range: string = ''): Promise<any[][]> {
     try {
       const url = `${this.BASE_URL}/${sheetName}${range ? `!${range}` : ''}?key=${this.API_KEY}`;
-      console.log('📖 Reading sheet:', url);
+      if (__DEV__) {
+        console.log(`Reading sheet via API: ${sheetName}${range ? ` (${range})` : ''}`);
+      }
       
       const response = await fetch(url);
       
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`❌ HTTP error! status: ${response.status}`, errorText);
+        await response.text(); // consume body without logging (may contain sensitive data)
+        console.error(`HTTP error! status: ${response.status}`);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       const data = await response.json();
-      console.log(`✅ Successfully read ${data.values?.length || 0} rows from sheet: ${sheetName}`);
+      console.log(`Successfully read ${data.values?.length || 0} rows from sheet: ${sheetName}`);
       return data.values || [];
     } catch (error) {
-      console.error(`❌ Error reading sheet ${sheetName}:`, error);
+      console.error(`Error reading sheet ${sheetName}:`, error);
       throw error;
     }
   }
@@ -106,8 +108,6 @@ class GoogleSheetsService {
    */
   async logUserLogin(userData: UserLoginData): Promise<boolean> {
     try {
-      console.log('📊 Attempting to log user login:', userData);
-
       // Prepare the data for the webhook
       const webhookData = {
         action: 'logUserLogin',
@@ -120,8 +120,6 @@ class GoogleSheetsService {
         }
       };
 
-      console.log('📤 Sending to webhook:', this.webhookUrl);
-
       const response = await fetch(this.webhookUrl, {
         method: 'POST',
         headers: {
@@ -131,30 +129,16 @@ class GoogleSheetsService {
         mode: 'no-cors' // Important for Google Apps Script
       });
 
-      console.log('📥 Webhook response status:', response.status);
+      if (__DEV__) {
+        console.log('User login sent to Google Sheets webhook');
+      }
 
-      // With no-cors mode, we can't read the response, but if no error is thrown, it likely worked
-      console.log('✅ User login sent to Google Sheets webhook');
-      this.logLocally(userData);
       return true;
 
     } catch (error) {
-      console.error('❌ Error sending to Google Sheets webhook:', error);
-      this.logLocally(userData);
+      console.error('Error sending to Google Sheets webhook:', error);
       return false; // Don't fail login if webhook fails
     }
-  }
-
-  private logLocally(userData: UserLoginData): void {
-    // Log to console for debugging
-    console.log('=== USER LOGIN LOGGED ===');
-    console.log('Email:', userData.email);
-    console.log('Name:', userData.name);
-    console.log('Login Time:', userData.loginTime);
-    console.log('Is Admin:', userData.isAdmin);
-    console.log('Platform:', Platform.OS);
-    console.log('Webhook URL:', this.webhookUrl);
-    console.log('========================');
   }
 
   /**
@@ -164,19 +148,18 @@ class GoogleSheetsService {
    */
   async getQuotes(): Promise<Quote[]> {
     try {
-      console.log('📚 Loading quotes from Google Sheets...');
+      console.log('Loading quotes from Google Sheets...');
       
       const rows = await this.readSheet('quotes');
       
       if (!rows.length) {
-        console.log('⚠️ No quotes found in sheet (sheet is empty or does not exist)');
+        console.log('No quotes found in sheet (sheet is empty or does not exist)');
         return [];
       }
       
       // First row is headers, skip it
-      const [headers, ...dataRows] = rows;
-      console.log('📋 Sheet headers:', headers);
-      console.log(`📊 Found ${dataRows.length} quote rows`);
+      const [, ...dataRows] = rows;
+      console.log(`Found ${dataRows.length} quote rows`);
       
       const quotes: Quote[] = dataRows.map((row, index) => {
         // Map columns: [id, text, author, category, dateAdded, reflection]
@@ -193,11 +176,11 @@ class GoogleSheetsService {
         return quote;
       }).filter(quote => quote.text.trim().length > 0);
       
-      console.log(`✅ Loaded ${quotes.length} quotes from Google Sheets`);
+      console.log(`Loaded ${quotes.length} quotes from Google Sheets`);
       return quotes;
       
     } catch (error) {
-      console.error('❌ Error getting quotes from Google Sheets:', error);
+      console.error('Error getting quotes from Google Sheets:', error);
       // Return empty array on error instead of throwing, so app still works
       return [];
     }
@@ -230,7 +213,9 @@ class GoogleSheetsService {
         data: rowData
       };
 
-      console.log('📤 Sending quote to Google Sheets via webhook:', newQuote);
+      if (__DEV__) {
+        console.log('Sending quote to Google Sheets via webhook', newQuote.id);
+      }
       
       const response = await fetch(this.webhookUrl, {
         method: 'POST',
@@ -241,11 +226,11 @@ class GoogleSheetsService {
         body: JSON.stringify(payload)
       });
 
-      console.log('✅ Quote sent to Google Sheets (no-cors mode)');
+      console.log('Quote sent to Google Sheets (no-cors mode)');
       
       return newQuote;
     } catch (error) {
-      console.error('❌ Error adding quote:', error);
+      console.error('Error adding quote:', error);
       throw error;
     }
   }
@@ -261,7 +246,9 @@ class GoogleSheetsService {
         data: data
       };
       
-      console.log('📤 Sending to Apps Script:', this.webhookUrl);
+      if (__DEV__) {
+        console.log('Sending append to Apps Script webhook');
+      }
       
       const response = await fetch(this.webhookUrl, {
         method: 'POST',
@@ -272,10 +259,10 @@ class GoogleSheetsService {
         body: JSON.stringify(payload)
       });
 
-      console.log('✅ Data sent to Google Sheets (no-cors mode)');
+      console.log('Data sent to Google Sheets (no-cors mode)');
       return { success: true, message: 'Data sent to Google Sheets' };
     } catch (error) {
-      console.error(`❌ Error writing to sheet ${sheetName}:`, error);
+      console.error(`Error writing to sheet ${sheetName}:`, error);
       throw error;
     }
   }
@@ -287,19 +274,18 @@ class GoogleSheetsService {
    */
   async getVideos(): Promise<Video[]> {
     try {
-      console.log('📺 Loading videos from Google Sheets...');
+      console.log('Loading videos from Google Sheets...');
       
       const rows = await this.readSheet('videos');
       
       if (!rows.length) {
-        console.log('⚠️ No videos found in sheet (sheet is empty or does not exist)');
+        console.log('No videos found in sheet (sheet is empty or does not exist)');
         return [];
       }
       
       // First row is headers, skip it
-      const [headers, ...dataRows] = rows;
-      console.log('📋 Sheet headers:', headers);
-      console.log(`📊 Found ${dataRows.length} video rows`);
+      const [, ...dataRows] = rows;
+      console.log(`Found ${dataRows.length} video rows`);
       
       const videos: Video[] = dataRows.map((row, index) => {
         // Map columns: [id, title, description, youtubeId, dateAdded]
@@ -314,11 +300,11 @@ class GoogleSheetsService {
         return video;
       }).filter(video => video.youtubeId.trim().length > 0 && video.title.trim().length > 0);
       
-      console.log(`✅ Loaded ${videos.length} videos from Google Sheets`);
+      console.log(`Loaded ${videos.length} videos from Google Sheets`);
       return videos;
       
     } catch (error) {
-      console.error('❌ Error getting videos from Google Sheets:', error);
+      console.error('Error getting videos from Google Sheets:', error);
       // Return empty array on error instead of throwing, so app still works
       return [];
     }
@@ -350,7 +336,9 @@ class GoogleSheetsService {
         data: rowData
       };
 
-      console.log('📤 Sending video to Google Sheets via webhook:', newVideo);
+      if (__DEV__) {
+        console.log('Sending video to Google Sheets via webhook', newVideo.id);
+      }
       
       const response = await fetch(this.webhookUrl, {
         method: 'POST',
@@ -361,11 +349,11 @@ class GoogleSheetsService {
         body: JSON.stringify(payload)
       });
 
-      console.log('✅ Video sent to Google Sheets (no-cors mode)');
+      console.log('Video sent to Google Sheets (no-cors mode)');
       
       return newVideo;
     } catch (error) {
-      console.error('❌ Error adding video:', error);
+      console.error('Error adding video:', error);
       throw error;
     }
   }
@@ -377,12 +365,12 @@ class GoogleSheetsService {
    */
   async getEvents(): Promise<Event[]> {
     try {
-      console.log('📅 Loading events from Google Sheets...');
+      console.log('Loading events from Google Sheets...');
       
       const rows = await this.readSheet('events');
       
       if (!rows.length) {
-        console.log('⚠️ No events found in sheet (sheet is empty or does not exist)');
+        console.log('No events found in sheet (sheet is empty or does not exist)');
         return [];
       }
       
@@ -391,8 +379,8 @@ class GoogleSheetsService {
       const isHeaderRow = firstCell === 'id' || firstCell === 'title' || firstCell === 'event id' || firstCell === '' || /^[a-z\s]+$/.test(firstCell) && !firstCell.startsWith('event_');
       const dataRows = isHeaderRow ? rows.slice(1) : rows;
       
-      console.log('📋 First row treated as', isHeaderRow ? 'header (skipped)' : 'data');
-      console.log(`📊 Found ${dataRows.length} event rows`);
+      console.log('First row treated as', isHeaderRow ? 'header (skipped)' : 'data');
+      console.log(`Found ${dataRows.length} event rows`);
       
       const events: Event[] = dataRows.map((row, index) => {
         const rawType = (row[6] != null && row[6] !== '') ? String(row[6]).trim().toLowerCase() : 'meditation';
@@ -410,11 +398,11 @@ class GoogleSheetsService {
         };
       }).filter(event => event.title.length > 0 && event.date.length > 0);
       
-      console.log(`✅ Loaded ${events.length} events from Google Sheets`);
+      console.log(`Loaded ${events.length} events from Google Sheets`);
       return events;
       
     } catch (error) {
-      console.error('❌ Error getting events from Google Sheets:', error);
+      console.error('Error getting events from Google Sheets:', error);
       // Return empty array on error instead of throwing, so app still works
       return [];
     }
@@ -448,7 +436,9 @@ class GoogleSheetsService {
         data: rowData
       };
 
-      console.log('📤 Sending event to Google Sheets via webhook:', newEvent);
+      if (__DEV__) {
+        console.log('Sending event to Google Sheets via webhook', newEvent.id);
+      }
       
       const response = await fetch(this.webhookUrl, {
         method: 'POST',
@@ -459,11 +449,11 @@ class GoogleSheetsService {
         body: JSON.stringify(payload)
       });
 
-      console.log('✅ Event sent to Google Sheets (no-cors mode)');
+      console.log('Event sent to Google Sheets (no-cors mode)');
       
       return newEvent;
     } catch (error) {
-      console.error('❌ Error adding event:', error);
+      console.error('Error adding event:', error);
       throw error;
     }
   }
@@ -475,7 +465,10 @@ class GoogleSheetsService {
   async savePushToken(email: string, pushToken: string): Promise<boolean> {
     try {
       if (!email || !pushToken) {
-        console.error('❌ Cannot save push token: email or token is missing', { email, hasToken: !!pushToken });
+        console.error('Cannot save push token: email or token is missing', {
+          hasEmail: !!email,
+          hasToken: !!pushToken,
+        });
         return false;
       }
 
@@ -499,19 +492,9 @@ class GoogleSheetsService {
         body: JSON.stringify(payload)
       });
 
-      
-      // Log locally for debugging
-      console.log('=== PUSH TOKEN SAVE ATTEMPT ===');
-      console.log('Email:', email);
-      console.log('Push Token:', pushToken);
-      console.log('Platform:', Platform.OS);
-      console.log('Timestamp:', new Date().toISOString());
-      console.log('================================');
-      
       return true;
     } catch (error) {
-      console.error('❌ Error saving push token:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
+      console.error('Error saving push token:', error);
       return false;
     }
   }
@@ -522,12 +505,12 @@ class GoogleSheetsService {
    */
   async getPushTokens(): Promise<string[]> {
     try {
-      console.log('📖 Loading push tokens from Google Sheets...');
+      console.log('Loading push tokens from Google Sheets...');
 
       const rows = await this.readSheet('pushTokens');
 
       if (!rows.length || rows.length === 0) {
-        console.log('⚠️ No push tokens found in sheet');
+        console.log('No push tokens found in sheet');
         return [];
       }
 
@@ -539,10 +522,10 @@ class GoogleSheetsService {
         .map((row) => row[1]) // pushToken is in column 2 (index 1)
         .filter((token) => token && token.trim().length > 0);
 
-      console.log(`✅ Loaded ${tokens.length} push tokens from Google Sheets`);
+      console.log(`Loaded ${tokens.length} push tokens from Google Sheets`);
       return tokens;
     } catch (error) {
-      console.error('❌ Error getting push tokens:', error);
+      console.error('Error getting push tokens:', error);
       // If sheet doesn't exist, return empty array
       return [];
     }
@@ -580,7 +563,7 @@ class GoogleSheetsService {
 
     const text = await response.text();
     if (!response.ok) {
-      console.error('❌ Prayer submission HTTP error:', response.status, text);
+      console.error('Prayer submission HTTP error:', response.status);
       throw new Error(text || `Request failed (${response.status})`);
     }
 
@@ -588,7 +571,7 @@ class GoogleSheetsService {
     try {
       json = JSON.parse(text);
     } catch {
-      console.error('❌ Prayer submission: invalid JSON response', text);
+      console.error('Prayer submission: invalid JSON response');
       throw new Error('Invalid response from server');
     }
 
@@ -630,7 +613,7 @@ class GoogleSheetsService {
       }
       return true;
     } catch (error) {
-      console.error('❌ addToUserbase error:', error);
+      console.error('addToUserbase error:', error);
       return false;
     }
   }
@@ -665,7 +648,7 @@ class GoogleSheetsService {
       }
       return { exists: false };
     } catch (error) {
-      console.error('❌ checkUserInUserbase error:', error);
+      console.error('checkUserInUserbase error:', error);
       return { exists: false };
     }
   }

@@ -135,9 +135,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const logout = async () => {
-    console.log('=== USER LOGOUT ===');
-    console.log('User logging out:', user?.email);
-    console.log('==================');
     
     try {
       // Clear user state
@@ -146,7 +143,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       // Clear stored session
       await AsyncStorage.removeItem('spiritual-app-user');
       
-      console.log('✅ User logged out successfully');
+      console.log('User logged out successfully');
     } catch (error) {
       console.error('Error during logout:', error);
       // Even if storage removal fails, still logout the user

@@ -35,7 +35,7 @@ export function EventsProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       const loadedEvents = await googleSheetsService.getEvents();
       setEvents(loadedEvents);
-      console.log(`📅 Loaded ${loadedEvents.length} events`);
+      console.log(`Loaded ${loadedEvents.length} events`);
     } catch (error) {
       console.error('Error loading events:', error);
     } finally {
@@ -104,7 +104,7 @@ export function EventsProvider({ children }: { children: ReactNode }) {
     try {
       const addedEvent = await googleSheetsService.addEvent(newEvent);
       setEvents(prev => [addedEvent, ...prev]);
-      console.log('✅ Event added successfully');
+      console.log('Event added successfully');
     } catch (error) {
       console.error('Error adding event:', error);
       throw error;
