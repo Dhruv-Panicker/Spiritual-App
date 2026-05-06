@@ -90,7 +90,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 40,
     paddingTop: 20,
-    backgroundColor: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
   },
   videoDetails: {
     marginBottom: 20,
