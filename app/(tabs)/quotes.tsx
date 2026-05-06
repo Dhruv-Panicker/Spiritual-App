@@ -13,7 +13,7 @@ import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuotes, Quote } from '@/contexts/QuotesContext';
 import { shareService } from '@/services/shareService';
-import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS, SPIRITUAL_TYPOGRAPHY } from '@/constants/SpiritualColors';
+import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_TYPOGRAPHY } from '@/constants/SpiritualColors';
 import { styles } from './styles/quotes.styles';
 
 // mapping of colors to categories
