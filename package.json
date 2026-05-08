@@ -50,6 +50,7 @@
     "@types/react": "~18.3.0",
     "dotenv": "^17.3.1",
     "jest-expo": "^52.0.6",
+    "patch-package": "^8.0.1",
     "react-test-renderer": "^18.3.1",
     "sharp": "^0.34.5",
     "typescript": "~5.8.3"
