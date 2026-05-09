@@ -33,8 +33,7 @@
         "VIBRATE",
         "POST_NOTIFICATIONS",
         "READ_MEDIA_IMAGES"
-      ],
-      "googleServicesFile": "./google-services.json"
+      ]
     },
     "web": {
       "bundler": "metro",
