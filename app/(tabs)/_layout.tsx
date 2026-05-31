@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { useAuth } from '@/contexts/AuthContext';
-import { tabsScreenOptions } from './styles/_layout.styles';
+import { tabsScreenOptions } from '@/styles/_layout.styles';
 
 function TabLayoutContent() {
   const { user } = useAuth();

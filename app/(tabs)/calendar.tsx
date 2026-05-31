@@ -18,7 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useEvents, type MonthData, type Event } from '@/contexts/EventsContext';
 import { shareService } from '@/services/shareService';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS } from '@/constants/SpiritualColors';
-import { styles } from './styles/calendar.styles';
+import { styles } from '@/styles/calendar.styles';
 
 const { width: screenWidth } = Dimensions.get('window');
 const CARD_WIDTH = (screenWidth - 16 * 3) / 2;

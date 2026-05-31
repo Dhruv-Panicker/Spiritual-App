@@ -22,7 +22,7 @@ import { useEvents } from '@/contexts/EventsContext';
 import { notificationService } from '@/services/notificationService';
 import { googleSheetsService } from '@/services/googleSheetsService';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS } from '@/constants/SpiritualColors';
-import { styles } from './styles/admin.styles';
+import { styles } from '@/styles/admin.styles';
 
 export default function AdminScreen() {
   const { user } = useAuth();
@@ -88,16 +88,16 @@ export default function AdminScreen() {
       const tokens = await googleSheetsService.getPushTokens();
       
       if (tokens.length === 0) {
-        console.log('⚠️ No push tokens found in Google Sheets, using local notification');
+        console.log('No push tokens found in Google Sheets, using local notification');
         // Fallback: if no tokens in sheets, use local token (for testing)
         const localToken = await notificationService.getStoredPushToken();
         return localToken ? [localToken] : [];
       }
       
-      console.log(`✅ Found ${tokens.length} push tokens from Google Sheets`);
+      console.log(`Found ${tokens.length} push tokens from Google Sheets`);
       return tokens;
     } catch (error) {
-      console.error('❌ Error getting push tokens from Google Sheets:', error);
+      console.error('Error getting push tokens from Google Sheets:', error);
       // Fallback to local token
       const localToken = await notificationService.getStoredPushToken();
       return localToken ? [localToken] : [];

@@ -18,7 +18,7 @@ import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuotes } from '@/contexts/QuotesContext';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS } from '@/constants/SpiritualColors';
-import { styles } from './styles/index.styles';
+import { styles } from '@/styles/index.styles';
 
 const { width: screenWidth } = Dimensions.get('window');
 const QUOTE_CARD_PADDING = 80;
