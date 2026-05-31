@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuotes, Quote } from '@/contexts/QuotesContext';
 import { shareService } from '@/services/shareService';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_TYPOGRAPHY } from '@/constants/SpiritualColors';
-import { styles } from './styles/quotes.styles';
+import { styles } from '@/styles/quotes.styles';
 
 // mapping of colors to categories
 const TAG_COLORS: { bg: string; text: string }[] = [

@@ -18,7 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
 
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS } from '@/constants/SpiritualColors';
-import { styles } from './styles/videos.styles';
+import { styles } from '@/styles/videos.styles';
 import { useVideos, type Video } from '@/contexts/VideosContext';
 import { shareService } from '@/services/shareService';
 
@@ -104,7 +104,7 @@ export default function VideosScreen() {
     // YouTube embed URL with autoplay and loop
     // Note: loop=1 requires playlist parameter with the same video ID
     // The baseUrl in WebView source helps establish proper origin
-    const embedUrl = `https://www.youtube-nocookie.com/embed/${cleanVideoId}?autoplay=1&playsinline=1&rel=0&loop=1&playlist=${cleanVideoId}`;
+    const embedUrl = `https://www.youtube-nocookie.com/embed/${cleanVideoId}?autoplay=1&playsinline=1&rel=0&loop=1&playlist=${cleanVideoId}&controls=0&modestbranding=1&iv_load_policy=3&fs=0&disablekb=1`;
     
     return `
       <!DOCTYPE html>

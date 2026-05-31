@@ -14,7 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS } from '@/constants/SpiritualColors';
-import { styles } from './styles/gurudev.styles';
+import { styles } from '@/styles/gurudev.styles';
 
 export default function GurudevScreen() {
   const pulseAnim = useRef(new Animated.Value(1)).current;

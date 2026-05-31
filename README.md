@@ -1,4 +1,4 @@
-# Spiritual App
+# Siddhguru App
 
 A React Native (Expo) app for spiritual content and community: quotes, videos, event calendar, prayers, and Siddhguru information. Data is backed by Google Sheets and a Google Apps Script web app for auth and write operations.
 
