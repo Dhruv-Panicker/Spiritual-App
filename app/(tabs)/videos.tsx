@@ -25,17 +25,29 @@ import { shareService } from '@/services/shareService';
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 export default function VideosScreen() {
-  const { videos, loading } = useVideos();
+  const { videos, loading, liveStatus } = useVideos();
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const currentVideoIndexRef = useRef(0);
   const translateY = useRef(new Animated.Value(0)).current;
 
-  const currentVideo = videos[currentVideoIndex];
+  // Live slot occupies index 0 when the channel is currently broadcasting.
+  const liveAvailable = liveStatus.isLive && !!liveStatus.liveVideoId;
+  const totalSlots = (liveAvailable ? 1 : 0) + videos.length;
+  const isLiveSlot = liveAvailable && currentVideoIndex === 0;
+  const regularVideoIndex = liveAvailable ? currentVideoIndex - 1 : currentVideoIndex;
+  const currentVideo = !isLiveSlot ? videos[regularVideoIndex] : undefined;
 
   // Keep ref in sync with state
   useEffect(() => {
     currentVideoIndexRef.current = currentVideoIndex;
   }, [currentVideoIndex]);
+
+  // Clamp the index if the total slot count shrinks (e.g. live stream ends).
+  useEffect(() => {
+    if (totalSlots > 0 && currentVideoIndex >= totalSlots) {
+      setCurrentVideoIndex(totalSlots - 1);
+    }
+  }, [totalSlots, currentVideoIndex]);
 
   // Extract and clean YouTube video ID (handles both ID and full URLs)
   const extractYouTubeId = (input: string): string => {
@@ -157,17 +169,74 @@ export default function VideosScreen() {
     `;
   };
 
+  // Landscape 16:9 embed for the live stream slot. Controls stay visible so the
+  // user can adjust volume / go fullscreen on the actual broadcast.
+  const createLiveStreamHTML = (videoId: string) => {
+    const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0&modestbranding=1`;
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            html, body {
+              width: 100vw;
+              height: 100vh;
+              background: #000;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              overflow: hidden;
+            }
+            .wrapper {
+              width: 100vw;
+              height: 56.25vw;
+              max-height: 100vh;
+            }
+            iframe { width: 100%; height: 100%; border: 0; }
+          </style>
+        </head>
+        <body>
+          <div class="wrapper">
+            <iframe src="${embedUrl}"
+              frameborder="0"
+              allow="accelerometer; autoplay; encrypted-media; picture-in-picture"
+              allowfullscreen></iframe>
+          </div>
+        </body>
+      </html>
+    `;
+  };
+
+  const openLiveChannel = async () => {
+    try {
+      if (Platform.OS !== 'web') {
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      const channelUrl = liveStatus.channelUrl || `https://www.youtube.com/watch?v=${liveStatus.liveVideoId}`;
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && window.open) {
+        window.open(channelUrl, '_blank');
+        return;
+      }
+      const canOpen = await Linking.canOpenURL(channelUrl);
+      if (canOpen) await Linking.openURL(channelUrl);
+    } catch (error) {
+      console.error('Error opening live channel:', error);
+    }
+  };
+
   // Navigation functions using useCallback to prevent stale closures
   const goToNextVideo = useCallback(() => {
     const current = currentVideoIndexRef.current;
-    if (current < videos.length - 1 && videos.length > 0) {
+    if (current < totalSlots - 1 && totalSlots > 0) {
       const nextIndex = current + 1;
       setCurrentVideoIndex(nextIndex);
       if (Platform.OS !== 'web') {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
     }
-  }, [videos.length]);
+  }, [totalSlots]);
 
   const goToPreviousVideo = useCallback(() => {
     const current = currentVideoIndexRef.current;
@@ -265,7 +334,7 @@ export default function VideosScreen() {
     );
   }
 
-  if (!videos || videos.length === 0) {
+  if (totalSlots === 0) {
     return (
       <View style={styles.container}>
         <LinearGradient colors={SPIRITUAL_GRADIENTS.peace} style={styles.gradient}>
@@ -293,12 +362,22 @@ export default function VideosScreen() {
           }
         ]}
       >
-        {/* Video Player Area - Full Screen Reel Style */}
+        {/* Live badge - top left, above the video */}
+        {isLiveSlot && (
+          <View style={styles.liveTopBadge}>
+            <View style={styles.liveBadgeDot} />
+            <Text style={styles.liveBadgeText}>LIVE NOW</Text>
+          </View>
+        )}
+
+        {/* Video Player Area - Full Screen Reel Style (or landscape live stream) */}
         <View style={styles.videoPlayerContainer}>
           <WebView
-            key={`${currentVideo.youtubeId}-${currentVideoIndex}`} // Force re-render when video changes
-            source={{ 
-              html: createYouTubeHTML(currentVideo.youtubeId),
+            key={isLiveSlot ? `live-${liveStatus.liveVideoId}` : `${currentVideo!.youtubeId}-${currentVideoIndex}`}
+            source={{
+              html: isLiveSlot
+                ? createLiveStreamHTML(liveStatus.liveVideoId!)
+                : createYouTubeHTML(currentVideo!.youtubeId),
               baseUrl: 'https://www.youtube-nocookie.com'
             }}
             style={styles.webView}
@@ -322,31 +401,33 @@ export default function VideosScreen() {
               console.warn('WebView HTTP error: ', nativeEvent);
             }}
             onLoadEnd={() => {
-              console.log('WebView loaded for video:', currentVideo.youtubeId);
+              console.log('WebView loaded:', isLiveSlot ? `live-${liveStatus.liveVideoId}` : currentVideo?.youtubeId);
             }}
           />
         </View>
 
             {/* Side Action Buttons */}
             <View style={styles.sideActionButtons}>
-              <TouchableOpacity
-                style={styles.sideActionButton}
-                onPress={() => shareVideo(currentVideo)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.actionIconContainer}>
-                  <Ionicons
-                    name="share-outline"
-                    size={28}
-                    color="#FFFFFF"
-                  />
-                </View>
-                <Text style={styles.actionButtonText}>Share</Text>
-              </TouchableOpacity>
+              {!isLiveSlot && (
+                <TouchableOpacity
+                  style={styles.sideActionButton}
+                  onPress={() => shareVideo(currentVideo!)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.actionIconContainer}>
+                    <Ionicons
+                      name="share-outline"
+                      size={28}
+                      color="#FFFFFF"
+                    />
+                  </View>
+                  <Text style={styles.actionButtonText}>Share</Text>
+                </TouchableOpacity>
+              )}
 
               <TouchableOpacity
                 style={styles.sideActionButton}
-                onPress={() => openInYouTube(currentVideo)}
+                onPress={() => (isLiveSlot ? openLiveChannel() : openInYouTube(currentVideo!))}
                 activeOpacity={0.7}
               >
                 <View style={styles.actionIconContainer}>
@@ -363,23 +444,40 @@ export default function VideosScreen() {
         {/* Video Info Overlay - Bottom */}
         <View style={styles.videoInfoOverlay}>
           <View style={styles.videoDetails}>
-            <Text style={styles.videoTitle} numberOfLines={2}>
-              {currentVideo.title}
-            </Text>
-            <Text style={styles.videoDescription} numberOfLines={2}>
-              {currentVideo.description}
-            </Text>
-            <Text style={styles.videoCounter}>
-              {currentVideoIndex + 1} / {videos.length}
-            </Text>
+            {isLiveSlot ? (
+              <>
+                {!!liveStatus.liveTitle && (
+                  <Text style={styles.videoTitle} numberOfLines={2}>
+                    {liveStatus.liveTitle}
+                  </Text>
+                )}
+                <Text style={styles.videoDescription} numberOfLines={2}>
+                  Tap the YouTube icon to watch on the channel
+                </Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.videoTitle} numberOfLines={2}>
+                  {currentVideo!.title}
+                </Text>
+                <Text style={styles.videoDescription} numberOfLines={2}>
+                  {currentVideo!.description}
+                </Text>
+                <Text style={styles.videoCounter}>
+                  {regularVideoIndex + 1} / {videos.length}
+                </Text>
+              </>
+            )}
           </View>
         </View>
 
         {/* Swipe Hint (for first-time users) */}
-        {currentVideoIndex === 0 && videos.length > 1 && (
+        {currentVideoIndex === 0 && totalSlots > 1 && (
           <View style={styles.swipeHint}>
             <Ionicons name="chevron-up" size={24} color="rgba(255,255,255,0.6)" />
-            <Text style={styles.swipeHintText}>Swipe up for next video</Text>
+            <Text style={styles.swipeHintText}>
+              {isLiveSlot ? 'Swipe up for videos' : 'Swipe up for next video'}
+            </Text>
           </View>
         )}
       </Animated.View>
