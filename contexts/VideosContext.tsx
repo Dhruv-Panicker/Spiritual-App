@@ -1,25 +1,33 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { googleSheetsService, Video } from '../services/googleSheetsService';
+import { googleSheetsService, Video, LiveStatus } from '../services/googleSheetsService';
 
 interface VideosContextType {
   videos: Video[];
   loading: boolean;
+  liveStatus: LiveStatus;
   addVideo: (video: Omit<Video, 'id' | 'dateAdded'>) => Promise<void>;
   refreshVideos: () => Promise<void>;
 }
+
+const EMPTY_LIVE: LiveStatus = { isLive: false, liveVideoId: null, channelUrl: '', liveTitle: null };
 
 const VideosContext = createContext<VideosContextType | undefined>(undefined);
 
 export function VideosProvider({ children }: { children: ReactNode }) {
   const [videos, setVideos] = useState<Video[]>([]);
+  const [liveStatus, setLiveStatus] = useState<LiveStatus>(EMPTY_LIVE);
   const [loading, setLoading] = useState(true);
 
   const loadVideos = async () => {
     try {
       setLoading(true);
-      const loadedVideos = await googleSheetsService.getVideos();
+      const [loadedVideos, loadedLive] = await Promise.all([
+        googleSheetsService.getVideos(),
+        googleSheetsService.getLiveStatus(),
+      ]);
       setVideos(loadedVideos);
-      console.log(`Loaded ${loadedVideos.length} videos`);
+      setLiveStatus(loadedLive);
+      console.log(`Loaded ${loadedVideos.length} videos, live=${loadedLive.isLive}`);
     } catch (error) {
       console.error('Error loading videos:', error);
     } finally {
@@ -27,7 +35,6 @@ export function VideosProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Load videos on mount
   useEffect(() => {
     loadVideos();
   }, []);
@@ -51,6 +58,7 @@ export function VideosProvider({ children }: { children: ReactNode }) {
     <VideosContext.Provider value={{
       videos,
       loading,
+      liveStatus,
       addVideo,
       refreshVideos
     }}>
@@ -68,4 +76,3 @@ export function useVideos() {
 }
 
 export type { Video };
-
