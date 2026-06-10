@@ -30,8 +30,7 @@
       "permissions": [
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",
-        "POST_NOTIFICATIONS",
-        "READ_MEDIA_IMAGES"
+        "POST_NOTIFICATIONS"
       ]
     },
     "web": {
