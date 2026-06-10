@@ -20,7 +20,7 @@ import * as FileSystem from 'expo-file-system';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
 import { googleSheetsService } from '@/services/googleSheetsService';
 import { env } from '@/config/env';
-import { styles } from './styles/prayer.styles';
+import { styles } from '@/styles/prayer.styles';
 
 const PRAYER_MAX_LENGTH = 3000;
 

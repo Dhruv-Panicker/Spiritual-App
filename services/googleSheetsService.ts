@@ -43,6 +43,13 @@ export interface PushToken {
   lastUpdated: string;
 }
 
+export interface LiveStatus {
+  isLive: boolean;
+  liveVideoId: string | null;
+  channelUrl: string;
+  liveTitle: string | null;
+}
+
 export interface PrayerSubmissionData {
   name: string;
   dateOfBirth: string;
@@ -615,6 +622,33 @@ class GoogleSheetsService {
     } catch (error) {
       console.error('addToUserbase error:', error);
       return false;
+    }
+  }
+
+  /**
+   * Check if the configured YouTube channel is currently live.
+   * Apps Script scrapes the channel /live page and caches for 60s.
+   */
+  async getLiveStatus(): Promise<LiveStatus> {
+    const empty: LiveStatus = { isLive: false, liveVideoId: null, channelUrl: '', liveTitle: null };
+    try {
+      const response = await fetch(this.webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'getLiveStatus' }),
+      });
+      const text = await response.text();
+      if (!response.ok) return empty;
+      const json = JSON.parse(text) as Partial<LiveStatus>;
+      return {
+        isLive: json.isLive === true && !!json.liveVideoId,
+        liveVideoId: json.liveVideoId || null,
+        channelUrl: json.channelUrl || '',
+        liveTitle: json.liveTitle || null,
+      };
+    } catch (error) {
+      console.error('Error getting live status:', error);
+      return empty;
     }
   }
 

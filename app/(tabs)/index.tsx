@@ -17,8 +17,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuotes } from '@/contexts/QuotesContext';
+import { useVideos } from '@/contexts/VideosContext';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS } from '@/constants/SpiritualColors';
-import { styles } from './styles/index.styles';
+import { styles } from '@/styles/index.styles';
 
 const { width: screenWidth } = Dimensions.get('window');
 const QUOTE_CARD_PADDING = 80;
@@ -68,9 +69,12 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, onP
 export default function HomeScreen() {
   const { user, logout } = useAuth();
   const { quotes } = useQuotes();
+  const { liveStatus } = useVideos();
   const [quoteIndex, setQuoteIndex] = useState(0);
   const quoteScrollRef = useRef<ScrollView>(null);
   const isUserScrolling = useRef(false);
+
+  const liveAvailable = liveStatus.isLive && !!liveStatus.liveVideoId;
 
   const threeRecentQuotes = React.useMemo(() => {
     const sorted = [...quotes].sort((a, b) =>
@@ -79,12 +83,30 @@ export default function HomeScreen() {
     return sorted.slice(0, 3);
   }, [quotes]);
 
+  // Activity slides: live broadcast (if any) first, then recent quotes.
+  type ActivitySlide =
+    | { type: 'live' }
+    | { type: 'quote'; quote: (typeof threeRecentQuotes)[number] };
+  const slides: ActivitySlide[] = React.useMemo(() => {
+    const quoteSlides = threeRecentQuotes.map(
+      (quote) => ({ type: 'quote', quote } as ActivitySlide)
+    );
+    return liveAvailable ? [{ type: 'live' }, ...quoteSlides] : quoteSlides;
+  }, [liveAvailable, threeRecentQuotes]);
+
+  // Clamp the active index when the slide count changes (e.g. live ends).
   useEffect(() => {
-    if (threeRecentQuotes.length < 2) return;
-    //for the auto rotate of the quotes on the home screen
+    if (quoteIndex > slides.length - 1) {
+      setQuoteIndex(Math.max(0, slides.length - 1));
+    }
+  }, [slides.length, quoteIndex]);
+
+  useEffect(() => {
+    if (slides.length < 2) return;
+    //for the auto rotate of the activity cards on the home screen
     const interval = setInterval(() => {
       if (isUserScrolling.current) return;
-      const next = (quoteIndex + 1) % threeRecentQuotes.length;
+      const next = (quoteIndex + 1) % slides.length;
       setQuoteIndex(next);
       quoteScrollRef.current?.scrollTo({
         x: next * quotePageWidth,
@@ -92,7 +114,14 @@ export default function HomeScreen() {
       });
     }, ROTATE_QUOTE_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [threeRecentQuotes.length, quoteIndex]);
+  }, [slides.length, quoteIndex]);
+
+  const goToLiveStream = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    router.push('/(tabs)/videos');
+  };
 
   const handleLogout = () => {
     if (Platform.OS !== 'web') {
@@ -140,6 +169,36 @@ export default function HomeScreen() {
     },
   ];
 
+  const renderSlide = (slide: ActivitySlide) => {
+    if (slide.type === 'live') {
+      return (
+        <View style={styles.liveSlide}>
+          <View style={styles.liveSlideHeader}>
+            <View style={styles.liveSlideDot} />
+            <Text style={styles.liveSlideLabel}>NOW LIVE</Text>
+          </View>
+          <Text style={styles.liveSlideTitle} numberOfLines={2}>
+            Sri Sidheshwar Live Broadcast
+          </Text>
+          <TouchableOpacity
+            style={styles.liveSlideButton}
+            onPress={goToLiveStream}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="play" size={14} color="#fff" />
+            <Text style={styles.liveSlideButtonText}>Join Now</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    return (
+      <>
+        <Text style={styles.dailyQuoteText}>{slide.quote.text}</Text>
+        <Text style={styles.dailyQuoteAuthor}>— {slide.quote.author}</Text>
+      </>
+    );
+  };
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -186,18 +245,17 @@ export default function HomeScreen() {
           {/* Divider */}
           <Text style={styles.divider}>— ✦ —</Text>
 
-          {/* Daily Quotes – swipable + auto-rotate */}
+          {/* Activity – live broadcast + recent quotes, swipable + auto-rotate */}
           <View style={styles.dailyQuotesCard}>
             <View style={styles.dailyQuotesAccent} />
-            <Text style={styles.dailyQuotesLabel}>☀ Daily Quotes</Text>
-            {threeRecentQuotes.length === 0 ? (
+            <Text style={styles.dailyQuotesLabel}>Activity</Text>
+            {slides.length === 0 ? (
               <Text style={styles.dailyQuotePlaceholder}>
                 No quotes yet. Add some in Daily Quotes.
               </Text>
-            ) : threeRecentQuotes.length === 1 ? (
+            ) : slides.length === 1 ? (
               <View style={[styles.quoteContent, styles.quotePage]}>
-                <Text style={styles.dailyQuoteText}>{threeRecentQuotes[0].text}</Text>
-                <Text style={styles.dailyQuoteAuthor}>— {threeRecentQuotes[0].author}</Text>
+                {renderSlide(slides[0])}
               </View>
             ) : (
               <>
@@ -210,22 +268,21 @@ export default function HomeScreen() {
                   onMomentumScrollEnd={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
                     const x = e.nativeEvent.contentOffset.x;
                     const index = Math.round(x / quotePageWidth);
-                    setQuoteIndex(Math.min(index, threeRecentQuotes.length - 1));
+                    setQuoteIndex(Math.min(index, slides.length - 1));
                     isUserScrolling.current = false;
                   }}
                   scrollEventThrottle={16}
                   decelerationRate="fast"
                   contentContainerStyle={styles.quoteScrollContent}
                 >
-                  {threeRecentQuotes.map((q, i) => (
+                  {slides.map((slide, i) => (
                     <View key={i} style={[styles.quotePage, { width: quotePageWidth }]}>
-                      <Text style={styles.dailyQuoteText}>{q.text}</Text>
-                      <Text style={styles.dailyQuoteAuthor}>— {q.author}</Text>
+                      {renderSlide(slide)}
                     </View>
                   ))}
                 </ScrollView>
                 <View style={styles.dots}>
-                  {threeRecentQuotes.map((_, i) => (
+                  {slides.map((_, i) => (
                     <View
                       key={i}
                       style={[

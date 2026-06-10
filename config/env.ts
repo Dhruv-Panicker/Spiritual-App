@@ -26,7 +26,7 @@ const getEnvVar = (key: string, defaultValue: string = ''): string => {
   // Use default value if provided
   if (defaultValue) {
     if (__DEV__) {
-      console.warn(`⚠️ Environment variable ${key} not set, using empty string. Please configure in app.json extra or .env`);
+      console.warn(`Environment variable ${key} not set, using empty string. Please configure in app.json extra or .env`);
     }
     return defaultValue;
   }
@@ -80,10 +80,10 @@ export const validateEnv = (): void => {
   });
   
   if (missing.length > 0) {
-    console.error('❌ Missing required environment variables:', missing.join(', '));
-    console.error('💡 Set these in .env (copy from .env.example) or EAS secrets. See ENV_SETUP.md.');
+    console.error('Missing required environment variables:', missing.join(', '));
+    console.error('Set these in .env (copy from .env.example) or EAS secrets. See ENV_SETUP.md.');
   } else {
-    console.log('✅ Environment variables loaded successfully');
+    console.log('Environment variables loaded successfully');
   }
 };
 
