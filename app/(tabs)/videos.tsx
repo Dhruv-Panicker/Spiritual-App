@@ -16,6 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
+import { useFocusEffect } from 'expo-router';
 
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS } from '@/constants/SpiritualColors';
 import { styles } from '@/styles/videos.styles';
@@ -29,6 +30,10 @@ export default function VideosScreen() {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const currentVideoIndexRef = useRef(0);
   const translateY = useRef(new Animated.Value(0)).current;
+  // Bumped each time the tab regains focus to force the player to remount and
+  // auto-resume (the YouTube iframe only autoplays on load, not on revisit).
+  const [focusKey, setFocusKey] = useState(0);
+  const isInitialFocus = useRef(true);
 
   // Live slot occupies index 0 when the channel is currently broadcasting.
   const liveAvailable = liveStatus.isLive && !!liveStatus.liveVideoId;
@@ -48,6 +53,18 @@ export default function VideosScreen() {
       setCurrentVideoIndex(totalSlots - 1);
     }
   }, [totalSlots, currentVideoIndex]);
+
+  // When returning to the videos tab, remount the player so the current reel
+  // autoplays again. Skip the very first focus so the initial load isn't doubled.
+  useFocusEffect(
+    useCallback(() => {
+      if (isInitialFocus.current) {
+        isInitialFocus.current = false;
+        return;
+      }
+      setFocusKey((k) => k + 1);
+    }, [])
+  );
 
   // Extract and clean YouTube video ID (handles both ID and full URLs)
   const extractYouTubeId = (input: string): string => {
@@ -373,7 +390,7 @@ export default function VideosScreen() {
         {/* Video Player Area - Full Screen Reel Style (or landscape live stream) */}
         <View style={styles.videoPlayerContainer}>
           <WebView
-            key={isLiveSlot ? `live-${liveStatus.liveVideoId}` : `${currentVideo!.youtubeId}-${currentVideoIndex}`}
+            key={`${isLiveSlot ? `live-${liveStatus.liveVideoId}` : `${currentVideo!.youtubeId}-${currentVideoIndex}`}-${focusKey}`}
             source={{
               html: isLiveSlot
                 ? createLiveStreamHTML(liveStatus.liveVideoId!)
