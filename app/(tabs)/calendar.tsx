@@ -134,8 +134,9 @@ export default function CalendarScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <LinearGradient colors={['#fdf6ec', '#f5e2c4']} style={styles.gradient}>
+        <SafeAreaView style={styles.safeArea}>
         {/* Subtle warm glow at top */}
         <View style={styles.glowOverlay} pointerEvents="none" />
 
@@ -167,7 +168,7 @@ export default function CalendarScreen() {
                   <View style={styles.heroCircle1} />
                   <View style={styles.heroCircle2} />
                 </View>
-                <Text style={styles.heroLabel}>☀ Next Upcoming Event</Text>
+                <Text style={styles.heroLabel}> Next Upcoming Event</Text>
                 <View style={styles.heroTypePill}>
                   <Text style={styles.heroTypePillText}>{nextEvent.type}</Text>
                 </View>
@@ -289,6 +290,7 @@ export default function CalendarScreen() {
           </View>
           <View style={styles.bottomPadding} />
         </ScrollView>
+        </SafeAreaView>
 
         {/* Month detail bottom sheet */}
         <Modal visible={modalVisible} animationType="slide" transparent onRequestClose={closeModal}>
@@ -389,6 +391,6 @@ export default function CalendarScreen() {
           </TouchableOpacity>
         </Modal>
       </LinearGradient>
-    </SafeAreaView>
+    </View>
   );
 }

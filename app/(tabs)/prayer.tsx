@@ -161,8 +161,9 @@ export default function PrayerScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <LinearGradient colors={SPIRITUAL_GRADIENTS.peace} style={styles.gradient}>
+        <SafeAreaView style={{ flex: 1 }}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardView}
@@ -371,7 +372,8 @@ export default function PrayerScreen() {
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
+        </SafeAreaView>
       </LinearGradient>
-    </SafeAreaView>
+    </View>
   );
 }

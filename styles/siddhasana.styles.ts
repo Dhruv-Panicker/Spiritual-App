@@ -6,6 +6,7 @@ const { height: screenHeight } = Dimensions.get('window');
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: SPIRITUAL_COLORS.background,
   },
   gradient: {
     flex: 1,
