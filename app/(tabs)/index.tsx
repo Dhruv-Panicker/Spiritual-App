@@ -215,7 +215,7 @@ export default function HomeScreen() {
             <View style={styles.headerTop}>
               <View style={styles.headerLeft}>
                 <Image
-                  source={require('@/assets/images/om_logo_transparent.png')}
+                  source={require('@/assets/images/app-main-icon.png')}
                   style={styles.omLogo}
                   resizeMode="contain"
                 />
