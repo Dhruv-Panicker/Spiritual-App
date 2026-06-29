@@ -5,7 +5,7 @@ const { height: screenHeight } = Dimensions.get('window');
 const MONTH_MODAL_MAX_HEIGHT = screenHeight - 140;
 
 export const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: SPIRITUAL_COLORS.background },
   gradient: { flex: 1 },
   safeArea: { flex: 1 },
   glowOverlay: {

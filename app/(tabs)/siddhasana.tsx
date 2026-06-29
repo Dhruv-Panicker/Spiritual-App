@@ -35,11 +35,12 @@ export default function SiddhasanaScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <LinearGradient
         colors={SPIRITUAL_GRADIENTS.peace}
         style={styles.gradient}
       >
+        <SafeAreaView style={{ flex: 1 }}>
         <ScrollView
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
@@ -105,7 +106,8 @@ export default function SiddhasanaScreen() {
             </LinearGradient>
           </View>
         </ScrollView>
+        </SafeAreaView>
       </LinearGradient>
-    </SafeAreaView>
+    </View>
   );
 }
