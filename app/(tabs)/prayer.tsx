@@ -168,6 +168,7 @@ export default function PrayerScreen() {
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
             bounces={true}
           >
             {/* Hero / Banner section */}
@@ -187,6 +188,12 @@ export default function PrayerScreen() {
                   Through this medium you can send your prayers and wishes to Siddhguru. Your heartfelt
                   words will be received with love and blessings.
                 </Text>
+                <View style={styles.privacyNote}>
+                  <Ionicons name="lock-closed" size={13} color="rgba(255,255,255,0.85)" />
+                  <Text style={styles.privacyText}>
+                    This prayer is private and will reach Om Siddheshwar directly — no one else will view what you've shared.
+                  </Text>
+                </View>
               </View>
             </View>
 

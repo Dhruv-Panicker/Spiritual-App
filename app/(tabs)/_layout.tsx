@@ -63,6 +63,16 @@ function TabLayoutContent() {
         }}
       />
       <Tabs.Screen
+        name="siddhasana"
+        options={{
+          title: 'Siddhasana',
+          tabBarAccessibilityLabel: 'Siddhasana',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'flower' : 'flower-outline'} size={28} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="prayer"
         options={{
           title: 'Prayer',
