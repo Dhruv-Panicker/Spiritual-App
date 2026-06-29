@@ -444,13 +444,6 @@ export default function VideosScreen() {
           />
         </View>
 
-        {/* Transparent tap overlay — tap to show/hide caption */}
-        <TouchableOpacity
-          style={styles.tapOverlay}
-          onPress={toggleCaption}
-          activeOpacity={1}
-        />
-
         {/* Side Action Buttons */}
         <View style={styles.sideActionButtons}>
           {!isLiveSlot && (
@@ -465,6 +458,17 @@ export default function VideosScreen() {
               <Text style={styles.actionButtonText}>Share</Text>
             </TouchableOpacity>
           )}
+
+          <TouchableOpacity
+            style={styles.sideActionButton}
+            onPress={toggleCaption}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.actionIconContainer, captionVisible && styles.actionIconActive]}>
+              <Ionicons name="text" size={24} color="#FFFFFF" />
+            </View>
+            <Text style={styles.actionButtonText}>Caption</Text>
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.sideActionButton}
