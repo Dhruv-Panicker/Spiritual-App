@@ -247,7 +247,7 @@ class NotificationService {
             ...notificationData.data,
           },
         },
-        trigger: null, // null = immediate (iOS handles this better with our handler)
+        trigger: { seconds: 1 },
       });
 
       console.log('✅ Local notification scheduled successfully!');
@@ -325,7 +325,7 @@ class NotificationService {
     return await this.sendPushNotification(
       {
         type: 'quote',
-        title: '📚 New Daily Wisdom',
+        title: 'New Daily Wisdom',
         body: `"${truncatedQuote}" - ${author}`,
         data: { quote: quoteText, author },
       },
@@ -338,7 +338,7 @@ class NotificationService {
     return await this.sendPushNotification(
       {
         type: 'video',
-        title: '🎥 New Spiritual Video',
+        title: 'New Spiritual Video',
         body: `New video available: ${videoTitle}`,
         data: { title: videoTitle },
       },
@@ -352,7 +352,7 @@ class NotificationService {
     return await this.sendPushNotification(
       {
         type: 'event',
-        title: '📅 New Event',
+        title: 'New Event',
         body: `${eventTitle} - ${date}`,
         data: { title: eventTitle, date: eventDate },
       },
@@ -365,7 +365,7 @@ class NotificationService {
     return await this.sendPushNotification(
       {
         type: 'general',
-        title: '🙏 Siddhguru',
+        title: 'Siddhguru',
         body: message,
       },
       pushTokens

@@ -121,18 +121,32 @@ export default function AdminScreen() {
 
       await addQuote(quoteData);
 
-      // Send notification if enabled
       if (sendQuoteNotification) {
         try {
           const pushTokens = await getPushTokens();
-          await notificationService.notifyNewQuote(quoteData.text, quoteData.author, pushTokens);
+          const adminToken = notificationService.getPushToken() || await notificationService.getStoredPushToken();
+          const remoteTokens = adminToken ? pushTokens.filter(t => t !== adminToken) : pushTokens;
+          if (remoteTokens.length > 0) {
+            await notificationService.notifyNewQuote(quoteData.text, quoteData.author, remoteTokens);
+          }
         } catch (notifError) {
           console.error('Error sending notification:', notifError);
-          // Don't fail the quote submission if notification fails
         }
       }
 
-      Alert.alert('Success', 'Quote has been added successfully!');
+      const quotePreview = quoteData.text.length > 60 ? quoteData.text.substring(0, 57) + '...' : quoteData.text;
+      Alert.alert('Success', 'Quote has been added successfully!', [{
+        text: 'OK',
+        onPress: () => {
+          if (sendQuoteNotification) {
+            notificationService.sendLocalNotification({
+              type: 'quote',
+              title: 'New Daily Wisdom',
+              body: `"${quotePreview}" - ${quoteData.author}`,
+            }).catch(() => {});
+          }
+        },
+      }]);
       
       // Clear form
       setQuoteText('');
@@ -192,17 +206,31 @@ export default function AdminScreen() {
 
       await addVideo(videoData);
 
-      // Send notification if enabled
       if (sendVideoNotification) {
         try {
           const pushTokens = await getPushTokens();
-          await notificationService.notifyNewVideo(videoData.title, pushTokens);
+          const adminToken = notificationService.getPushToken() || await notificationService.getStoredPushToken();
+          const remoteTokens = adminToken ? pushTokens.filter(t => t !== adminToken) : pushTokens;
+          if (remoteTokens.length > 0) {
+            await notificationService.notifyNewVideo(videoData.title, remoteTokens);
+          }
         } catch (notifError) {
           console.error('Error sending notification:', notifError);
         }
       }
 
-      Alert.alert('Success', 'Video has been added successfully!');
+      Alert.alert('Success', 'Video has been added successfully!', [{
+        text: 'OK',
+        onPress: () => {
+          if (sendVideoNotification) {
+            notificationService.sendLocalNotification({
+              type: 'video',
+              title: 'New Spiritual Video',
+              body: `New video available: ${videoData.title}`,
+            }).catch(() => {});
+          }
+        },
+      }]);
 
       // Clear form
       setVideoTitle('');
@@ -244,17 +272,31 @@ export default function AdminScreen() {
 
       await addEvent(eventData);
 
-      // Send notification if enabled
       if (sendEventNotification) {
         try {
           const pushTokens = await getPushTokens();
-          await notificationService.notifyNewEvent(eventData.title, eventData.date, pushTokens);
+          const adminToken = notificationService.getPushToken() || await notificationService.getStoredPushToken();
+          const remoteTokens = adminToken ? pushTokens.filter(t => t !== adminToken) : pushTokens;
+          if (remoteTokens.length > 0) {
+            await notificationService.notifyNewEvent(eventData.title, eventData.date, remoteTokens);
+          }
         } catch (notifError) {
           console.error('Error sending notification:', notifError);
         }
       }
 
-      Alert.alert('Success', 'Event has been added successfully!');
+      Alert.alert('Success', 'Event has been added successfully!', [{
+        text: 'OK',
+        onPress: () => {
+          if (sendEventNotification) {
+            notificationService.sendLocalNotification({
+              type: 'event',
+              title: 'New Event',
+              body: `${eventData.title} - ${eventData.date}`,
+            }).catch(() => {});
+          }
+        },
+      }]);
 
       // Clear form
       setEventTitle('');
@@ -602,54 +644,36 @@ export default function AdminScreen() {
         return;
       }
 
-      // Get push tokens
-      console.log('🔍 Fetching push tokens from Google Sheets...');
-      const pushTokens = await getPushTokens();
-      console.log(`📋 Found ${pushTokens.length} push token(s)`);
-      
-      if (pushTokens.length > 0) {
-        console.log('  Tokens (first 30 chars each):');
-        pushTokens.forEach((token, index) => {
-          console.log(`    ${index + 1}. ${token.substring(0, 30)}...`);
-        });
+      // Get all push tokens from Google Sheets
+      const allTokens = await getPushTokens();
+
+      // Get admin's own token so we can exclude it from push (admin gets local instead)
+      const adminToken = notificationService.getPushToken() || await notificationService.getStoredPushToken();
+      const remoteTokens = adminToken
+        ? allTokens.filter(t => t !== adminToken)
+        : allTokens;
+
+      // Send push to all other users
+      if (remoteTokens.length > 0) {
+        await notificationService.notifyGeneral(notificationMessage.trim(), remoteTokens);
       }
-      
-      // Send notification
-      console.log('📤 Sending notification...');
-      const success = await notificationService.notifyGeneral(notificationMessage.trim(), pushTokens);
-      
-      if (success) {
-        console.log('✅ Notification sent successfully!');
-        
-        // Show immediate alert for testing + notification
-        Alert.alert(
-          '✅ Notification Sent!', 
-          `"${notificationMessage.trim()}"\n\nThe notification has been sent. On iOS:\n\n• If app is in FOREGROUND: Check the alert above or minimize the app\n• If app is in BACKGROUND: Check notification center (swipe down)\n• Lock your phone to see it on lock screen\n\n💡 Tip: Minimize the app or lock your phone to see the notification banner.`,
-          [{ text: 'OK' }]
-        );
-        setNotificationMessage('');
-      } else {
-        console.error('❌ Notification send returned false');
-        Alert.alert(
-          'Notification Scheduled',
-          'Notification was scheduled but may not have sent successfully.\n\nPlease try:\n• Minimize the app and check notification center\n• Lock your phone to see on lock screen\n• Verify notifications are enabled in iOS Settings',
-          [{ text: 'OK' }]
-        );
-        setNotificationMessage('');
-      }
+
+      const message = notificationMessage.trim();
+      setNotificationMessage('');
+
+      Alert.alert('Notification Sent', 'Your message has been sent to all users.', [{
+        text: 'OK',
+        onPress: () => {
+          notificationService.sendLocalNotification({
+            type: 'general',
+            title: 'Siddhguru',
+            body: message,
+          }).catch(() => {});
+        },
+      }]);
     } catch (error: any) {
       const errorMessage = error?.message || error?.toString() || 'Unknown error';
-      console.error('❌ Error sending notification:', error);
-      console.error('  Error type:', error?.constructor?.name);
-      console.error('  Error message:', errorMessage);
-      console.error('  Full error:', JSON.stringify(error, null, 2));
-      
-      // Show detailed error in alert
-      Alert.alert(
-        'Error Sending Notification', 
-        `Failed to send notification.\n\nError: ${errorMessage}\n\nPlease check:\n1. Notifications are enabled in device settings\n2. Internet connection is available\n3. Try again in a moment`,
-        [{ text: 'OK' }]
-      );
+      Alert.alert('Error', `Failed to send notification: ${errorMessage}`, [{ text: 'OK' }]);
     } finally {
       setIsSendingNotification(false);
     }
@@ -696,12 +720,6 @@ export default function AdminScreen() {
             )}
           </TouchableOpacity>
 
-          <View style={styles.infoCard}>
-            <Ionicons name="information-circle" size={20} color={SPIRITUAL_COLORS.primary} />
-            <Text style={styles.infoText}>
-              Notifications are sent immediately to all users. In production, you'll need a backend service to collect and manage user push tokens.
-            </Text>
-          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
