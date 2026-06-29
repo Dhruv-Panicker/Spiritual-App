@@ -82,12 +82,8 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
   },
-  tapOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+  actionIconActive: {
+    backgroundColor: 'rgba(193,127,60,0.55)',
   },
   videoInfoOverlay: {
     position: 'absolute',
