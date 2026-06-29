@@ -82,6 +82,13 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
   },
+  tapOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
   videoInfoOverlay: {
     position: 'absolute',
     bottom: 0,
@@ -89,8 +96,22 @@ export const styles = StyleSheet.create({
     right: 0,
     paddingHorizontal: 16,
     paddingBottom: 40,
-    paddingTop: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    paddingTop: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.82)',
+  },
+  captionHideBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-end',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    gap: 4,
+    marginBottom: 4,
+  },
+  captionHideBtnText: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 12,
+    fontWeight: '500',
   },
   videoDetails: {
     marginBottom: 20,
