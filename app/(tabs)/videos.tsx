@@ -465,7 +465,7 @@ export default function VideosScreen() {
             activeOpacity={0.7}
           >
             <View style={[styles.actionIconContainer, captionVisible && styles.actionIconActive]}>
-              <Ionicons name="text" size={24} color="#FFFFFF" />
+              <Ionicons name={captionVisible ? 'chatbubble-ellipses' : 'chatbubble-ellipses-outline'} size={24} color="#FFFFFF" />
             </View>
             <Text style={styles.actionButtonText}>Caption</Text>
           </TouchableOpacity>
