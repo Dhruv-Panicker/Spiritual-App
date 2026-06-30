@@ -73,6 +73,12 @@ export const styles = StyleSheet.create({
   quoteText: {
     marginBottom: 12,
   },
+  quoteImage: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 10,
+    marginBottom: 12,
+  },
   author: {
     marginBottom: 12,
   },

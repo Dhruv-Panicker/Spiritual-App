@@ -15,6 +15,7 @@ export interface Quote {
   category: string;
   dateAdded: string;
   reflection?: string;
+  imageUrl?: string;
 }
 
 export interface Video {
@@ -169,19 +170,19 @@ class GoogleSheetsService {
       console.log(`Found ${dataRows.length} quote rows`);
       
       const quotes: Quote[] = dataRows.map((row, index) => {
-        // Map columns: [id, text, author, category, dateAdded, reflection]
+        // Map columns: [id, text, author, category, dateAdded, reflection, imageUrl]
         const quote: Quote = {
           id: row[0] || `quote_${index + 1}`,
           text: row[1] || '',
           author: row[2] || 'Unknown',
           category: row[3] || 'General',
           dateAdded: row[4] || new Date().toISOString(),
-          reflection: row[5] || undefined
+          reflection: row[5] || undefined,
+          imageUrl: row[6] || undefined,
         };
-        
-        // Filter out empty quotes (where text is empty)
+
         return quote;
-      }).filter(quote => quote.text.trim().length > 0);
+      }).filter(quote => quote.text.trim().length > 0 || !!quote.imageUrl);
       
       console.log(`Loaded ${quotes.length} quotes from Google Sheets`);
       return quotes;
@@ -210,7 +211,8 @@ class GoogleSheetsService {
         newQuote.author,
         newQuote.category,
         newQuote.dateAdded,
-        newQuote.reflection || ''
+        newQuote.reflection || '',
+        newQuote.imageUrl || '',
       ];
 
       // Send to Google Sheets via webhook (Apps Script)
