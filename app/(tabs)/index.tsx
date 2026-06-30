@@ -348,11 +348,11 @@ export default function HomeScreen() {
 
           {/* Siddhguru Says */}
           <View style={styles.gurudevSaysCard}>
-            <Text style={styles.gurudevSaysLabel}>Siddhguru Says</Text>
+            <Text style={styles.gurudevSaysLabel}>Om Siddheshwar Says</Text>
             <Text style={styles.gurudevSaysText}>
               When you connect with the silence within you, that is when you can make sense of the disturbance going on around you.
             </Text>
-            <Text style={styles.gurudevSaysAuthor}>— Sri Sidheshwar Brahmrishi</Text>
+            <Text style={styles.gurudevSaysAuthor}>— Om Siddheshwar Brahmrishi Ji</Text>
           </View>
 
           <View style={styles.footerSpacer} />
