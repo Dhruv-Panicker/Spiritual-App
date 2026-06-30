@@ -5,6 +5,7 @@ import {
   Image,
   ScrollView,
   TouchableOpacity,
+  Modal,
   Dimensions,
   Platform,
   Linking,
@@ -71,6 +72,7 @@ export default function HomeScreen() {
   const { quotes } = useQuotes();
   const { liveStatus } = useVideos();
   const [quoteIndex, setQuoteIndex] = useState(0);
+  const [accountMenuVisible, setAccountMenuVisible] = useState(false);
   const quoteScrollRef = useRef<ScrollView>(null);
   const isUserScrolling = useRef(false);
 
@@ -124,10 +126,18 @@ export default function HomeScreen() {
   };
 
   const handleLogout = () => {
+    setAccountMenuVisible(false);
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     logout();
+  };
+
+  const handleDeleteAccount = () => {
+    setAccountMenuVisible(false);
+    Linking.openURL(
+      `mailto:noreply.gurudevapp@gmail.com?subject=Account%20Deletion%20Request&body=Please%20delete%20my%20account%20and%20all%20associated%20data.%0A%0AMy%20email%3A%20${encodeURIComponent(user?.email ?? '')}`
+    );
   };
 
   const features = [
@@ -221,13 +231,37 @@ export default function HomeScreen() {
                 />
               </View>
               <TouchableOpacity
-                style={styles.logoutButton}
-                onPress={handleLogout}
+                style={styles.accountButton}
+                onPress={() => setAccountMenuVisible(true)}
                 activeOpacity={0.7}
               >
-                <Ionicons name="log-out-outline" size={20} color={SPIRITUAL_COLORS.primary} />
-                <Text style={styles.logoutText}>Logout</Text>
+                <Ionicons name="person-circle-outline" size={34} color={SPIRITUAL_COLORS.primary} />
               </TouchableOpacity>
+
+              <Modal
+                visible={accountMenuVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setAccountMenuVisible(false)}
+              >
+                <TouchableOpacity
+                  style={styles.dropdownBackdrop}
+                  activeOpacity={1}
+                  onPress={() => setAccountMenuVisible(false)}
+                >
+                  <View style={styles.dropdownMenu}>
+                    <TouchableOpacity style={styles.dropdownItem} onPress={handleLogout} activeOpacity={0.7}>
+                      <Ionicons name="log-out-outline" size={18} color={SPIRITUAL_COLORS.primary} />
+                      <Text style={styles.dropdownItemText}>Logout</Text>
+                    </TouchableOpacity>
+                    <View style={styles.dropdownDivider} />
+                    <TouchableOpacity style={styles.dropdownItem} onPress={handleDeleteAccount} activeOpacity={0.7}>
+                      <Ionicons name="trash-outline" size={18} color="#c0392b" />
+                      <Text style={[styles.dropdownItemText, { color: '#c0392b' }]}>Delete my account</Text>
+                    </TouchableOpacity>
+                  </View>
+                </TouchableOpacity>
+              </Modal>
             </View>
           </View>
 
@@ -320,19 +354,6 @@ export default function HomeScreen() {
             </Text>
             <Text style={styles.gurudevSaysAuthor}>— Sri Sidheshwar Brahmrishi</Text>
           </View>
-
-          <View style={styles.footerSpacer} />
-
-          <TouchableOpacity
-            onPress={() =>
-              Linking.openURL(
-                `mailto:noreply.gurudevapp@gmail.com?subject=Account%20Deletion%20Request&body=Please%20delete%20my%20account%20and%20all%20associated%20data.%0A%0AMy%20email%3A%20${encodeURIComponent(user?.email ?? '')}`
-              )
-            }
-            activeOpacity={0.6}
-          >
-            <Text style={styles.deleteAccountText}>Delete my account</Text>
-          </TouchableOpacity>
 
           <View style={styles.footerSpacer} />
         </ScrollView>

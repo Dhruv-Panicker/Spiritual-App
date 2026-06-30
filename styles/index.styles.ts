@@ -37,22 +37,42 @@ export const styles = StyleSheet.create({
     width: 80,
     height: 80,
   },
-  logoutButton: {
+  accountButton: {
+    padding: 4,
+  },
+  dropdownBackdrop: {
+    flex: 1,
+  },
+  dropdownMenu: {
+    position: 'absolute',
+    top: 80,
+    right: 20,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 8,
+    minWidth: 190,
+    overflow: 'hidden',
+  },
+  dropdownItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'transparent',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1.5,
-    borderColor: 'rgba(139,69,19,0.25)',
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    gap: 10,
   },
-  logoutText: {
-    marginLeft: 6,
-    fontSize: 12,
-    fontWeight: '600',
-    color: SPIRITUAL_COLORS.primary,
-    letterSpacing: 0.5,
+  dropdownItemText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: SPIRITUAL_COLORS.foreground,
+  },
+  dropdownDivider: {
+    height: 1,
+    backgroundColor: 'rgba(0,0,0,0.07)',
+    marginHorizontal: 12,
   },
   hero: {
     paddingTop: 24,
@@ -299,12 +319,5 @@ export const styles = StyleSheet.create({
   },
   footerSpacer: {
     height: 24,
-  },
-  deleteAccountText: {
-    fontSize: 11,
-    color: 'rgba(139,69,19,0.35)',
-    textAlign: 'center',
-    textDecorationLine: 'underline',
-    marginBottom: 8,
   },
 });
