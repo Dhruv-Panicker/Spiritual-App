@@ -43,6 +43,7 @@ yarn-error.*
 # Google Services (sensitive files)
 GoogleService-Info.plist
 google-services.json
+google-play-service-account.json
 
 # IDE
 .vscode/

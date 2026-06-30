@@ -22,13 +22,16 @@
       }
     },
     "android": {
-      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/gurudev-app-icon.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.spiritualapp.gurudarshan",
-      "permissions": ["RECEIVE_BOOT_COMPLETED", "VIBRATE"]
+      "permissions": [
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "POST_NOTIFICATIONS"
+      ]
     },
     "web": {
       "bundler": "metro",
