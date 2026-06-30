@@ -58,7 +58,7 @@ export default function GurudevScreen() {
     try {
       await Share.share({
         message: shareText,
-        title: 'Meet Our Siddhguru',
+        title: 'Meet Our Om Siddheshwar',
       });
     } catch (error) {
       console.error('Error sharing app:', error);
@@ -77,7 +77,7 @@ export default function GurudevScreen() {
           showsVerticalScrollIndicator={false}
           bounces={true}
         >
-          {/* Hero Section - Siddhguru profile image backdrop */}
+          {/* Hero Section - Om Siddheshwar profile image backdrop */}
           <View style={styles.heroContainer}>
             <Image
               source={require('@/assets/images/gurudev-profile-image.png')}
@@ -96,7 +96,7 @@ export default function GurudevScreen() {
                   resizeMode="contain"
                 />
               </Animated.View>
-              <Text style={styles.heroTitle}>Siddhguru</Text>
+              <Text style={styles.heroTitle}>Om Siddheshwar</Text>
               <Text style={styles.heroSubtitle}>A beacon of wisdom and compassion</Text>
             </View>
           </View>
@@ -105,7 +105,7 @@ export default function GurudevScreen() {
           <Animated.View style={[styles.contentCard, { opacity: fadeAnim }]}>
             <View style={styles.biographySection}>
               <Text style={styles.bodyText}>
-                Siddhguru, also often known as Gurudev, spent over 50 years in deep, uninterrupted meditation and self-inquiry. That sustained focus has given him an unprecedented level of clarity about the rhythm of life and how to apply ancient wisdom to our modern challenges.
+                Om Siddheshwar, also often known as Gurudev, spent over 50 years in deep, uninterrupted meditation and self-inquiry. That sustained focus has given him an unprecedented level of clarity about the rhythm of life and how to apply ancient wisdom to our modern challenges.
               </Text>
 
               <Text style={styles.bodyText}>
