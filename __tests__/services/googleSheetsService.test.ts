@@ -58,8 +58,8 @@ describe('getQuotes()', () => {
     mockFetch.mockResolvedValueOnce(
       makeOkResponse({
         values: [
-          ['id', 'text', 'author', 'category', 'dateAdded', 'reflection'],
-          ['q1', 'Peace begins within', 'Siddhguru', 'Meditation', '2024-01-01', 'Breathe deeply'],
+          ['id', 'text', 'author', 'category', 'dateAdded', 'imageUrl'],
+          ['q1', 'Peace begins within', 'Siddhguru', 'Meditation', '2024-01-01', ''],
           ['q2', 'Love is the path', 'Siddhguru', 'Love', '2024-01-02', ''],
         ],
       })
@@ -73,9 +73,8 @@ describe('getQuotes()', () => {
       text: 'Peace begins within',
       author: 'Siddhguru',
       category: 'Meditation',
-      reflection: 'Breathe deeply',
     });
-    expect(quotes[1].reflection).toBeUndefined();
+    expect(quotes[1].imageUrl).toBeUndefined();
   });
 
   it('filters out quotes with empty text', async () => {
@@ -289,7 +288,6 @@ describe('addQuote()', () => {
       text: 'New quote',
       author: 'Siddhguru',
       category: 'Wisdom',
-      reflection: 'Reflect on this',
     });
 
     expect(quote.id).toMatch(/^quote_\d+$/);

@@ -22,10 +22,6 @@ class ShareService {
     try {
       let shareText = quote.text ? `"${quote.text}"\n— ${quote.author}\n\n` : `— ${quote.author}\n\n`;
 
-      if (quote.reflection) {
-        shareText += `Reflection: ${quote.reflection}\n\n`;
-      }
-
       if (quote.imageUrl) {
         shareText += `${quote.imageUrl}\n\n`;
       }

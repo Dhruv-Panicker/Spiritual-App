@@ -14,7 +14,6 @@ export interface Quote {
   author: string;
   category: string;
   dateAdded: string;
-  reflection?: string;
   imageUrl?: string;
 }
 
@@ -152,7 +151,7 @@ class GoogleSheetsService {
   /**
    * Get quotes from Google Sheets
    * Reads from the 'quotes' sheet in Google Sheets
-   * Expected columns: [id, text, author, category, dateAdded, reflection]
+   * Expected columns: [id, text, author, category, dateAdded, imageUrl]
    */
   async getQuotes(): Promise<Quote[]> {
     try {
@@ -170,15 +169,14 @@ class GoogleSheetsService {
       console.log(`Found ${dataRows.length} quote rows`);
       
       const quotes: Quote[] = dataRows.map((row, index) => {
-        // Map columns: [id, text, author, category, dateAdded, reflection, imageUrl]
+        // Map columns: [id, text, author, category, dateAdded, imageUrl]
         const quote: Quote = {
           id: row[0] || `quote_${index + 1}`,
           text: row[1] || '',
           author: row[2] || 'Unknown',
           category: row[3] || 'General',
           dateAdded: row[4] || new Date().toISOString(),
-          reflection: row[5] || undefined,
-          imageUrl: row[6] || undefined,
+          imageUrl: row[5] || undefined,
         };
 
         return quote;
@@ -211,7 +209,6 @@ class GoogleSheetsService {
         newQuote.author,
         newQuote.category,
         newQuote.dateAdded,
-        newQuote.reflection || '',
         newQuote.imageUrl || '',
       ];
 

@@ -112,14 +112,6 @@ const QuoteCard: React.FC<{ quote: Quote }> = ({ quote }) => {
         );
       })()}
 
-      {quote.reflection && (
-        <View style={styles.reflectionContainer}>
-          <Text style={styles.reflectionLabel}>Reflection:</Text>
-          <Text style={[styles.reflectionText, SPIRITUAL_TYPOGRAPHY.reflection]}>
-            {quote.reflection}
-          </Text>
-        </View>
-      )}
 
       <View style={styles.actionButtons}>
         <TouchableOpacity
