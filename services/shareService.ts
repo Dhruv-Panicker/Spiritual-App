@@ -6,7 +6,7 @@ import { env } from '@/config/env';
 
 class ShareService {
   private get appName(): string {
-    return env.appName || 'Siddhguru';
+    return env.appName || 'Om Siddheshwar';
   }
   private get appStoreLink(): string {
     return env.appStoreLink || 'https://apps.apple.com/app/siddhguru/id6761345708';

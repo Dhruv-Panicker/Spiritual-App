@@ -60,6 +60,20 @@ export const styles = StyleSheet.create({
     lineHeight: 22,
     paddingHorizontal: 8,
   },
+  privacyNote: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginTop: 12,
+    paddingHorizontal: 8,
+    gap: 6,
+  },
+  privacyText: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.75)',
+    lineHeight: 18,
+    flex: 1,
+    fontStyle: 'italic',
+  },
   formCard: {
     backgroundColor: SPIRITUAL_COLORS.cardBackground,
     marginHorizontal: 16,

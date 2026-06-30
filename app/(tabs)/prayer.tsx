@@ -134,7 +134,7 @@ export default function PrayerScreen() {
       }
       Alert.alert(
         'Prayer sent',
-        `Your prayer has been submitted. A confirmation email has been sent to ${userEmail}. May Siddhguru's blessings be with you.`,
+        `Your prayer has been submitted. A confirmation email has been sent to ${userEmail}. May Om Siddheshwar's blessings be with you.`,
         [{ text: 'OK' }]
       );
       setName('');
@@ -157,8 +157,9 @@ export default function PrayerScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <LinearGradient colors={SPIRITUAL_GRADIENTS.peace} style={styles.gradient}>
+        <SafeAreaView style={{ flex: 1 }}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardView}
@@ -168,6 +169,7 @@ export default function PrayerScreen() {
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
             bounces={true}
           >
             {/* Hero / Banner section */}
@@ -182,11 +184,17 @@ export default function PrayerScreen() {
                 style={styles.heroOverlay}
               />
               <View style={styles.heroContent}>
-                <Text style={styles.heroTitle}>Send a prayer to Siddhguru</Text>
+                <Text style={styles.heroTitle}>Send a prayer to Om Siddheshwar</Text>
                 <Text style={styles.heroSubtitle}>
-                  Through this medium you can send your prayers and wishes to Siddhguru. Your heartfelt
+                  Through this medium you can send your prayers and wishes to Om Siddheshwar. Your heartfelt
                   words will be received with love and blessings.
                 </Text>
+                <View style={styles.privacyNote}>
+                  <Ionicons name="lock-closed" size={13} color="rgba(255,255,255,0.85)" />
+                  <Text style={styles.privacyText}>
+                    This prayer is private and will reach Om Siddheshwar directly — no one else will view what you've shared.
+                  </Text>
+                </View>
               </View>
             </View>
 
@@ -360,7 +368,8 @@ export default function PrayerScreen() {
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
+        </SafeAreaView>
       </LinearGradient>
-    </SafeAreaView>
+    </View>
   );
 }

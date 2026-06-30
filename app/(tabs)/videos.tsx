@@ -30,6 +30,8 @@ export default function VideosScreen() {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const currentVideoIndexRef = useRef(0);
   const translateY = useRef(new Animated.Value(0)).current;
+  const [captionVisible, setCaptionVisible] = useState(false);
+  const captionAnim = useRef(new Animated.Value(0)).current;
   // Bumped each time the tab regains focus to force the player to remount and
   // auto-resume (the YouTube iframe only autoplays on load, not on revisit).
   const [focusKey, setFocusKey] = useState(0);
@@ -53,6 +55,28 @@ export default function VideosScreen() {
       setCurrentVideoIndex(totalSlots - 1);
     }
   }, [totalSlots, currentVideoIndex]);
+
+  // Hide caption whenever the video changes.
+  useEffect(() => {
+    captionAnim.setValue(0);
+    setCaptionVisible(false);
+  }, [currentVideoIndex]);
+
+  const showCaption = useCallback(() => {
+    setCaptionVisible(true);
+    Animated.timing(captionAnim, { toValue: 1, duration: 220, useNativeDriver: true }).start();
+  }, [captionAnim]);
+
+  const hideCaption = useCallback(() => {
+    Animated.timing(captionAnim, { toValue: 0, duration: 180, useNativeDriver: true }).start(() =>
+      setCaptionVisible(false)
+    );
+  }, [captionAnim]);
+
+  const toggleCaption = useCallback(() => {
+    if (captionVisible) hideCaption();
+    else showCaption();
+  }, [captionVisible, showCaption, hideCaption]);
 
   // When returning to the videos tab, remount the player so the current reel
   // autoplays again. Skip the very first focus so the initial load isn't doubled.
@@ -417,49 +441,66 @@ export default function VideosScreen() {
               const { nativeEvent } = syntheticEvent;
               console.warn('WebView HTTP error: ', nativeEvent);
             }}
-            onLoadEnd={() => {
-              console.log('WebView loaded:', isLiveSlot ? `live-${liveStatus.liveVideoId}` : currentVideo?.youtubeId);
-            }}
           />
         </View>
 
-            {/* Side Action Buttons */}
-            <View style={styles.sideActionButtons}>
-              {!isLiveSlot && (
-                <TouchableOpacity
-                  style={styles.sideActionButton}
-                  onPress={() => shareVideo(currentVideo!)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.actionIconContainer}>
-                    <Ionicons
-                      name="share-outline"
-                      size={28}
-                      color="#FFFFFF"
-                    />
-                  </View>
-                  <Text style={styles.actionButtonText}>Share</Text>
-                </TouchableOpacity>
-              )}
+        {/* Side Action Buttons */}
+        <View style={styles.sideActionButtons}>
+          {!isLiveSlot && (
+            <TouchableOpacity
+              style={styles.sideActionButton}
+              onPress={() => shareVideo(currentVideo!)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.actionIconContainer}>
+                <Ionicons name="share-outline" size={28} color="#FFFFFF" />
+              </View>
+              <Text style={styles.actionButtonText}>Share</Text>
+            </TouchableOpacity>
+          )}
 
-              <TouchableOpacity
-                style={styles.sideActionButton}
-                onPress={() => (isLiveSlot ? openLiveChannel() : openInYouTube(currentVideo!))}
-                activeOpacity={0.7}
-              >
-                <View style={styles.actionIconContainer}>
-                  <Ionicons
-                    name="logo-youtube"
-                    size={28}
-                    color="#ff0000"
-                  />
-                </View>
-                <Text style={styles.actionButtonText}>YouTube</Text>
-              </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.sideActionButton}
+            onPress={toggleCaption}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.actionIconContainer, captionVisible && styles.actionIconActive]}>
+              <Ionicons name={captionVisible ? 'chatbubble-ellipses' : 'chatbubble-ellipses-outline'} size={24} color="#FFFFFF" />
             </View>
+            <Text style={styles.actionButtonText}>Caption</Text>
+          </TouchableOpacity>
 
-        {/* Video Info Overlay - Bottom */}
-        <View style={styles.videoInfoOverlay}>
+          <TouchableOpacity
+            style={styles.sideActionButton}
+            onPress={() => (isLiveSlot ? openLiveChannel() : openInYouTube(currentVideo!))}
+            activeOpacity={0.7}
+          >
+            <View style={styles.actionIconContainer}>
+              <Ionicons name="logo-youtube" size={28} color="#ff0000" />
+            </View>
+            <Text style={styles.actionButtonText}>YouTube</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Caption overlay — slides up on tap, hidden by default */}
+        <Animated.View
+          style={[
+            styles.videoInfoOverlay,
+            {
+              opacity: captionAnim,
+              transform: [{
+                translateY: captionAnim.interpolate({ inputRange: [0, 1], outputRange: [80, 0] }),
+              }],
+            },
+          ]}
+          pointerEvents={captionVisible ? 'auto' : 'none'}
+        >
+          {/* Hide button row */}
+          <TouchableOpacity style={styles.captionHideBtn} onPress={hideCaption} activeOpacity={0.7}>
+            <Ionicons name="chevron-down" size={16} color="rgba(255,255,255,0.7)" />
+            <Text style={styles.captionHideBtnText}>Hide</Text>
+          </TouchableOpacity>
+
           <View style={styles.videoDetails}>
             {isLiveSlot ? (
               <>
@@ -486,10 +527,10 @@ export default function VideosScreen() {
               </>
             )}
           </View>
-        </View>
+        </Animated.View>
 
         {/* Swipe Hint (for first-time users) */}
-        {currentVideoIndex === 0 && totalSlots > 1 && (
+        {currentVideoIndex === 0 && totalSlots > 1 && !captionVisible && (
           <View style={styles.swipeHint}>
             <Ionicons name="chevron-up" size={24} color="rgba(255,255,255,0.6)" />
             <Text style={styles.swipeHintText}>

@@ -349,7 +349,7 @@ export default function AdminScreen() {
             <Text style={styles.label}>Author *</Text>
             <TextInput
               style={styles.input}
-              placeholder="e.g., Siddhguru, Buddha, Rumi..."
+              placeholder="e.g., Om Siddheshwar, Buddha, Rumi..."
               placeholderTextColor={SPIRITUAL_COLORS.textMuted}
               value={quoteAuthor}
               onChangeText={setQuoteAuthor}
@@ -666,7 +666,7 @@ export default function AdminScreen() {
         onPress: () => {
           notificationService.sendLocalNotification({
             type: 'general',
-            title: 'Siddhguru',
+            title: 'Om Siddheshwar',
             body: message,
           }).catch(() => {});
         },

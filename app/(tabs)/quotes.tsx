@@ -78,7 +78,7 @@ const QuoteCard: React.FC<{ quote: Quote }> = ({ quote }) => {
     <View style={styles.quoteCard}>
       <View style={styles.quoteHeader}>
         <Image
-          source={require('@/assets/images/om_logo_transparent.png')}
+          source={require('@/assets/images/app-main-icon.png')}
           style={styles.omQuoteLogo}
           resizeMode="contain"
         />
@@ -166,7 +166,7 @@ export default function QuotesScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Image
-            source={require('@/assets/images/om_logo_transparent.png')}
+            source={require('@/assets/images/app-main-icon.png')}
             style={styles.omHeaderLogo}
             resizeMode="contain"
           />

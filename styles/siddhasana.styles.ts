@@ -37,13 +37,6 @@ export const styles = StyleSheet.create({
     right: 24,
     alignItems: 'center',
   },
-  omLogoWrap: {
-    marginBottom: 16,
-  },
-  omLogo: {
-    width: 48,
-    height: 48,
-  },
   heroTitle: {
     fontSize: 32,
     fontWeight: 'bold',
@@ -65,7 +58,7 @@ export const styles = StyleSheet.create({
     padding: 24,
     ...SPIRITUAL_SHADOWS.divine,
   },
-  biographySection: {
+  section: {
     gap: 20,
   },
   bodyText: {
@@ -74,11 +67,12 @@ export const styles = StyleSheet.create({
     color: SPIRITUAL_COLORS.foreground,
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
-  shareSection: {
+  eventsSection: {
     margin: 16,
     marginTop: 24,
+    marginBottom: 32,
   },
-  shareCard: {
+  eventsCard: {
     borderRadius: 16,
     padding: 24,
     alignItems: 'center',
@@ -86,33 +80,31 @@ export const styles = StyleSheet.create({
     borderColor: 'rgba(193,127,60,0.18)',
     ...SPIRITUAL_SHADOWS.peaceful,
   },
-  shareTitle: {
+  eventsTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: SPIRITUAL_COLORS.foreground,
     marginBottom: 8,
     textAlign: 'center',
   },
-  shareSubtitle: {
+  eventsSubtitle: {
     fontSize: 16,
     color: SPIRITUAL_COLORS.textMuted,
     textAlign: 'center',
     marginBottom: 20,
   },
-  shareButton: {
+  eventsButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.75)',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+    backgroundColor: SPIRITUAL_COLORS.primary,
+    paddingHorizontal: 28,
+    paddingVertical: 14,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(193,127,60,0.22)',
   },
-  shareButtonText: {
+  eventsButtonText: {
     marginLeft: 8,
     fontSize: 16,
     fontWeight: '600',
-    color: SPIRITUAL_COLORS.primary,
+    color: '#FFFFFF',
   },
 });

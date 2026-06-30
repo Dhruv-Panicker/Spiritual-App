@@ -5,6 +5,7 @@ import {
   Image,
   ScrollView,
   TouchableOpacity,
+  Modal,
   Dimensions,
   Platform,
   Linking,
@@ -71,6 +72,7 @@ export default function HomeScreen() {
   const { quotes } = useQuotes();
   const { liveStatus } = useVideos();
   const [quoteIndex, setQuoteIndex] = useState(0);
+  const [accountMenuVisible, setAccountMenuVisible] = useState(false);
   const quoteScrollRef = useRef<ScrollView>(null);
   const isUserScrolling = useRef(false);
 
@@ -124,10 +126,18 @@ export default function HomeScreen() {
   };
 
   const handleLogout = () => {
+    setAccountMenuVisible(false);
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     logout();
+  };
+
+  const handleDeleteAccount = () => {
+    setAccountMenuVisible(false);
+    Linking.openURL(
+      `mailto:noreply.gurudevapp@gmail.com?subject=Account%20Deletion%20Request&body=Please%20delete%20my%20account%20and%20all%20associated%20data.%0A%0AMy%20email%3A%20${encodeURIComponent(user?.email ?? '')}`
+    );
   };
 
   const features = [
@@ -147,14 +157,14 @@ export default function HomeScreen() {
     },
     {
       icon: 'play-circle-outline' as const,
-      title: "Siddhguru's Videos",
+      title: "Om Siddheshwar's Videos",
       description: 'Experience spiritual guidance through sacred video content',
       onPress: () => router.push('/(tabs)/videos'),
       accentColor: TILE_THEME_COLORS[2],
     },
     {
       icon: 'person-outline' as const,
-      title: 'About Siddhguru',
+      title: 'About Om Siddheshwar',
       description: "Connect with the teachings of Sri Sidheshwar Brahmrishi",
       onPress: () => router.push('/(tabs)/gurudev'),
       accentColor: TILE_THEME_COLORS[3],
@@ -215,29 +225,53 @@ export default function HomeScreen() {
             <View style={styles.headerTop}>
               <View style={styles.headerLeft}>
                 <Image
-                  source={require('@/assets/images/om_logo_transparent.png')}
+                  source={require('@/assets/images/app-main-icon.png')}
                   style={styles.omLogo}
                   resizeMode="contain"
                 />
               </View>
               <TouchableOpacity
-                style={styles.logoutButton}
-                onPress={handleLogout}
+                style={styles.accountButton}
+                onPress={() => setAccountMenuVisible(true)}
                 activeOpacity={0.7}
               >
-                <Ionicons name="log-out-outline" size={20} color={SPIRITUAL_COLORS.primary} />
-                <Text style={styles.logoutText}>Logout</Text>
+                <Ionicons name="person-circle-outline" size={34} color={SPIRITUAL_COLORS.primary} />
               </TouchableOpacity>
+
+              <Modal
+                visible={accountMenuVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setAccountMenuVisible(false)}
+              >
+                <TouchableOpacity
+                  style={styles.dropdownBackdrop}
+                  activeOpacity={1}
+                  onPress={() => setAccountMenuVisible(false)}
+                >
+                  <View style={styles.dropdownMenu}>
+                    <TouchableOpacity style={styles.dropdownItem} onPress={handleLogout} activeOpacity={0.7}>
+                      <Ionicons name="log-out-outline" size={18} color={SPIRITUAL_COLORS.primary} />
+                      <Text style={styles.dropdownItemText}>Logout</Text>
+                    </TouchableOpacity>
+                    <View style={styles.dropdownDivider} />
+                    <TouchableOpacity style={styles.dropdownItem} onPress={handleDeleteAccount} activeOpacity={0.7}>
+                      <Ionicons name="trash-outline" size={18} color="#c0392b" />
+                      <Text style={[styles.dropdownItemText, { color: '#c0392b' }]}>Delete my account</Text>
+                    </TouchableOpacity>
+                  </View>
+                </TouchableOpacity>
+              </Modal>
             </View>
           </View>
 
           {/* Hero: SIDDGURU / Sri Sidheshwar Brahmrishi / description */}
           <View style={styles.hero}>
-            <Text style={styles.heroMainTitle}>SIDDHGURU</Text>
-            <Text style={styles.heroSubTitle}>Sri Sidheshwar Brahmrishi</Text>
+            <Text style={styles.heroMainTitle}>Om Siddheshwar Brahmrishi Ji</Text>
+            <Text style={styles.heroSubTitle}>A Living Divine Power</Text>
             <View style={styles.heroDescriptionWrap}>
               <Text style={styles.heroDescription}>
-                An enlightened master dedicated to lifting your consciousness
+                The supreme global ambassador of divine consciousness, universal peace, spirituality, humanity, and non-violence
               </Text>
             </View>
           </View>
@@ -314,25 +348,12 @@ export default function HomeScreen() {
 
           {/* Siddhguru Says */}
           <View style={styles.gurudevSaysCard}>
-            <Text style={styles.gurudevSaysLabel}>Siddhguru Says</Text>
+            <Text style={styles.gurudevSaysLabel}>Om Siddheshwar Says</Text>
             <Text style={styles.gurudevSaysText}>
               When you connect with the silence within you, that is when you can make sense of the disturbance going on around you.
             </Text>
-            <Text style={styles.gurudevSaysAuthor}>— Sri Sidheshwar Brahmrishi</Text>
+            <Text style={styles.gurudevSaysAuthor}>— Om Siddheshwar Brahmrishi Ji</Text>
           </View>
-
-          <View style={styles.footerSpacer} />
-
-          <TouchableOpacity
-            onPress={() =>
-              Linking.openURL(
-                `mailto:noreply.gurudevapp@gmail.com?subject=Account%20Deletion%20Request&body=Please%20delete%20my%20account%20and%20all%20associated%20data.%0A%0AMy%20email%3A%20${encodeURIComponent(user?.email ?? '')}`
-              )
-            }
-            activeOpacity={0.6}
-          >
-            <Text style={styles.deleteAccountText}>Delete my account</Text>
-          </TouchableOpacity>
 
           <View style={styles.footerSpacer} />
         </ScrollView>

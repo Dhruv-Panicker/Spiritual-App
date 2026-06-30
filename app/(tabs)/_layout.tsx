@@ -55,10 +55,20 @@ function TabLayoutContent() {
       <Tabs.Screen
         name="gurudev"
         options={{
-          title: 'Siddhguru',
-          tabBarAccessibilityLabel: 'About Siddhguru',
+          title: 'Om Siddheshwar',
+          tabBarAccessibilityLabel: 'About Om Siddheshwar',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'person' : 'person-outline'} size={28} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="siddhasana"
+        options={{
+          title: 'Siddhasana',
+          tabBarAccessibilityLabel: 'Siddhasana',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'flower' : 'flower-outline'} size={28} color={color} />
           ),
         }}
       />
