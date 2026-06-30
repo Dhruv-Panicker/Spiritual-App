@@ -157,14 +157,14 @@ export default function HomeScreen() {
     },
     {
       icon: 'play-circle-outline' as const,
-      title: "Siddhguru's Videos",
+      title: "Om Siddheshwar's Videos",
       description: 'Experience spiritual guidance through sacred video content',
       onPress: () => router.push('/(tabs)/videos'),
       accentColor: TILE_THEME_COLORS[2],
     },
     {
       icon: 'person-outline' as const,
-      title: 'About Siddhguru',
+      title: 'About Om Siddheshwar',
       description: "Connect with the teachings of Sri Sidheshwar Brahmrishi",
       onPress: () => router.push('/(tabs)/gurudev'),
       accentColor: TILE_THEME_COLORS[3],
@@ -267,11 +267,11 @@ export default function HomeScreen() {
 
           {/* Hero: SIDDGURU / Sri Sidheshwar Brahmrishi / description */}
           <View style={styles.hero}>
-            <Text style={styles.heroMainTitle}>SIDDHGURU</Text>
-            <Text style={styles.heroSubTitle}>Sri Sidheshwar Brahmrishi</Text>
+            <Text style={styles.heroMainTitle}>Om Siddheshwar Brahmrishi Ji</Text>
+            <Text style={styles.heroSubTitle}>A Living Divine Power</Text>
             <View style={styles.heroDescriptionWrap}>
               <Text style={styles.heroDescription}>
-                An enlightened master dedicated to lifting your consciousness
+                The supreme global ambassador of divine consciousness, universal peace, spirituality, humanity, and non-violence
               </Text>
             </View>
           </View>
