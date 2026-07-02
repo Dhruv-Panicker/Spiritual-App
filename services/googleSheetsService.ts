@@ -176,7 +176,7 @@ class GoogleSheetsService {
           author: row[2] || 'Unknown',
           category: row[3] || 'General',
           dateAdded: row[4] || new Date().toISOString(),
-          imageUrl: row[5] || undefined,
+          imageUrl: (row[5] || '').trim().startsWith('http') ? (row[5] as string).trim() : undefined,
         };
 
         return quote;
