@@ -64,6 +64,15 @@ export interface PrayerSubmissionData {
   photoMimeType?: string;
 }
 
+// Converts a Google Drive sharing URL to a direct image URL
+// Admins can paste the standard "Copy link" URL from Drive and it just works
+function toDriveDirectUrl(url: string): string | undefined {
+  if (!url.startsWith('http')) return undefined;
+  const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (match) return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+  return url;
+}
+
 class GoogleSheetsService {
   private webhookUrl: string;
   private SHEET_ID: string;
@@ -169,14 +178,15 @@ class GoogleSheetsService {
       console.log(`Found ${dataRows.length} quote rows`);
       
       const quotes: Quote[] = dataRows.map((row, index) => {
-        // Map columns: [id, text, author, category, dateAdded, imageUrl]
+        // Map columns: [id, text, author, category, imageUrl, dateAdded]
+        const rawImageUrl = (row[4] || '').trim();
         const quote: Quote = {
           id: row[0] || `quote_${index + 1}`,
           text: row[1] || '',
           author: row[2] || 'Unknown',
           category: row[3] || 'General',
-          dateAdded: row[4] || new Date().toISOString(),
-          imageUrl: (row[5] || '').trim().startsWith('http') ? (row[5] as string).trim() : undefined,
+          dateAdded: row[5] || new Date().toISOString(),
+          imageUrl: toDriveDirectUrl(rawImageUrl),
         };
 
         return quote;
