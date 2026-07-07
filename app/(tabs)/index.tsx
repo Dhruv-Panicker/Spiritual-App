@@ -265,15 +265,13 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {/* Hero: SIDDGURU / Sri Sidheshwar Brahmrishi / description */}
-          <View style={styles.hero}>
-            <Text style={styles.heroMainTitle}>Om Siddheshwar Brahmrishi Ji</Text>
-            <Text style={styles.heroSubTitle}>A Living Divine Power</Text>
-            <View style={styles.heroDescriptionWrap}>
-              <Text style={styles.heroDescription}>
-                The supreme global ambassador of divine consciousness, universal peace, spirituality, humanity, and non-violence
-              </Text>
-            </View>
+          {/* Hero: Om Siddheshwar image */}
+          <View style={styles.heroImageContainer}>
+            <Image
+              source={require('@/assets/images/om-siddeshwar-main.png')}
+              style={styles.heroImage}
+              resizeMode="cover"
+            />
           </View>
 
           {/* Divider */}
