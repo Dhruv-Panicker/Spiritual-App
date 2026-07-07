@@ -267,11 +267,13 @@ export default function HomeScreen() {
 
           {/* Hero: Om Siddheshwar image */}
           <View style={styles.heroImageContainer}>
-            <Image
-              source={require('@/assets/images/om-siddeshwar-main.png')}
-              style={styles.heroImage}
-              resizeMode="cover"
-            />
+            <View style={styles.heroImageClip}>
+              <Image
+                source={require('@/assets/images/om-siddeshwar-main.png')}
+                style={styles.heroImage}
+                resizeMode="cover"
+              />
+            </View>
           </View>
 
           {/* Divider */}

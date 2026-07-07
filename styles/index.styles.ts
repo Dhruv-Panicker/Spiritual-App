@@ -78,16 +78,19 @@ export const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 4,
     borderRadius: 18,
-    overflow: 'hidden',
     shadowColor: '#3b1a00',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.18,
     shadowRadius: 14,
     elevation: 7,
   },
+  heroImageClip: {
+    borderRadius: 18,
+    overflow: 'hidden',
+  },
   heroImage: {
-    width: '100%',
-    aspectRatio: 1362 / 766,
+    width: screenWidth - 40,
+    height: (screenWidth - 40) * (766 / 1362),
   },
   divider: {
     textAlign: 'center',
