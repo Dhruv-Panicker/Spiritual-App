@@ -27,6 +27,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.spiritualapp.gurudarshan",
+      "googleServicesFile": "./google-services.json",
       "permissions": [
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",

@@ -41,9 +41,11 @@ yarn-error.*
 *.tsbuildinfo
 
 # Google Services (sensitive files)
+# Note: google-services.json is intentionally committed — it holds client
+# identifiers (not secrets) and EAS builds need it in the repo.
 GoogleService-Info.plist
-google-services.json
 google-play-service-account.json
+*firebase-adminsdk*.json
 
 # IDE
 .vscode/
