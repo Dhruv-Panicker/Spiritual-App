@@ -7,6 +7,8 @@ Sentry.init({
   enabled: !__DEV__,
 });
 import { useEffect } from 'react';
+import { useFonts } from 'expo-font';
+import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { QuotesProvider } from '@/contexts/QuotesContext';
@@ -19,6 +21,8 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({ ...Ionicons.font });
+
   useEffect(() => {
     // Initialize notification service on app start
     (async () => {

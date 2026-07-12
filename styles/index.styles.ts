@@ -1,4 +1,4 @@
-import { Dimensions, StyleSheet } from 'react-native';
+import { Dimensions, Platform, StyleSheet } from 'react-native';
 import { SPIRITUAL_COLORS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -124,7 +124,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 20,
     marginBottom: 24,
-    overflow: 'hidden',
+    ...Platform.select({ ios: { overflow: 'hidden' as const } }),
     ...SPIRITUAL_SHADOWS.card,
   },
   dailyQuotesAccent: {
@@ -250,7 +250,7 @@ export const styles = StyleSheet.create({
     width: (screenWidth - 52) / 2,
     marginBottom: 12,
     borderRadius: 14,
-    overflow: 'hidden',
+    ...Platform.select({ ios: { overflow: 'hidden' as const } }),
   },
   featureCardFullWidth: {
     width: '100%',
