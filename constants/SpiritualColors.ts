@@ -1,5 +1,9 @@
+import { Platform } from 'react-native';
+
 // Spiritual color palette – Siddguru / Vedic-inspired (brown, copper, cream)
 // Replaces previous saffron theme globally.
+// Android double-draws translucent backgrounds on views with border + radius,
+// so Android gets pre-blended opaque equivalents of the translucent whites.
 export const SPIRITUAL_COLORS = {
   // Primary – copper / saddle brown
   primary: '#c17f3c',
@@ -8,7 +12,7 @@ export const SPIRITUAL_COLORS = {
 
   // Background
   background: '#fdf6ec',
-  cardBackground: 'rgba(255,255,255,0.9)',
+  cardBackground: Platform.select({ android: '#fefdfb', default: 'rgba(255,255,255,0.9)' }) as string,
 
   // Text
   foreground: '#3d1f0a',
@@ -28,7 +32,7 @@ export const SPIRITUAL_COLORS = {
 
   // Border and input
   border: 'rgba(193,127,60,0.25)',
-  input: 'rgba(255,255,255,0.9)',
+  input: Platform.select({ android: '#fefdfb', default: 'rgba(255,255,255,0.9)' }) as string,
 
   // Tab navigation
   tabBackground: '#fdf6ec',

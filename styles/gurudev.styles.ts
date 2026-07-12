@@ -102,7 +102,7 @@ export const styles = StyleSheet.create({
   shareButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.75)',
+    backgroundColor: Platform.select({ android: '#fdfbf7', default: 'rgba(255,255,255,0.75)' }),
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,

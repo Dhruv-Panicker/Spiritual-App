@@ -1,4 +1,4 @@
-import { Dimensions, StyleSheet } from 'react-native';
+import { Dimensions, Platform, StyleSheet } from 'react-native';
 import { SPIRITUAL_COLORS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
 
 const { height: screenHeight } = Dimensions.get('window');
@@ -192,7 +192,7 @@ export const styles = StyleSheet.create({
   eventPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.7)',
+    backgroundColor: Platform.select({ android: '#fdfaf5', default: 'rgba(255,255,255,0.7)' }),
     borderRadius: 12,
     borderWidth: 1,
     borderColor: 'rgba(193,127,60,0.15)',
@@ -265,7 +265,7 @@ export const styles = StyleSheet.create({
     gap: 12,
   },
   monthCard: {
-    backgroundColor: 'rgba(255,255,255,0.6)',
+    backgroundColor: Platform.select({ android: '#fcf8f2', default: 'rgba(255,255,255,0.6)' }),
     borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(193,127,60,0.15)',

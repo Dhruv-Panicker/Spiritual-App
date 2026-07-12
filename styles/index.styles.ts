@@ -117,7 +117,7 @@ export const styles = StyleSheet.create({
     letterSpacing: 6,
   },
   dailyQuotesCard: {
-    backgroundColor: 'rgba(255,255,255,0.7)',
+    backgroundColor: Platform.select({ android: '#fdfaf5', default: 'rgba(255,255,255,0.7)' }),
     borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(193,127,60,0.2)',
@@ -256,7 +256,7 @@ export const styles = StyleSheet.create({
     width: '100%',
   },
   featureCardInner: {
-    backgroundColor: 'rgba(255,255,255,0.65)',
+    backgroundColor: Platform.select({ android: '#fdf9f3', default: 'rgba(255,255,255,0.65)' }),
     borderRadius: 14,
     borderWidth: 1,
     borderColor: 'rgba(193,127,60,0.18)',
@@ -292,7 +292,7 @@ export const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 16,
     paddingHorizontal: 18,
-    backgroundColor: 'rgba(255,255,255,0.5)',
+    backgroundColor: Platform.select({ android: '#fcf6ee', default: 'rgba(255,255,255,0.5)' }),
     borderWidth: 1,
     borderColor: 'rgba(193,127,60,0.2)',
   },
