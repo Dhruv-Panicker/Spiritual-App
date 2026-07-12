@@ -85,13 +85,23 @@ const QuoteCard: React.FC<{ quote: Quote }> = ({ quote }) => {
         <Text style={styles.date}>{formatDate(quote.dateAdded)}</Text>
       </View>
 
-      <Text style={[styles.quoteText, SPIRITUAL_TYPOGRAPHY.quoteText]}>
-        "{quote.text}"
-      </Text>
-      
-      <Text style={[styles.author, SPIRITUAL_TYPOGRAPHY.author]}>
-        — {quote.author}
-      </Text>
+      {quote.imageUrl ? (
+        <Image
+          source={{ uri: quote.imageUrl }}
+          style={styles.quoteImage}
+          resizeMode="cover"
+        />
+      ) : (
+        <Text style={[styles.quoteText, SPIRITUAL_TYPOGRAPHY.quoteText]}>
+          "{quote.text}"
+        </Text>
+      )}
+
+      {!quote.imageUrl && (
+        <Text style={[styles.author, SPIRITUAL_TYPOGRAPHY.author]}>
+          — {quote.author}
+        </Text>
+      )}
 
       {quote.category && (() => {
         const { bg, text } = getTagColor(quote.category);
@@ -102,14 +112,6 @@ const QuoteCard: React.FC<{ quote: Quote }> = ({ quote }) => {
         );
       })()}
 
-      {quote.reflection && (
-        <View style={styles.reflectionContainer}>
-          <Text style={styles.reflectionLabel}>Reflection:</Text>
-          <Text style={[styles.reflectionText, SPIRITUAL_TYPOGRAPHY.reflection]}>
-            {quote.reflection}
-          </Text>
-        </View>
-      )}
 
       <View style={styles.actionButtons}>
         <TouchableOpacity

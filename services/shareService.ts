@@ -20,14 +20,12 @@ class ShareService {
 
   async shareQuote(quote: Quote): Promise<void> {
     try {
-      let shareText = `"${quote.text}"\n— ${quote.author}\n\n`;
+      let shareText = quote.text ? `"${quote.text}"\n— ${quote.author}\n\n` : `— ${quote.author}\n\n`;
 
-      // Add reflection if available
-      if (quote.reflection) {
-        shareText += `Reflection: ${quote.reflection}\n\n`;
+      if (quote.imageUrl) {
+        shareText += `${quote.imageUrl}\n\n`;
       }
 
-      // Add app download message
       shareText += `🪷 Find more to pause and reflect on in the ${this.appName} app.\n`;
       shareText += `📱 ${this.getDownloadLink()}`;
 
