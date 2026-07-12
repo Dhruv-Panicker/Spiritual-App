@@ -9,6 +9,7 @@
     "web": "expo start --web",
     "generate-icon": "node scripts/generate-app-icon.js",
     "postinstall": "patch-package",
+    "eas-build-pre-install": "if [ -n \"$GOOGLE_SERVICES_JSON\" ]; then cp \"$GOOGLE_SERVICES_JSON\" android/app/google-services.json && cp \"$GOOGLE_SERVICES_JSON\" google-services.json; fi",
     "test": "jest --forceExit",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage --forceExit"
