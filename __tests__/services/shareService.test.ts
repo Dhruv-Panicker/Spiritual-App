@@ -2,7 +2,7 @@
  * Unit tests for ShareService
  *
  * Tests cover:
- * - shareQuote: correct message format, reflection inclusion
+ * - shareQuote: correct message format, imageUrl inclusion
  * - shareVideo: YouTube URL inclusion
  * - shareEvent: event details, location conditionally included
  * - shareApp: correct share message
@@ -35,7 +35,6 @@ const mockQuote = {
   author: 'Siddhguru',
   category: 'Wisdom',
   dateAdded: '2024-01-01',
-  reflection: 'Sit quietly and breathe',
 };
 
 const mockVideo = {
@@ -72,21 +71,20 @@ describe('shareQuote()', () => {
     expect(call.message).toContain('Siddhguru');
   });
 
-  it('includes reflection when present', async () => {
+  it('includes the imageUrl when present', async () => {
+    const quoteWithImage = { ...mockQuote, imageUrl: 'https://drive.google.com/uc?export=view&id=abc' };
+
+    await shareService.shareQuote(quoteWithImage);
+
+    const call = mockShare.mock.calls[0][0];
+    expect(call.message).toContain('https://drive.google.com/uc?export=view&id=abc');
+  });
+
+  it('does not include an image link when imageUrl is absent', async () => {
     await shareService.shareQuote(mockQuote);
 
     const call = mockShare.mock.calls[0][0];
-    expect(call.message).toContain('Sit quietly and breathe');
-    expect(call.message).toContain('Reflection:');
-  });
-
-  it('does not include "Reflection:" when reflection is absent', async () => {
-    const quoteNoReflection = { ...mockQuote, reflection: undefined };
-
-    await shareService.shareQuote(quoteNoReflection);
-
-    const call = mockShare.mock.calls[0][0];
-    expect(call.message).not.toContain('Reflection:');
+    expect(call.message).not.toContain('drive.google.com');
   });
 
   it('includes an app download link in the message', async () => {
