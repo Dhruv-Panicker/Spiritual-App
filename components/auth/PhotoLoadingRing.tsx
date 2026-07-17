@@ -1,20 +1,16 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Image, Animated, Easing, StyleSheet } from 'react-native';
+import { View, Image, Animated, Easing } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import {
+  styles,
+  SVG_SIZE,
+  RING_THICKNESS,
+  RING_COLOR,
+  SPIN_DURATION,
+  ARC_SWEEP,
+  SEGMENTS,
+} from './styles/PhotoLoadingRing.styles';
 
-/* ============================================
-   LOADING RING — edit these values
-   ============================================ */
-const PHOTO_SIZE = 180;        // diameter of the circular photo
-const RING_GAP = 8;            // space between photo edge and the ring
-const RING_THICKNESS = 4;      // how thin/thick the line is
-const RING_COLOR = '#F5A623';  // color of the line
-const SPIN_DURATION = 1400;    // ms per full rotation — lower = faster
-const ARC_SWEEP = 300;         // degrees of visible arc (rest is invisible tail)
-const SEGMENTS = 48;           // more = smoother fade
-/* ============================================ */
-
-const SVG_SIZE = PHOTO_SIZE + 2 * (RING_GAP + RING_THICKNESS);
 const RADIUS = SVG_SIZE / 2 - RING_THICKNESS / 2;
 const CENTER = SVG_SIZE / 2;
 
@@ -91,18 +87,3 @@ export const PhotoLoadingRing: React.FC = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  wrap: {
-    width: SVG_SIZE,
-    height: SVG_SIZE,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  photo: {
-    position: 'absolute',
-    width: PHOTO_SIZE,
-    height: PHOTO_SIZE,
-    borderRadius: PHOTO_SIZE / 2, // circular crop — hides the white square background
-  },
-});

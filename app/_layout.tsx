@@ -6,7 +6,8 @@ Sentry.init({
   dsn: 'https://64cb5a6d7bb3c0d945609f9444e04654@o4511130079789056.ingest.us.sentry.io/4511130095648768',
   enabled: !__DEV__,
 });
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { QuotesProvider } from '@/contexts/QuotesContext';
@@ -14,11 +15,19 @@ import { VideosProvider } from '@/contexts/VideosContext';
 import { EventsProvider } from '@/contexts/EventsContext';
 import { notificationService } from '@/services/notificationService';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { PhotoLoadingRing } from '@/components/auth/PhotoLoadingRing';
+import { styles as ringStyles } from '@/components/auth/styles/PhotoLoadingRing.styles';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
+const LOADER_MIN_MS = 1000;   // how long the animated loader stays up
+const LOADER_FADE_MS = 400;   // fade-out duration
+
 export default function RootLayout() {
+  const [showLoader, setShowLoader] = useState(true);
+  const loaderOpacity = useRef(new Animated.Value(1)).current;
+
   useEffect(() => {
     // Initialize notification service on app start
     (async () => {
@@ -30,10 +39,17 @@ export default function RootLayout() {
       }
     })();
 
-    // Hide splash screen after a short delay
+    // Swap native splash for the animated loader as soon as JS is up
+    SplashScreen.hideAsync();
+
+    // Keep the ring up briefly, then fade it out to reveal the app
     const timer = setTimeout(() => {
-      SplashScreen.hideAsync();
-    }, 1000);
+      Animated.timing(loaderOpacity, {
+        toValue: 0,
+        duration: LOADER_FADE_MS,
+        useNativeDriver: true,
+      }).start(() => setShowLoader(false));
+    }, LOADER_MIN_MS);
 
     return () => {
       clearTimeout(timer);
@@ -52,6 +68,17 @@ export default function RootLayout() {
                 <Stack.Screen name="+not-found" />
               </Stack>
               <StatusBar style="auto" />
+              {showLoader && (
+                <Animated.View
+                  style={[
+                    layoutStyles.loaderOverlay,
+                    ringStyles.centered,
+                    { opacity: loaderOpacity },
+                  ]}
+                >
+                  <PhotoLoadingRing />
+                </Animated.View>
+              )}
             </EventsProvider>
           </VideosProvider>
         </QuotesProvider>
@@ -60,3 +87,10 @@ export default function RootLayout() {
   );
 }
 
+const layoutStyles = StyleSheet.create({
+  loaderOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#111111', // match your splash backgroundColor in app.json
+    zIndex: 100,
+  },
+});

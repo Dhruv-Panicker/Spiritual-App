@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Animated } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { AuthFlow } from './AuthFlow';
-import { PhotoLoadingRing } from '@/components/PhotoLoadingRing';
+import { PhotoLoadingRing } from './PhotoLoadingRing';
+import { styles as ringStyles } from './styles/PhotoLoadingRing.styles';
 import { styles } from './styles/AuthGuard.styles';
 
 interface AuthGuardProps {
@@ -68,7 +69,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
 
   return (
     <View style={styles.loadingContainer} pointerEvents="box-none">
-      <Animated.View style={[styles.overlay, { opacity }]}>
+      <Animated.View style={[styles.overlay, ringStyles.centered, { opacity }]}>
         <PhotoLoadingRing />
       </Animated.View>
     </View>
