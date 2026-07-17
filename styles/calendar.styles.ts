@@ -1,5 +1,5 @@
 import { Dimensions, StyleSheet } from 'react-native';
-import { SPIRITUAL_COLORS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
+import { SPIRITUAL_COLORS, SPIRITUAL_PALETTE, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
 
 const { height: screenHeight } = Dimensions.get('window');
 const MONTH_MODAL_MAX_HEIGHT = screenHeight - 140;
@@ -85,7 +85,7 @@ export const styles = StyleSheet.create({
     height: 120,
     borderRadius: 60,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(36,16,7,0.08)',
   },
   heroCircle2: {
     position: 'absolute',
@@ -95,36 +95,36 @@ export const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
+    borderColor: 'rgba(36,16,7,0.06)',
   },
   heroLabel: {
     fontSize: 9,
-    color: 'rgba(255,255,255,0.65)',
+    color: 'rgba(57,34,24,0.75)',
     letterSpacing: 2,
     textTransform: 'uppercase',
     marginBottom: 8,
   },
   heroTypePill: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: 'rgba(36,16,7,0.10)',
     borderRadius: 20,
     paddingVertical: 3,
     paddingHorizontal: 10,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: 'rgba(36,16,7,0.16)',
   },
   heroTypePillText: {
     fontSize: 9,
     fontWeight: '700',
-    color: SPIRITUAL_COLORS.primaryForeground,
+    color: SPIRITUAL_PALETTE.brown800,
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
   heroTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: SPIRITUAL_COLORS.primaryForeground,
+    color: SPIRITUAL_PALETTE.brown800,
     marginBottom: 10,
     lineHeight: 24,
   },
@@ -140,7 +140,7 @@ export const styles = StyleSheet.create({
   },
   heroMetaText: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.85)',
+    color: 'rgba(57,34,24,0.85)',
   },
   divider: {
     flexDirection: 'row',
@@ -218,6 +218,9 @@ export const styles = StyleSheet.create({
   },
   eventPillBadge: {
     alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     paddingVertical: 2,
     paddingHorizontal: 7,
     borderRadius: 20,
@@ -251,11 +254,11 @@ export const styles = StyleSheet.create({
   eventPillDate: {
     fontSize: 11,
     fontWeight: '600',
-    color: SPIRITUAL_COLORS.primary,
+    color: SPIRITUAL_PALETTE.brown500,
   },
   eventPillTime: {
     fontSize: 11,
-    color: SPIRITUAL_COLORS.textMuted,
+    color: SPIRITUAL_PALETTE.brown500,
     marginTop: 1,
   },
   monthGrid: {

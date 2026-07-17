@@ -17,7 +17,7 @@ import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { useEvents, type MonthData, type Event } from '@/contexts/EventsContext';
 import { shareService } from '@/services/shareService';
-import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS } from '@/constants/SpiritualColors';
+import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_PALETTE } from '@/constants/SpiritualColors';
 import { styles } from '@/styles/calendar.styles';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -25,17 +25,13 @@ const CARD_WIDTH = (screenWidth - 16 * 3) / 2;
 
 // Type pill styles (mockup: light bg + colored text)
 function getEventTypePillStyle(type: Event['type']) {
-  const color = {
-    meditation: SPIRITUAL_COLORS.primary,
-    teaching: SPIRITUAL_COLORS.secondary,
-    celebration: SPIRITUAL_COLORS.spiritualRed,
-    retreat: SPIRITUAL_COLORS.omGold,
-  }[type] || SPIRITUAL_COLORS.textMuted;
-  return {
-    bg: `${color}20`,
-    text: color,
-    dot: color,
+  const styles = {
+    meditation: { bg: SPIRITUAL_PALETTE.marigoldLo, text: SPIRITUAL_PALETTE.brown800, dot: SPIRITUAL_PALETTE.marigold, icon: 'flower-outline' as const },
+    teaching: { bg: SPIRITUAL_PALETTE.brown200, text: SPIRITUAL_PALETTE.brown800, dot: SPIRITUAL_PALETTE.brown600, icon: 'book-outline' as const },
+    celebration: { bg: SPIRITUAL_PALETTE.kumkum, text: SPIRITUAL_PALETTE.bg, dot: SPIRITUAL_PALETTE.kumkum, icon: 'sparkles-outline' as const },
+    retreat: { bg: SPIRITUAL_PALETTE.tulsiLo, text: SPIRITUAL_PALETTE.tulsi, dot: SPIRITUAL_PALETTE.tulsi, icon: 'leaf-outline' as const },
   };
+  return styles[type] || { bg: SPIRITUAL_PALETTE.sunken, text: SPIRITUAL_PALETTE.brown600, dot: SPIRITUAL_PALETTE.brown400, icon: 'ellipse-outline' as const };
 }
 
 function formatEventDate(dateStr: string) {
@@ -159,7 +155,7 @@ export default function CalendarScreen() {
               activeOpacity={0.9}
             >
               <LinearGradient
-                colors={[SPIRITUAL_COLORS.secondary, SPIRITUAL_COLORS.primary]}
+                colors={SPIRITUAL_GRADIENTS.marigold as [string, string]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.heroCard}
@@ -219,6 +215,7 @@ export default function CalendarScreen() {
                   <View style={styles.eventPillContent}>
                     <View style={styles.eventPillHeader}>
                       <View style={[styles.eventPillBadge, { backgroundColor: pill.bg }]}>
+                        <Ionicons name={pill.icon} size={16} color={pill.text} />
                         <Text style={[styles.eventPillBadgeText, { color: pill.text }]}>{event.type}</Text>
                       </View>
                     </View>
@@ -315,6 +312,7 @@ export default function CalendarScreen() {
                             <View style={[styles.eventPillBar, { backgroundColor: pill.dot }]} />
                             <View style={styles.eventPillContent}>
                               <View style={[styles.eventPillBadge, { backgroundColor: pill.bg }]}>
+                                <Ionicons name={pill.icon} size={16} color={pill.text} />
                                 <Text style={[styles.eventPillBadgeText, { color: pill.text }]}>{event.type}</Text>
                               </View>
                               <Text style={styles.eventPillTitle}>{event.title}</Text>
@@ -348,6 +346,7 @@ export default function CalendarScreen() {
                   </View>
                   <ScrollView style={styles.sheetScroll} contentContainerStyle={styles.sheetScrollContent} showsVerticalScrollIndicator>
                     <View style={[styles.eventPillBadge, styles.eventDetailBadge, { backgroundColor: getEventTypePillStyle(selectedEvent.type).bg }]}>
+                      <Ionicons name={getEventTypePillStyle(selectedEvent.type).icon} size={16} color={getEventTypePillStyle(selectedEvent.type).text} />
                       <Text style={[styles.eventPillBadgeText, { color: getEventTypePillStyle(selectedEvent.type).text }]}>{selectedEvent.type}</Text>
                     </View>
                     <View style={styles.eventDetailMeta}>

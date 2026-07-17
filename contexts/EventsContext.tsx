@@ -83,11 +83,11 @@ export function EventsProvider({ children }: { children: ReactNode }) {
     // Import dynamically to avoid circular dependencies
     const { SPIRITUAL_COLORS } = require('../constants/SpiritualColors');
     switch (type) {
-      case 'meditation': return SPIRITUAL_COLORS.primary;
-      case 'teaching': return SPIRITUAL_COLORS.secondary;
-      case 'celebration': return SPIRITUAL_COLORS.spiritualRed;
-      case 'retreat': return SPIRITUAL_COLORS.omGold;
-      default: return SPIRITUAL_COLORS.textMuted;
+      case 'meditation': return SPIRITUAL_COLORS.omGold;
+      case 'teaching': return SPIRITUAL_COLORS.textMuted;
+      case 'celebration': return SPIRITUAL_COLORS.primary;
+      case 'retreat': return '#3C5838';
+      default: return SPIRITUAL_COLORS.textMeta;
     }
   };
 
