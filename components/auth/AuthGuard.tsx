@@ -1,13 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  View,
-  Image,
-  Animated,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Animated } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { AuthFlow } from './AuthFlow';
-import { SPIRITUAL_COLORS } from '@/constants/SpiritualColors';
+import { PhotoLoadingRing } from '@/components/PhotoLoadingRing';
 import { styles } from './styles/AuthGuard.styles';
 
 interface AuthGuardProps {
@@ -74,19 +69,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   return (
     <View style={styles.loadingContainer} pointerEvents="box-none">
       <Animated.View style={[styles.overlay, { opacity }]}>
-        <Image
-          source={require('@/assets/images/gurudev-main-image.png')}
-          style={styles.loadingImage}
-          resizeMode="cover"
-        />
-        <View style={styles.spinnerWrap}>
-          <View style={styles.spinnerCircle}>
-            <ActivityIndicator
-              size="large"
-              color={SPIRITUAL_COLORS.primaryForeground}
-            />
-          </View>
-        </View>
+        <PhotoLoadingRing />
       </Animated.View>
     </View>
   );

@@ -23,4 +23,8 @@ export const styles = StyleSheet.create({
     borderRadius: 9999,
     padding: 16,
   },
+  overlayCenter: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
