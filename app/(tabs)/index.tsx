@@ -276,6 +276,17 @@ export default function HomeScreen() {
             </View>
           </View>
 
+          {/* Hero image */}
+          <View style={styles.heroImageContainer}>
+            <View style={styles.heroImageClip}>
+              <Image
+                source={require('@/assets/images/hero-image-1.jpeg')}
+                style={styles.heroImage}
+                resizeMode="cover"
+              />
+            </View>
+          </View>
+
           {/* Divider */}
           <Text style={styles.divider}>— ✦ —</Text>
 

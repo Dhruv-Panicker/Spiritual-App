@@ -27,6 +27,7 @@ jest.mock('@/config/env', () => ({
 jest.mock('@/services/googleSheetsService', () => ({
   googleSheetsService: {
     getVideos: jest.fn(),
+    getLiveStatus: jest.fn(),
     addVideo: jest.fn(),
   },
 }));
@@ -38,7 +39,10 @@ import { VideosProvider, useVideos } from '@/contexts/VideosContext';
 import { googleSheetsService } from '@/services/googleSheetsService';
 
 const mockGetVideos = googleSheetsService.getVideos as jest.Mock;
+const mockGetLiveStatus = googleSheetsService.getLiveStatus as jest.Mock;
 const mockAddVideo = googleSheetsService.addVideo as jest.Mock;
+
+const emptyLive = { isLive: false, liveVideoId: null, channelUrl: '', liveTitle: null };
 
 const sampleVideos = [
   { id: 'v1', title: 'Morning Meditation', description: 'Guided session', youtubeId: 'abc123', dateAdded: '2024-01-01' },
@@ -68,6 +72,7 @@ function renderWithProvider() {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockGetLiveStatus.mockResolvedValue(emptyLive);
 });
 
 describe('VideosProvider', () => {

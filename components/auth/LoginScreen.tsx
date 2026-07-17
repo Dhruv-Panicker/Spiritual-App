@@ -53,8 +53,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onGoToSignUp }) => {
           >
             {/* Title – match Welcome */}
             <View style={styles.titleBlock}>
-              <Text style={styles.titleLine1}>Sri Sidheshwar</Text>
-              <Text style={styles.titleLine2}>SiddhGuru</Text>
+              <Text style={styles.titleLine1}>A Living Divine Power</Text>
+              <Text style={styles.titleLine2}>Om Siddheshwar</Text>
             </View>
 
             {/* Login panel – same style as Welcome bottom panel */}
@@ -126,7 +126,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onGoToSignUp }) => {
             </View>
 
             <Text style={styles.footerTagline}>
-              Sri SiddhGuru · Vedic Wisdom · Ancient Path
+              Om Siddheshwar · Vedic Wisdom · Ancient Path
             </Text>
           </ScrollView>
         </KeyboardAvoidingView>

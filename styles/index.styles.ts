@@ -109,6 +109,24 @@ export const styles = StyleSheet.create({
     lineHeight: 22,
     textAlign: 'center',
   },
+  heroImageContainer: {
+    marginTop: 16,
+    marginBottom: 4,
+    borderRadius: 18,
+    shadowColor: '#3b1a00',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 14,
+    elevation: 6,
+  },
+  heroImageClip: {
+    borderRadius: 18,
+    overflow: 'hidden',
+  },
+  heroImage: {
+    width: screenWidth - 40,
+    height: screenWidth - 40,
+  },
   divider: {
     textAlign: 'center',
     color: 'rgba(139,69,19,0.3)',

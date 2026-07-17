@@ -67,7 +67,7 @@ exports[`LoginScreen snapshot matches snapshot 1`] = `
                 }
               }
             >
-              Sri Sidheshwar
+              A Living Divine Power
             </Text>
             <Text
               style={
@@ -80,7 +80,7 @@ exports[`LoginScreen snapshot matches snapshot 1`] = `
                 }
               }
             >
-              SiddhGuru
+              Om Siddheshwar
             </Text>
           </View>
           <View
@@ -293,7 +293,7 @@ exports[`LoginScreen snapshot matches snapshot 1`] = `
               }
             }
           >
-            Sri SiddhGuru · Vedic Wisdom · Ancient Path
+            Om Siddheshwar · Vedic Wisdom · Ancient Path
           </Text>
         </View>
       </RCTScrollView>

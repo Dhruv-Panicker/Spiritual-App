@@ -76,7 +76,7 @@ describe('LoginScreen rendering', () => {
 
   it('renders the title', () => {
     const { getByText } = renderLoginScreen();
-    expect(getByText('SiddhGuru')).toBeTruthy();
+    expect(getByText('Om Siddheshwar')).toBeTruthy();
   });
 
   it('renders the "Sign up" link when onGoToSignUp is provided', () => {
