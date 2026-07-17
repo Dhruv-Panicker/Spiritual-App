@@ -33,6 +33,7 @@ const TILE_THEME_COLORS = [
   '#a67c52', //  – Calendar
   '#a0522d', // – Videos
   '#b07d62', // – About Siddhguru
+  '#8b6914', // – Siddhasana
   '#b5651d', // – Send Prayer
 ] as const;
 
@@ -170,12 +171,18 @@ export default function HomeScreen() {
       accentColor: TILE_THEME_COLORS[3],
     },
     {
+      icon: 'flower-outline' as const,
+      title: 'Siddhasana',
+      description: 'Deepen your practice through stillness and sacred posture',
+      onPress: () => router.push('/(tabs)/siddhasana' as never),
+      accentColor: TILE_THEME_COLORS[4],
+    },
+    {
       icon: 'heart-outline' as const,
       title: 'Send Prayer',
       description: 'Share your prayers and intentions with the community',
       onPress: () => router.push('/(tabs)/prayer' as never),
-      fullWidth: true,
-      accentColor: TILE_THEME_COLORS[4],
+      accentColor: TILE_THEME_COLORS[5],
     },
   ];
 
