@@ -300,7 +300,6 @@ export default function HomeScreen() {
           {/* Activity – live broadcast + recent quotes, swipable + auto-rotate */}
           <View style={styles.dailyQuotesCard}>
             <View style={styles.dailyQuotesAccent} />
-            <Text style={styles.dailyQuotesLabel}>Activity</Text>
             {slides.length === 0 ? (
               <Text style={styles.dailyQuotePlaceholder}>
                 No quotes yet. Add some in Daily Quotes.
@@ -358,19 +357,9 @@ export default function HomeScreen() {
                 title={feature.title}
                 description={feature.description}
                 onPress={feature.onPress}
-                fullWidth={feature.fullWidth}
                 accentColor={feature.accentColor}
               />
             ))}
-          </View>
-
-          {/* Siddhguru Says */}
-          <View style={styles.gurudevSaysCard}>
-            <Text style={styles.gurudevSaysLabel}>Om Siddheshwar Says</Text>
-            <Text style={styles.gurudevSaysText}>
-              When you connect with the silence within you, that is when you can make sense of the disturbance going on around you.
-            </Text>
-            <Text style={styles.gurudevSaysAuthor}>— Om Siddheshwar Brahmrishi Ji</Text>
           </View>
 
           <View style={styles.footerSpacer} />
