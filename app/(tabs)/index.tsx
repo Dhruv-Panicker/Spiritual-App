@@ -373,17 +373,10 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {/* Footer: copyright + logo */}
+          {/* Footer: copyright */}
           <View style={styles.footerRow}>
-            <View>
-              <Text style={styles.footerCopyright}>© 2026 Om Siddheshwar</Text>
-              <Text style={styles.footerRights}>All rights reserved.</Text>
-            </View>
-            <Image
-              source={require('@/assets/images/app-main-icon.png')}
-              style={styles.footerLogo}
-              resizeMode="contain"
-            />
+            <Text style={styles.footerCopyright}>© 2026 Om Siddheshwar</Text>
+            <Text style={styles.footerRights}>All rights reserved.</Text>
           </View>
 
           <View style={styles.footerSpacer} />

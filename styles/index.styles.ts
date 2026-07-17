@@ -316,8 +316,6 @@ export const styles = StyleSheet.create({
     height: (screenWidth - 40) * (306 / 514),
   },
   footerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 18,
     paddingTop: 14,
@@ -327,18 +325,14 @@ export const styles = StyleSheet.create({
   footerCopyright: {
     fontFamily: 'DMSans_600SemiBold',
     fontSize: 12,
-    color: SPIRITUAL_COLORS.foreground,
+    color: 'rgba(61,31,10,0.45)',
     letterSpacing: 0.3,
   },
   footerRights: {
     fontFamily: 'DMSans_400Regular',
     fontSize: 10,
-    color: SPIRITUAL_COLORS.textMuted,
+    color: 'rgba(61,31,10,0.35)',
     marginTop: 2,
-  },
-  footerLogo: {
-    width: 42,
-    height: 42,
   },
   footerSpacer: {
     height: 24,
