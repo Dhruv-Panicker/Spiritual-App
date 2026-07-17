@@ -315,6 +315,31 @@ export const styles = StyleSheet.create({
     width: screenWidth - 40,
     height: (screenWidth - 40) * (306 / 514),
   },
+  footerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 18,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(193,127,60,0.18)',
+  },
+  footerCopyright: {
+    fontFamily: 'DMSans_600SemiBold',
+    fontSize: 12,
+    color: SPIRITUAL_COLORS.foreground,
+    letterSpacing: 0.3,
+  },
+  footerRights: {
+    fontFamily: 'DMSans_400Regular',
+    fontSize: 10,
+    color: SPIRITUAL_COLORS.textMuted,
+    marginTop: 2,
+  },
+  footerLogo: {
+    width: 42,
+    height: 42,
+  },
   footerSpacer: {
     height: 24,
   },
