@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { SPIRITUAL_COLORS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
+import { SPIRITUAL_COLORS, SPIRITUAL_PALETTE, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
 
 export const styles = StyleSheet.create({
   container: {
@@ -68,7 +68,7 @@ export const styles = StyleSheet.create({
   },
   date: {
     fontSize: 12,
-    color: SPIRITUAL_COLORS.textMuted,
+    color: SPIRITUAL_PALETTE.brown500,
   },
   quoteText: {
     marginBottom: 12,
@@ -123,7 +123,7 @@ export const styles = StyleSheet.create({
     backgroundColor: SPIRITUAL_COLORS.input,
   },
   likedButton: {
-    backgroundColor: '#FFE5D9',
+    backgroundColor: SPIRITUAL_PALETTE.marigoldLo,
   },
   actionText: {
     marginLeft: 8,

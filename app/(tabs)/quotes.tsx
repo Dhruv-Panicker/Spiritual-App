@@ -13,31 +13,12 @@ import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuotes, Quote } from '@/contexts/QuotesContext';
 import { shareService } from '@/services/shareService';
-import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_TYPOGRAPHY } from '@/constants/SpiritualColors';
+import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_PALETTE, SPIRITUAL_TYPOGRAPHY } from '@/constants/SpiritualColors';
 import { styles } from '@/styles/quotes.styles';
 
-// mapping of colors to categories
-const TAG_COLORS: { bg: string; text: string }[] = [
-  { bg: '#c17f3c', text: '#fff' },
-  { bg: '#a67c52', text: '#fff' },
-  { bg: '#a0522d', text: '#fff' },
-  { bg: '#b07d62', text: '#fff' },
-  { bg: '#b5651d', text: '#fff' },
-  { bg: '#8b6914', text: '#fff' },
-  { bg: '#9a7b4f', text: '#fff' },
-  { bg: '#5c4033', text: '#fff' },
-];
-
-function getTagColor(category: string): { bg: string; text: string } {
-  const normalized = (category || 'general').trim().toLowerCase();
-  let hash = 0;
-  for (let i = 0; i < normalized.length; i++) {
-    hash = (hash << 5) - hash + normalized.charCodeAt(i);
-    //value to signed 32 bit integer
-    hash |= 0;
-  }
-  const index = Math.abs(hash) % TAG_COLORS.length;
-  return TAG_COLORS[index];
+// Tags are neutral metadata: soft fill, brown-500 text
+function getTagColor(_category: string): { bg: string; text: string } {
+  return { bg: SPIRITUAL_PALETTE.sunken, text: SPIRITUAL_PALETTE.brown500 };
 }
 
 const QuoteCard: React.FC<{ quote: Quote }> = ({ quote }) => {

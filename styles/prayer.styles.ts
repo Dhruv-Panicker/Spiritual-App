@@ -28,7 +28,7 @@ export const styles = StyleSheet.create({
   heroImage: {
     width: '100%',
     height: '100%',
-    tintColor: SPIRITUAL_COLORS.omGold,
+    tintColor: SPIRITUAL_COLORS.borderSoft,
     opacity: 0.35,
   },
   heroOverlay: {
@@ -197,9 +197,9 @@ export const styles = StyleSheet.create({
     borderWidth: 0,
   },
   submitButtonDisabled: {
-    backgroundColor: 'rgba(193,127,60,0.12)',
+    backgroundColor: SPIRITUAL_COLORS.input,
     borderWidth: 1.5,
-    borderColor: 'rgba(193,127,60,0.35)',
+    borderColor: SPIRITUAL_COLORS.border,
   },
   submitButtonText: {
     fontSize: 17,
