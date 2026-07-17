@@ -1,5 +1,5 @@
 import { Dimensions, StyleSheet } from 'react-native';
-import { SPIRITUAL_COLORS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
+import { SPIRITUAL_COLORS, SPIRITUAL_PALETTE, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -82,7 +82,7 @@ export const styles = StyleSheet.create({
   heroMainTitle: {
     fontFamily: 'LibreBaskerville_700Bold',
     fontSize: 26,
-    color: '#1C0000',
+    color: SPIRITUAL_PALETTE.brown800,
     letterSpacing: 0.5,
     marginBottom: 6,
     textAlign: 'center',
@@ -90,7 +90,7 @@ export const styles = StyleSheet.create({
   heroSubTitle: {
     fontFamily: 'DMSans_600SemiBold',
     fontSize: 17,
-    color: '#b5651d',
+    color: SPIRITUAL_PALETTE.copper,
     letterSpacing: 0.4,
     marginBottom: 12,
     textAlign: 'center',
@@ -129,16 +129,14 @@ export const styles = StyleSheet.create({
   },
   divider: {
     textAlign: 'center',
-    color: 'rgba(139,69,19,0.3)',
+    color: SPIRITUAL_PALETTE.brown300,
     fontSize: 16,
     marginVertical: 18,
     letterSpacing: 6,
   },
   dailyQuotesCard: {
-    backgroundColor: 'rgba(255,255,255,0.7)',
+    backgroundColor: SPIRITUAL_PALETTE.brown900,
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(193,127,60,0.2)',
     paddingVertical: 20,
     paddingHorizontal: 20,
     marginBottom: 24,
@@ -151,7 +149,7 @@ export const styles = StyleSheet.create({
     left: 20,
     right: 20,
     height: 2,
-    backgroundColor: SPIRITUAL_COLORS.primary,
+    backgroundColor: SPIRITUAL_PALETTE.marigold,
     borderRadius: 1,
   },
   quoteContent: {
@@ -166,7 +164,7 @@ export const styles = StyleSheet.create({
   dailyQuoteText: {
     fontFamily: 'DMSans_600SemiBold',
     fontSize: 16,
-    color: '#5a2d0c',
+    color: SPIRITUAL_PALETTE.bg,
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: 8,
@@ -174,7 +172,7 @@ export const styles = StyleSheet.create({
   dailyQuoteAuthor: {
     fontFamily: 'DMSans_400Regular_Italic',
     fontSize: 12,
-    color: SPIRITUAL_COLORS.textMuted,
+    color: 'rgba(251,243,231,0.65)',
     textAlign: 'center',
   },
   liveSlide: {
@@ -191,19 +189,19 @@ export const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#ff0000',
+    backgroundColor: SPIRITUAL_PALETTE.marigold,
     marginRight: 6,
   },
   liveSlideLabel: {
     fontFamily: 'DMSans_700Bold',
     fontSize: 12,
-    color: '#ff0000',
+    color: SPIRITUAL_PALETTE.marigold,
     letterSpacing: 1.5,
   },
   liveSlideTitle: {
     fontFamily: 'DMSans_600SemiBold',
     fontSize: 16,
-    color: '#5a2d0c',
+    color: SPIRITUAL_PALETTE.bg,
     textAlign: 'left',
     lineHeight: 22,
     marginBottom: 12,
@@ -212,7 +210,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'center',
-    backgroundColor: '#a30000',
+    backgroundColor: SPIRITUAL_PALETTE.kumkum,
     paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: 20,
@@ -226,7 +224,7 @@ export const styles = StyleSheet.create({
   dailyQuotePlaceholder: {
     fontFamily: 'DMSans_400Regular_Italic',
     fontSize: 14,
-    color: SPIRITUAL_COLORS.textMuted,
+    color: 'rgba(251,243,231,0.65)',
     textAlign: 'center',
   },
   dots: {
@@ -239,11 +237,11 @@ export const styles = StyleSheet.create({
     width: 5,
     height: 5,
     borderRadius: 3,
-    backgroundColor: 'rgba(193,127,60,0.25)',
+    backgroundColor: 'rgba(251,243,231,0.25)',
   },
   dotActive: {
     width: 18,
-    backgroundColor: SPIRITUAL_COLORS.primary,
+    backgroundColor: SPIRITUAL_PALETTE.marigold,
   },
   sectionTitle: {
     fontFamily: 'DMSans_700Bold',
@@ -266,10 +264,10 @@ export const styles = StyleSheet.create({
     width: '100%',
   },
   featureCardInner: {
-    backgroundColor: 'rgba(255,255,255,0.65)',
+    backgroundColor: SPIRITUAL_PALETTE.surface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(193,127,60,0.18)',
+    borderColor: SPIRITUAL_PALETTE.brown200,
     paddingVertical: 16,
     paddingHorizontal: 14,
     minHeight: 120,
@@ -290,6 +288,7 @@ export const styles = StyleSheet.create({
   featureTitle: {
     fontFamily: 'DMSans_700Bold',
     fontSize: 13,
+    color: SPIRITUAL_PALETTE.brown800,
     marginBottom: 4,
   },
   featureDescription: {
@@ -320,18 +319,18 @@ export const styles = StyleSheet.create({
     marginTop: 18,
     paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(193,127,60,0.18)',
+    borderTopColor: SPIRITUAL_PALETTE.brown200,
   },
   footerCopyright: {
     fontFamily: 'DMSans_600SemiBold',
     fontSize: 12,
-    color: 'rgba(61,31,10,0.45)',
+    color: SPIRITUAL_PALETTE.brown500,
     letterSpacing: 0.3,
   },
   footerRights: {
     fontFamily: 'DMSans_400Regular',
     fontSize: 10,
-    color: 'rgba(61,31,10,0.35)',
+    color: SPIRITUAL_PALETTE.brown400,
     marginTop: 2,
   },
   footerSpacer: {
