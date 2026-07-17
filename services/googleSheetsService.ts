@@ -398,12 +398,20 @@ class GoogleSheetsService {
       console.log('First row treated as', isHeaderRow ? 'header (skipped)' : 'data');
       console.log(`Found ${dataRows.length} event rows`);
       
+      // Sheet rows are hand-edited, so ids can be blank or duplicated —
+      // uniquify them or React list keys collide.
+      const seenIds = new Set<string>();
       const events: Event[] = dataRows.map((row, index) => {
         const rawType = (row[6] != null && row[6] !== '') ? String(row[6]).trim().toLowerCase() : 'meditation';
         const validTypes: Event['type'][] = ['meditation', 'teaching', 'celebration', 'retreat'];
         const type: Event['type'] = validTypes.includes(rawType as Event['type']) ? (rawType as Event['type']) : 'meditation';
+        let id = (row[0] != null && row[0] !== '') ? String(row[0]).trim() : `event_row${index + 1}`;
+        while (seenIds.has(id)) {
+          id = `${id}_${index + 1}`;
+        }
+        seenIds.add(id);
         return {
-          id: (row[0] != null && row[0] !== '') ? String(row[0]).trim() : `event_${index + 1}`,
+          id,
           title: (row[1] != null && row[1] !== '') ? String(row[1]).trim() : '',
           date: (row[2] != null && row[2] !== '') ? String(row[2]).trim() : '',
           time: (row[3] != null && row[3] !== '') ? String(row[3]).trim() : '',
