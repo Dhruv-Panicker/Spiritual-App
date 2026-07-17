@@ -298,6 +298,23 @@ export const styles = StyleSheet.create({
     color: SPIRITUAL_COLORS.textMuted,
     lineHeight: 16,
   },
+  bottomImageContainer: {
+    marginTop: 12,
+    borderRadius: 18,
+    shadowColor: '#3b1a00',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 14,
+    elevation: 6,
+  },
+  bottomImageClip: {
+    borderRadius: 18,
+    overflow: 'hidden',
+  },
+  bottomImage: {
+    width: screenWidth - 40,
+    height: (screenWidth - 40) * (306 / 514),
+  },
   footerSpacer: {
     height: 24,
   },

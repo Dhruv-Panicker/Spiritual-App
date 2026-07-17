@@ -362,6 +362,17 @@ export default function HomeScreen() {
             ))}
           </View>
 
+          {/* Bottom image */}
+          <View style={styles.bottomImageContainer}>
+            <View style={styles.bottomImageClip}>
+              <Image
+                source={require('@/assets/images/bottom-image-1.jpeg')}
+                style={styles.bottomImage}
+                resizeMode="cover"
+              />
+            </View>
+          </View>
+
           <View style={styles.footerSpacer} />
         </ScrollView>
       </LinearGradient>
