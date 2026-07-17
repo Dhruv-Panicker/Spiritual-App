@@ -65,8 +65,8 @@ export const styles = StyleSheet.create({
     gap: 10,
   },
   dropdownItemText: {
+    fontFamily: 'DMSans_500Medium',
     fontSize: 15,
-    fontWeight: '500',
     color: SPIRITUAL_COLORS.foreground,
   },
   dropdownDivider: {
@@ -80,16 +80,16 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   heroMainTitle: {
+    fontFamily: 'LibreBaskerville_700Bold',
     fontSize: 26,
-    fontWeight: '800',
     color: '#1C0000',
     letterSpacing: 0.5,
     marginBottom: 6,
     textAlign: 'center',
   },
   heroSubTitle: {
+    fontFamily: 'DMSans_600SemiBold',
     fontSize: 17,
-    fontWeight: '600',
     color: '#b5651d',
     letterSpacing: 0.4,
     marginBottom: 12,
@@ -103,9 +103,9 @@ export const styles = StyleSheet.create({
     marginHorizontal: 8,
   },
   heroDescription: {
+    fontFamily: 'DMSans_400Regular_Italic',
     fontSize: 14,
     color: SPIRITUAL_COLORS.textMuted,
-    fontStyle: 'italic',
     lineHeight: 22,
     textAlign: 'center',
   },
@@ -172,18 +172,18 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   dailyQuoteText: {
+    fontFamily: 'DMSans_600SemiBold',
     fontSize: 16,
     color: '#5a2d0c',
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: 8,
-    fontWeight: '600',
   },
   dailyQuoteAuthor: {
+    fontFamily: 'DMSans_400Regular_Italic',
     fontSize: 12,
     color: SPIRITUAL_COLORS.textMuted,
     textAlign: 'center',
-    fontStyle: 'italic',
   },
   liveSlide: {
     minHeight: 60,
@@ -203,14 +203,14 @@ export const styles = StyleSheet.create({
     marginRight: 6,
   },
   liveSlideLabel: {
+    fontFamily: 'DMSans_700Bold',
     fontSize: 12,
-    fontWeight: '700',
     color: '#ff0000',
     letterSpacing: 1.5,
   },
   liveSlideTitle: {
+    fontFamily: 'DMSans_600SemiBold',
     fontSize: 16,
-    fontWeight: '600',
     color: '#5a2d0c',
     textAlign: 'left',
     lineHeight: 22,
@@ -227,15 +227,15 @@ export const styles = StyleSheet.create({
     gap: 6,
   },
   liveSlideButtonText: {
+    fontFamily: 'DMSans_700Bold',
     color: '#fff',
     fontSize: 14,
-    fontWeight: '700',
   },
   dailyQuotePlaceholder: {
+    fontFamily: 'DMSans_400Regular_Italic',
     fontSize: 14,
     color: SPIRITUAL_COLORS.textMuted,
     textAlign: 'center',
-    fontStyle: 'italic',
   },
   dots: {
     flexDirection: 'row',
@@ -254,8 +254,8 @@ export const styles = StyleSheet.create({
     backgroundColor: SPIRITUAL_COLORS.primary,
   },
   sectionTitle: {
+    fontFamily: 'DMSans_700Bold',
     fontSize: 18,
-    fontWeight: '700',
     color: SPIRITUAL_COLORS.foreground,
     marginBottom: 14,
   },
@@ -296,11 +296,12 @@ export const styles = StyleSheet.create({
     marginBottom: 8,
   },
   featureTitle: {
+    fontFamily: 'DMSans_700Bold',
     fontSize: 13,
-    fontWeight: '700',
     marginBottom: 4,
   },
   featureDescription: {
+    fontFamily: 'DMSans_400Regular',
     fontSize: 11,
     color: SPIRITUAL_COLORS.textMuted,
     lineHeight: 16,

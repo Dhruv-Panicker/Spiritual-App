@@ -7,6 +7,15 @@ Sentry.init({
   enabled: !__DEV__,
 });
 import { useEffect } from 'react';
+import { useFonts } from 'expo-font';
+import { LibreBaskerville_700Bold } from '@expo-google-fonts/libre-baskerville';
+import {
+  DMSans_400Regular,
+  DMSans_400Regular_Italic,
+  DMSans_500Medium,
+  DMSans_600SemiBold,
+  DMSans_700Bold,
+} from '@expo-google-fonts/dm-sans';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { QuotesProvider } from '@/contexts/QuotesContext';
@@ -19,6 +28,15 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    LibreBaskerville_700Bold,
+    DMSans_400Regular,
+    DMSans_400Regular_Italic,
+    DMSans_500Medium,
+    DMSans_600SemiBold,
+    DMSans_700Bold,
+  });
+
   useEffect(() => {
     // Initialize notification service on app start
     (async () => {
@@ -40,6 +58,9 @@ export default function RootLayout() {
       notificationService.cleanup();
     };
   }, []);
+
+  // Keep splash up until fonts are ready so text never flashes in a fallback font
+  if (!fontsLoaded) return null;
 
   return (
     <ErrorBoundary>
