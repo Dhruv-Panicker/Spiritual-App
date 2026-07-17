@@ -29,14 +29,14 @@ beforeEach(() => {
 });
 
 describe('WelcomeScreen rendering', () => {
-  it('renders "Sri Sidheshwar" text', () => {
+  it('renders "A Living Divine Power" text', () => {
     const { getByText } = renderWelcomeScreen();
-    expect(getByText('Sri Sidheshwar')).toBeTruthy();
+    expect(getByText('A Living Divine Power')).toBeTruthy();
   });
 
-  it('renders "SiddhGuru" heading', () => {
+  it('renders "Om Siddheshwar" heading', () => {
     const { getByText } = renderWelcomeScreen();
-    expect(getByText('SiddhGuru')).toBeTruthy();
+    expect(getByText('Om Siddheshwar')).toBeTruthy();
   });
 
   it('renders the Sign Up button', () => {
@@ -51,7 +51,7 @@ describe('WelcomeScreen rendering', () => {
 
   it('renders the footer tagline', () => {
     const { getByText } = renderWelcomeScreen();
-    expect(getByText('Sri SiddhGuru · Vedic Wisdom · Ancient Path')).toBeTruthy();
+    expect(getByText('Om Siddheshwar · Vedic Wisdom · Ancient Path')).toBeTruthy();
   });
 });
 
