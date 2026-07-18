@@ -20,7 +20,7 @@ export const styles = StyleSheet.create({
   },
   scrollView: { flex: 1 },
   scrollContent: {
-    paddingBottom: 120,
+    paddingBottom: 32,
     paddingHorizontal: 16,
     paddingTop: 8,
   },

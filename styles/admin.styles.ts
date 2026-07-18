@@ -15,7 +15,7 @@ export const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     padding: 20,
-    paddingBottom: 100,
+    paddingBottom: 32,
   },
   header: {
     alignItems: 'center',
