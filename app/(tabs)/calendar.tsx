@@ -94,12 +94,12 @@ export default function CalendarScreen() {
     return future || sortedUpcomingEvents[0] || null;
   }, [sortedUpcomingEvents]);
 
-  // Only the next 5 future events are listed; the rest live in Browse by Month
+  // Only the next 3 future events are listed; the rest live in Browse by Month
   const displayedUpcomingEvents = useMemo(() => {
     const now = Date.now();
     return sortedUpcomingEvents
       .filter(e => new Date(e.date).getTime() >= now)
-      .slice(0, 5);
+      .slice(0, 3);
   }, [sortedUpcomingEvents]);
 
   const openMonthModal = (monthData: MonthData) => {
@@ -227,7 +227,7 @@ export default function CalendarScreen() {
 
           {/* All Upcoming Events */}
           <View style={styles.sectionTitleRow}>
-            <Text style={styles.sectionTitle}>All Upcoming Events</Text>
+            <Text style={styles.sectionTitle}>Upcoming Events</Text>
             <View style={styles.totalPill}>
               <Text style={styles.totalPillText}>{sortedUpcomingEvents.length} total</Text>
             </View>
