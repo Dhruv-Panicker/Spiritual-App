@@ -346,6 +346,9 @@ export default function PrayerScreen() {
                 <Text style={[styles.charCount, prayerOverLimit && styles.charCountOver]}>
                   {prayer.length} / {PRAYER_MAX_LENGTH}
                 </Text>
+                {prayerOverLimit && (
+                  <Text style={styles.charLimitError}>Character limit exceeded</Text>
+                )}
               </View>
 
               <TouchableOpacity

@@ -167,6 +167,13 @@ export const styles = StyleSheet.create({
     color: SPIRITUAL_PALETTE.kumkum,
     fontWeight: '700',
   },
+  charLimitError: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: SPIRITUAL_PALETTE.kumkum,
+    marginTop: 2,
+    textAlign: 'right',
+  },
   addPhotoBtn: {
     flexDirection: 'row',
     alignItems: 'center',
