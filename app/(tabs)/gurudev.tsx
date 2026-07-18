@@ -43,7 +43,7 @@ export default function GurudevScreen() {
               resizeMode="cover"
             />
             <LinearGradient
-              colors={['rgba(251,243,231,0)', 'rgba(251,243,231,0.85)', '#FBF3E7']}
+              colors={['rgba(247,236,220,0)', 'rgba(247,236,220,0.85)', '#F7ECDC']}
               style={styles.heroFade}
             />
             <View style={styles.heroContent}>

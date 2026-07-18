@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
-  Image,
   Animated,
   Platform,
 } from 'react-native';
@@ -13,7 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS } from '@/constants/SpiritualColors';
+import { SPIRITUAL_GRADIENTS } from '@/constants/SpiritualColors';
 import { styles } from '@/styles/siddhasana.styles';
 
 export default function SiddhasanaScreen() {
@@ -54,33 +53,40 @@ export default function SiddhasanaScreen() {
               style={styles.heroImage}
             />
             <LinearGradient
-              colors={['transparent', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.6)']}
-              style={styles.heroOverlay}
+              colors={['rgba(247,236,220,0)', 'rgba(247,236,220,0.85)', '#F7ECDC']}
+              style={styles.heroFade}
             />
             <View style={styles.heroContent}>
               <Text style={styles.heroTitle}>Siddhasana</Text>
-              <Text style={styles.heroSubtitle}>The ancient seat of the Siddhas</Text>
+              <Text style={styles.heroSubtitle}>Intentional living, offered freely</Text>
             </View>
           </View>
 
           {/* Content Card */}
           <Animated.View style={[styles.contentCard, { opacity: fadeAnim }]}>
             <View style={styles.section}>
-              {/* TODO: Replace placeholder paragraphs below with actual content */}
               <Text style={styles.bodyText}>
-                [Paragraph 1 — content to be added]
+                Siddhasana is a flagship lifestyle program built around one idea: intentional living. It is completely free to access for anyone.
               </Text>
 
               <Text style={styles.bodyText}>
-                [Paragraph 2 — content to be added]
+                The flagship experience is a residential silence retreat, structured to lift consciousness out of the subconscious and into higher conscious living. It unfolds over seven levels. Each level has its own activities, guidelines, and purpose, and each one is crafted to bring the untrained, distracted mind a step closer to more complete living. People tend to leave a level lighter than they arrived, carrying a happiness that was already theirs.
               </Text>
 
               <Text style={styles.bodyText}>
-                [Paragraph 3 — content to be added]
+                The residential retreats are held every month at Sri Siddheshwar Tirth, in the calm and lush mountains of Tirupati, India. Three-day international retreats are held in different parts of the world. Two-hour sessions are conducted in person at conferences, organizations, and universities, and online workshops run worldwide through the year.
               </Text>
 
               <Text style={styles.bodyText}>
-                [Paragraph 4 — content to be added]
+                Residential retreats are open to anyone from the age of 25. Workshops are open to adults, and to children from the age of 14. All of it is built and sustained purely by the labor of love. There is absolutely no charge to participate in any residential retreat in India.
+              </Text>
+
+              <Text style={styles.bodyText}>
+                The reason for all of it is simple. Most of us live in the subconscious, and the days pass in a blur. We react, we carry, and we repeat. Stress, anxiety, anger, fear, guilt, hurt, and sadness are not who we are. They are signs of internal energy worn thin. Siddhasana meets that directly, through the pure element of silence, sharing the art of living above emotional baggage rather than compartmentalizing it. What follows is a life with more freedom in it, and a way of living that is chosen rather than inherited.
+              </Text>
+
+              <Text style={styles.closingText}>
+                Join us and explore your inner world for outer development.
               </Text>
             </View>
           </Animated.View>

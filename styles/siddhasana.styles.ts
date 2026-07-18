@@ -1,5 +1,5 @@
-import { Dimensions, Platform, StyleSheet } from 'react-native';
-import { SPIRITUAL_COLORS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
+import { Dimensions, StyleSheet } from 'react-native';
+import { SPIRITUAL_COLORS, SPIRITUAL_PALETTE, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
 
 const { height: screenHeight } = Dimensions.get('window');
 
@@ -23,12 +23,12 @@ export const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  heroOverlay: {
+  heroFade: {
     position: 'absolute',
-    top: 0,
     left: 0,
     right: 0,
     bottom: 0,
+    height: '18%',
   },
   heroContent: {
     position: 'absolute',
@@ -38,22 +38,22 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   heroTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontFamily: 'LibreBaskerville_700Bold',
+    fontSize: 30,
+    color: SPIRITUAL_PALETTE.brown800,
     marginBottom: 8,
     textAlign: 'center',
-    ...SPIRITUAL_SHADOWS.divine,
   },
   heroSubtitle: {
-    fontSize: 18,
-    color: 'rgba(255,255,255,0.9)',
+    fontFamily: 'DMSans_400Regular_Italic',
+    fontSize: 16,
+    color: SPIRITUAL_PALETTE.brown600,
     textAlign: 'center',
   },
   contentCard: {
     backgroundColor: SPIRITUAL_COLORS.cardBackground,
     marginHorizontal: 16,
-    marginTop: -24,
+    marginTop: 16,
     borderRadius: 16,
     padding: 24,
     ...SPIRITUAL_SHADOWS.divine,
@@ -62,10 +62,17 @@ export const styles = StyleSheet.create({
     gap: 20,
   },
   bodyText: {
+    fontFamily: 'DMSans_400Regular',
     fontSize: 16,
     lineHeight: 26,
     color: SPIRITUAL_COLORS.foreground,
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+  },
+  closingText: {
+    fontFamily: 'DMSans_400Regular_Italic',
+    fontSize: 16,
+    lineHeight: 26,
+    color: SPIRITUAL_COLORS.textMuted,
+    textAlign: 'center',
   },
   eventsSection: {
     margin: 16,
