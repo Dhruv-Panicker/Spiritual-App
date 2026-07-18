@@ -98,17 +98,6 @@ export const styles = StyleSheet.create({
   author: {
     marginBottom: 12,
   },
-  categoryBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginBottom: 12,
-  },
-  categoryText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
   reflectionContainer: {
     backgroundColor: SPIRITUAL_COLORS.accent,
     borderRadius: 12,

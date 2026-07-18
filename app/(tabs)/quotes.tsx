@@ -13,13 +13,8 @@ import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuotes, Quote } from '@/contexts/QuotesContext';
 import { shareService } from '@/services/shareService';
-import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_PALETTE, SPIRITUAL_TYPOGRAPHY } from '@/constants/SpiritualColors';
+import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_TYPOGRAPHY } from '@/constants/SpiritualColors';
 import { styles } from '@/styles/quotes.styles';
-
-// Tags are neutral metadata: soft fill, brown-500 text
-function getTagColor(_category: string): { bg: string; text: string } {
-  return { bg: SPIRITUAL_PALETTE.sunken, text: SPIRITUAL_PALETTE.brown500 };
-}
 
 const QuoteCard: React.FC<{ quote: Quote }> = ({ quote }) => {
   const [isLiked, setIsLiked] = useState(false);
@@ -83,16 +78,6 @@ const QuoteCard: React.FC<{ quote: Quote }> = ({ quote }) => {
           — {quote.author}
         </Text>
       )}
-
-      {quote.category && (() => {
-        const { bg, text } = getTagColor(quote.category);
-        return (
-          <View style={[styles.categoryBadge, { backgroundColor: bg }]}>
-            <Text style={[styles.categoryText, { color: text }]}>{quote.category}</Text>
-          </View>
-        );
-      })()}
-
 
       <View style={styles.actionButtons}>
         <TouchableOpacity
