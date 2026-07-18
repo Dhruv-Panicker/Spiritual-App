@@ -20,8 +20,8 @@ export const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    paddingTop: 60,
-    paddingBottom: 20,
+    paddingTop: 44,
+    paddingBottom: 16,
     paddingHorizontal: 20,
   },
   omHeaderLogo: {
@@ -40,6 +40,12 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     color: SPIRITUAL_COLORS.textMuted,
     textAlign: 'center',
+  },
+  headerDivider: {
+    height: 1,
+    backgroundColor: SPIRITUAL_PALETTE.brown300,
+    marginBottom: 16,
+    marginHorizontal: 8,
   },
   scrollView: {
     flex: 1,
@@ -111,7 +117,7 @@ export const styles = StyleSheet.create({
   },
   actionButtons: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
     gap: 12,
   },
   actionButton: {

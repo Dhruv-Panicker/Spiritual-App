@@ -146,25 +146,25 @@ export default function QuotesScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient colors={SPIRITUAL_GRADIENTS.peace} style={styles.gradient}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Image
-            source={require('@/assets/images/app-main-icon.png')}
-            style={styles.omHeaderLogo}
-            resizeMode="contain"
-          />
-          <Text style={[styles.headerTitle, SPIRITUAL_TYPOGRAPHY.spiritualHeading]}>
-            Daily Wisdom
-          </Text>
-          <Text style={styles.headerSubtitle}>Find peace in sacred teachings</Text>
-        </View>
-
-        {/* Quotes List */}
+        {/* Quotes List — header scrolls away with content */}
         <ScrollView
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
+          <View style={styles.header}>
+            <Image
+              source={require('@/assets/images/app-main-icon.png')}
+              style={styles.omHeaderLogo}
+              resizeMode="contain"
+            />
+            <Text style={[styles.headerTitle, SPIRITUAL_TYPOGRAPHY.spiritualHeading]}>
+              Daily Wisdom
+            </Text>
+            <Text style={styles.headerSubtitle}>Find peace in sacred teachings</Text>
+          </View>
+          <View style={styles.headerDivider} />
+
           {quotes.length === 0 ? (
             <View style={styles.emptyContainer}>
               <Ionicons name="book-outline" size={64} color={SPIRITUAL_COLORS.textMuted} />

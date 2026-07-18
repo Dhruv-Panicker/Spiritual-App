@@ -22,10 +22,6 @@ class ShareService {
     try {
       let shareText = quote.text ? `"${quote.text}"\n— ${quote.author}\n\n` : `— ${quote.author}\n\n`;
 
-      if (quote.imageUrl) {
-        shareText += `${quote.imageUrl}\n\n`;
-      }
-
       shareText += `🪷 Find more to pause and reflect on in the ${this.appName} app.\n`;
       shareText += `📱 ${this.getDownloadLink()}`;
 
