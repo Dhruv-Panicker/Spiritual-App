@@ -2,7 +2,7 @@
   "expo": {
     "name": "Om Siddheshwar",
     "slug": "spiritual-app",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "orientation": "portrait",
     "icon": "./assets/images/gurudev-app-icon.png",
     "scheme": "guru-darshan",
