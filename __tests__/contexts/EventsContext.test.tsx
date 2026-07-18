@@ -174,9 +174,11 @@ describe('monthlyData', () => {
     );
 
     await waitFor(() => {
-      const currentMonthIndex = now.getMonth();
-      expect(monthlyDataValue[currentMonthIndex].events).toHaveLength(1);
-      expect(monthlyDataValue[currentMonthIndex].events[0].id).toBe('e1');
+      // Rolling 12-month window: the current month is always bucket 0
+      expect(monthlyDataValue[0].events).toHaveLength(1);
+      expect(monthlyDataValue[0].events[0].id).toBe('e1');
+      expect(monthlyDataValue[1].events).toHaveLength(1);
+      expect(monthlyDataValue[1].events[0].id).toBe('e2');
     });
   });
 });

@@ -11,8 +11,8 @@ exports[`LoginScreen snapshot matches snapshot 1`] = `
   <View
     colors={
       [
-        "#fdf6ec",
-        "#f5e6d0",
+        "#FBF3E7",
+        "#F3E6D2",
       ]
     }
     style={
@@ -58,7 +58,7 @@ exports[`LoginScreen snapshot matches snapshot 1`] = `
             <Text
               style={
                 {
-                  "color": "#b5651d",
+                  "color": "#AA5B0D",
                   "fontSize": 11,
                   "fontWeight": "600",
                   "letterSpacing": 3.5,
@@ -72,7 +72,7 @@ exports[`LoginScreen snapshot matches snapshot 1`] = `
             <Text
               style={
                 {
-                  "color": "#3d1f0a",
+                  "color": "#392218",
                   "fontSize": 34,
                   "fontWeight": "700",
                   "letterSpacing": 0.5,
@@ -100,7 +100,7 @@ exports[`LoginScreen snapshot matches snapshot 1`] = `
             <Text
               style={
                 {
-                  "color": "#b5651d",
+                  "color": "#AA5B0D",
                   "fontSize": 12,
                   "letterSpacing": 2,
                   "marginBottom": 16,
@@ -117,15 +117,15 @@ exports[`LoginScreen snapshot matches snapshot 1`] = `
               keyboardType="email-address"
               onChangeText={[Function]}
               placeholder="Email"
-              placeholderTextColor="#8b6a4a"
+              placeholderTextColor="#594136"
               style={
                 [
                   {
                     "backgroundColor": "rgba(255,255,255,0.9)",
-                    "borderColor": "rgba(193,127,60,0.25)",
+                    "borderColor": "#9C8980",
                     "borderRadius": 12,
                     "borderWidth": 1,
-                    "color": "#3d1f0a",
+                    "color": "#392218",
                     "fontSize": 16,
                     "marginBottom": 12,
                     "padding": 16,
@@ -185,8 +185,8 @@ exports[`LoginScreen snapshot matches snapshot 1`] = `
               <View
                 colors={
                   [
-                    "#c17f3c",
-                    "#8b4513",
+                    "#8C2C37",
+                    "#55101A",
                   ]
                 }
                 end={
@@ -213,7 +213,7 @@ exports[`LoginScreen snapshot matches snapshot 1`] = `
                 <Text
                   style={
                     {
-                      "color": "#fdf6ec",
+                      "color": "#FBF3E7",
                       "fontSize": 16,
                       "fontWeight": "700",
                       "letterSpacing": 0.8,
@@ -263,7 +263,7 @@ exports[`LoginScreen snapshot matches snapshot 1`] = `
               <Text
                 style={
                   {
-                    "color": "#8b4513",
+                    "color": "#55101A",
                     "fontSize": 14,
                     "letterSpacing": 0.3,
                   }

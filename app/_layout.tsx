@@ -8,6 +8,15 @@ Sentry.init({
 });
 import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet } from 'react-native';
+import { useFonts } from 'expo-font';
+import { LibreBaskerville_700Bold } from '@expo-google-fonts/libre-baskerville';
+import {
+  DMSans_400Regular,
+  DMSans_400Regular_Italic,
+  DMSans_500Medium,
+  DMSans_600SemiBold,
+  DMSans_700Bold,
+} from '@expo-google-fonts/dm-sans';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { QuotesProvider } from '@/contexts/QuotesContext';
@@ -25,6 +34,14 @@ const LOADER_MIN_MS = 1000;   // how long the animated loader stays up
 const LOADER_FADE_MS = 400;   // fade-out duration
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    LibreBaskerville_700Bold,
+    DMSans_400Regular,
+    DMSans_400Regular_Italic,
+    DMSans_500Medium,
+    DMSans_600SemiBold,
+    DMSans_700Bold,
+  });
   const [showLoader, setShowLoader] = useState(true);
   const loaderOpacity = useRef(new Animated.Value(1)).current;
 
@@ -39,10 +56,18 @@ export default function RootLayout() {
       }
     })();
 
-    // Swap native splash for the animated loader as soon as JS is up
+    return () => {
+      notificationService.cleanup();
+    };
+  }, []);
+
+  useEffect(() => {
+    // Hold the native splash until fonts are ready so text never flashes in a
+    // fallback font, then swap to the animated loader for its minimum time.
+    if (!fontsLoaded) return;
+
     SplashScreen.hideAsync();
 
-    // Keep the ring up briefly, then fade it out to reveal the app
     const timer = setTimeout(() => {
       Animated.timing(loaderOpacity, {
         toValue: 0,
@@ -51,11 +76,8 @@ export default function RootLayout() {
       }).start(() => setShowLoader(false));
     }, LOADER_MIN_MS);
 
-    return () => {
-      clearTimeout(timer);
-      notificationService.cleanup();
-    };
-  }, []);
+    return () => clearTimeout(timer);
+  }, [fontsLoaded]);
 
   return (
     <ErrorBoundary>

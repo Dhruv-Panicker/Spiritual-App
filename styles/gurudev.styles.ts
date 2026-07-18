@@ -1,5 +1,5 @@
-import { Dimensions, Platform, StyleSheet } from 'react-native';
-import { SPIRITUAL_COLORS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
+import { Dimensions, StyleSheet } from 'react-native';
+import { SPIRITUAL_COLORS, SPIRITUAL_PALETTE, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
 
 const { height: screenHeight } = Dimensions.get('window');
 
@@ -14,6 +14,9 @@ export const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  scrollContent: {
+    paddingBottom: 24,
+  },
   heroContainer: {
     height: screenHeight * 0.5,
     position: 'relative',
@@ -23,12 +26,12 @@ export const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  heroOverlay: {
+  heroFade: {
     position: 'absolute',
-    top: 0,
     left: 0,
     right: 0,
     bottom: 0,
+    height: '18%',
   },
   heroContent: {
     position: 'absolute',
@@ -37,30 +40,23 @@ export const styles = StyleSheet.create({
     right: 24,
     alignItems: 'center',
   },
-  omLogoWrap: {
-    marginBottom: 16,
-  },
-  omLogo: {
-    width: 48,
-    height: 48,
-  },
   heroTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontFamily: 'LibreBaskerville_700Bold',
+    fontSize: 30,
+    color: SPIRITUAL_PALETTE.brown800,
     marginBottom: 8,
     textAlign: 'center',
-    ...SPIRITUAL_SHADOWS.divine,
   },
   heroSubtitle: {
-    fontSize: 18,
-    color: 'rgba(255,255,255,0.9)',
+    fontFamily: 'DMSans_400Regular_Italic',
+    fontSize: 16,
+    color: SPIRITUAL_PALETTE.brown600,
     textAlign: 'center',
   },
   contentCard: {
     backgroundColor: SPIRITUAL_COLORS.cardBackground,
     marginHorizontal: 16,
-    marginTop: -24,
+    marginTop: 16,
     borderRadius: 16,
     padding: 24,
     ...SPIRITUAL_SHADOWS.divine,
@@ -69,50 +65,26 @@ export const styles = StyleSheet.create({
     gap: 20,
   },
   bodyText: {
+    fontFamily: 'DMSans_400Regular',
     fontSize: 16,
     lineHeight: 26,
     color: SPIRITUAL_COLORS.foreground,
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
-  shareSection: {
-    margin: 16,
-    marginTop: 24,
-  },
-  shareCard: {
-    borderRadius: 16,
-    padding: 24,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(193,127,60,0.18)',
-    ...SPIRITUAL_SHADOWS.peaceful,
-  },
-  shareTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: SPIRITUAL_COLORS.foreground,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  shareSubtitle: {
-    fontSize: 16,
-    color: SPIRITUAL_COLORS.textMuted,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  shareButton: {
+  footerDivider: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.75)',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(193,127,60,0.22)',
+    gap: 10,
+    marginTop: 28,
+    marginBottom: 12,
+    marginHorizontal: 40,
   },
-  shareButtonText: {
-    marginLeft: 8,
+  footerDividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: SPIRITUAL_PALETTE.brown300,
+  },
+  footerDividerStar: {
+    color: SPIRITUAL_PALETTE.brown300,
     fontSize: 16,
-    fontWeight: '600',
-    color: SPIRITUAL_COLORS.primary,
   },
 });

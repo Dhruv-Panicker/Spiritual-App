@@ -3,67 +3,25 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
   SafeAreaView,
   Image,
-  Share,
   Animated,
-  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as Haptics from 'expo-haptics';
-import { Ionicons } from '@expo/vector-icons';
-import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS } from '@/constants/SpiritualColors';
+import { SPIRITUAL_GRADIENTS } from '@/constants/SpiritualColors';
 import { styles } from '@/styles/gurudev.styles';
 
 export default function GurudevScreen() {
-  const pulseAnim = useRef(new Animated.Value(1)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Sacred pulse animation for Om symbol
-    const pulseAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.1,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    pulseAnimation.start();
-
     // Fade in content
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 1000,
       useNativeDriver: true,
     }).start();
-
-    return () => pulseAnimation.stop();
   }, []);
-
-  const shareApp = async () => {
-    if (Platform.OS !== 'web') {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    
-    const shareText = "🙏 I've been inspired by the teachings shared in this beautiful siddhguru app. Thought you might find it meaningful too!";
-    
-    try {
-      await Share.share({
-        message: shareText,
-        title: 'Meet Our Om Siddheshwar',
-      });
-    } catch (error) {
-      console.error('Error sharing app:', error);
-    }
-  };
 
   return (
     <View style={styles.container}>
@@ -74,6 +32,7 @@ export default function GurudevScreen() {
         <SafeAreaView style={{ flex: 1 }}>
         <ScrollView
           style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           bounces={true}
         >
@@ -85,17 +44,10 @@ export default function GurudevScreen() {
               resizeMode="cover"
             />
             <LinearGradient
-              colors={['transparent', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.6)']}
-              style={styles.heroOverlay}
+              colors={['rgba(247,236,220,0)', 'rgba(247,236,220,0.85)', '#F7ECDC']}
+              style={styles.heroFade}
             />
             <View style={styles.heroContent}>
-              <Animated.View style={[styles.omLogoWrap, { transform: [{ scale: pulseAnim }] }]}>
-                <Image
-                  source={require('@/assets/images/om_logo_transparent.png')}
-                  style={styles.omLogo}
-                  resizeMode="contain"
-                />
-              </Animated.View>
               <Text style={styles.heroTitle}>Om Siddheshwar</Text>
               <Text style={styles.heroSubtitle}>A beacon of wisdom and compassion</Text>
             </View>
@@ -126,25 +78,10 @@ export default function GurudevScreen() {
             </View>
           </Animated.View>
 
-          {/* Share App CTA */}
-          <View style={styles.shareSection}>
-            <LinearGradient
-              colors={['#faf5ef', '#f0e4d4']}
-              style={styles.shareCard}
-            >
-              <Text style={styles.shareTitle}>Share the Teaching</Text>
-              <Text style={styles.shareSubtitle}>
-                Share this app with someone who might find it meaningful
-              </Text>
-              <TouchableOpacity
-                style={styles.shareButton}
-                onPress={shareApp}
-                activeOpacity={0.8}
-              >
-                <Ionicons name="share-outline" size={20} color={SPIRITUAL_COLORS.primary} />
-                <Text style={styles.shareButtonText}>Share App</Text>
-              </TouchableOpacity>
-            </LinearGradient>
+          <View style={styles.footerDivider}>
+            <View style={styles.footerDividerLine} />
+            <Text style={styles.footerDividerStar}>✦</Text>
+            <View style={styles.footerDividerLine} />
           </View>
         </ScrollView>
         </SafeAreaView>

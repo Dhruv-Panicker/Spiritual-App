@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { SPIRITUAL_COLORS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
+import { SPIRITUAL_COLORS, SPIRITUAL_PALETTE, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
 
 export const styles = StyleSheet.create({
   container: {
@@ -20,8 +20,8 @@ export const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    paddingTop: 60,
-    paddingBottom: 20,
+    paddingTop: 44,
+    paddingBottom: 16,
     paddingHorizontal: 20,
   },
   omHeaderLogo: {
@@ -41,13 +41,29 @@ export const styles = StyleSheet.create({
     color: SPIRITUAL_COLORS.textMuted,
     textAlign: 'center',
   },
+  headerDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 16,
+    marginHorizontal: 24,
+  },
+  headerDividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: SPIRITUAL_PALETTE.brown300,
+  },
+  headerDividerStar: {
+    color: SPIRITUAL_PALETTE.brown300,
+    fontSize: 16,
+  },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 16,
-    paddingBottom: 100, // Space for tab bar
+    paddingBottom: 32,
   },
   quoteCard: {
     backgroundColor: SPIRITUAL_COLORS.cardBackground,
@@ -68,7 +84,7 @@ export const styles = StyleSheet.create({
   },
   date: {
     fontSize: 12,
-    color: SPIRITUAL_COLORS.textMuted,
+    color: SPIRITUAL_PALETTE.brown500,
   },
   quoteText: {
     marginBottom: 12,
@@ -81,17 +97,6 @@ export const styles = StyleSheet.create({
   },
   author: {
     marginBottom: 12,
-  },
-  categoryBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginBottom: 12,
-  },
-  categoryText: {
-    fontSize: 12,
-    fontWeight: '600',
   },
   reflectionContainer: {
     backgroundColor: SPIRITUAL_COLORS.accent,
@@ -111,7 +116,7 @@ export const styles = StyleSheet.create({
   },
   actionButtons: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
     gap: 12,
   },
   actionButton: {
@@ -123,7 +128,7 @@ export const styles = StyleSheet.create({
     backgroundColor: SPIRITUAL_COLORS.input,
   },
   likedButton: {
-    backgroundColor: '#FFE5D9',
+    backgroundColor: SPIRITUAL_PALETTE.marigoldLo,
   },
   actionText: {
     marginLeft: 8,
@@ -150,5 +155,22 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     color: SPIRITUAL_COLORS.textMuted,
     textAlign: 'center',
+  },
+  footerDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 28,
+    marginBottom: 12,
+    marginHorizontal: 40,
+  },
+  footerDividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: SPIRITUAL_PALETTE.brown300,
+  },
+  footerDividerStar: {
+    color: SPIRITUAL_PALETTE.brown300,
+    fontSize: 16,
   },
 });

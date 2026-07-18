@@ -1,68 +1,100 @@
-// Spiritual color palette – Siddguru / Vedic-inspired (brown, copper, cream)
-// Replaces previous saffron theme globally.
-export const SPIRITUAL_COLORS = {
-  // Primary – copper / saddle brown
-  primary: '#c17f3c',
-  primaryGlow: '#d4955c',
-  primaryForeground: '#fdf6ec',
+// Om Siddheshwar colour system.
+// Brown does neutral work only; three imported accents (marigold, kumkum,
+// tulsi) do all the separating. All values are WCAG-verified — do not
+// re-derive or "improve" the hex values.
 
-  // Background
-  background: '#fdf6ec',
-  cardBackground: 'rgba(255,255,255,0.9)',
+// Raw tokens
+export const SPIRITUAL_PALETTE = {
+  // Base surfaces
+  bg: '#FBF3E7',
+  surface: '#FEF9F3',
+  sunken: '#F3E6D2',
 
-  // Text
-  foreground: '#3d1f0a',
-  textMuted: '#8b6a4a',
+  // Brown spine (chroma tapers as lightness rises)
+  brown900: '#241007', // dark blocks, quote card background (16.6:1)
+  brown800: '#392218', // headings, body text (13.5:1)
+  brown600: '#594136', // supporting copy (8.5:1)
+  brown500: '#826B60', // dates, metadata, captions (4.5:1)
+  brown400: '#9C8980', // input borders, component boundaries (3.0:1)
+  brown300: '#C4B3AC', // decorative dividers, watermarks
+  brown200: '#E3D4CD', // soft fills
 
-  // Secondary – deeper brown
-  secondary: '#8b4513',
-  secondaryForeground: '#fdf6ec',
-
-  // Accent – warm brown
-  accent: '#b5651d',
-  accentForeground: '#3d1f0a',
-
-  // UI
-  spiritualRed: '#c41e1e',
-  omGold: '#c17f3c',
-
-  // Border and input
-  border: 'rgba(193,127,60,0.25)',
-  input: 'rgba(255,255,255,0.9)',
-
-  // Tab navigation
-  tabBackground: '#fdf6ec',
-  tabForeground: '#3d1f0a',
-  tabActive: '#c17f3c',
-  tabActiveForeground: '#fdf6ec',
+  // Accents
+  marigold: '#E9A13B',   // fill only — never a word on cream
+  marigoldLo: '#FFCE91', // chips
+  kumkum: '#8C2C37',     // links, emphasis, filled heart
+  kumkumDeep: '#55101A', // deep fills
+  tulsi: '#3C5838',      // retreat category only
+  tulsiLo: '#D3E3D1',    // retreat chips
+  copper: '#AA5B0D',     // brand labels only — never for emphasis
 };
 
-// Gradients (cream / tan / copper)
+export const SPIRITUAL_COLORS = {
+  // Primary – kumkum, the single emphasis colour
+  primary: SPIRITUAL_PALETTE.kumkum,
+  primaryGlow: SPIRITUAL_PALETTE.marigold,
+  primaryForeground: SPIRITUAL_PALETTE.bg,
+
+  // Background
+  background: SPIRITUAL_PALETTE.bg,
+  cardBackground: SPIRITUAL_PALETTE.surface,
+
+  // Text
+  foreground: SPIRITUAL_PALETTE.brown800,
+  textMuted: SPIRITUAL_PALETTE.brown600,
+  textMeta: SPIRITUAL_PALETTE.brown500,
+
+  // Secondary – deep kumkum fill
+  secondary: SPIRITUAL_PALETTE.kumkumDeep,
+  secondaryForeground: SPIRITUAL_PALETTE.bg,
+
+  // Accent – copper, brand labels only
+  accent: SPIRITUAL_PALETTE.copper,
+  accentForeground: SPIRITUAL_PALETTE.brown800,
+
+  // UI
+  spiritualRed: SPIRITUAL_PALETTE.kumkum,
+  omGold: SPIRITUAL_PALETTE.marigold,
+
+  // Border and input
+  border: SPIRITUAL_PALETTE.brown400,
+  borderSoft: SPIRITUAL_PALETTE.brown300,
+  input: SPIRITUAL_PALETTE.sunken,
+
+  // Tab navigation
+  tabBackground: SPIRITUAL_PALETTE.bg,
+  tabForeground: SPIRITUAL_PALETTE.brown800,
+  tabActive: SPIRITUAL_PALETTE.kumkum,
+  tabActiveForeground: SPIRITUAL_PALETTE.bg,
+};
+
+// Gradients
 export const SPIRITUAL_GRADIENTS = {
-  divine: ['#c17f3c', '#8b4513'],
-  peace: ['#fdf6ec', '#f5e6d0'],
-  meditation: ['#d4955c', '#c17f3c'],
-  sunset: ['#c17f3c', '#f5e6d0'],
+  divine: [SPIRITUAL_PALETTE.kumkum, SPIRITUAL_PALETTE.kumkumDeep],
+  peace: [SPIRITUAL_PALETTE.bg, SPIRITUAL_PALETTE.sunken],
+  meditation: [SPIRITUAL_PALETTE.marigoldLo, SPIRITUAL_PALETTE.marigold],
+  sunset: [SPIRITUAL_PALETTE.marigold, SPIRITUAL_PALETTE.bg],
+  marigold: ['#F2B45B', SPIRITUAL_PALETTE.marigold],
 };
 
 // Shadows – brown-based
 export const SPIRITUAL_SHADOWS = {
   peaceful: {
-    shadowColor: '#8b4513',
+    shadowColor: SPIRITUAL_PALETTE.brown900,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 4,
   },
   divine: {
-    shadowColor: '#8b4513',
+    shadowColor: SPIRITUAL_PALETTE.brown900,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.2,
     shadowRadius: 20,
     elevation: 8,
   },
   card: {
-    shadowColor: '#8b4513',
+    shadowColor: SPIRITUAL_PALETTE.brown900,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 12,
@@ -77,22 +109,22 @@ export const SPIRITUAL_TYPOGRAPHY = {
     lineHeight: 28,
     fontStyle: 'italic' as const,
     textAlign: 'center' as const,
-    color: '#3d1f0a',
+    color: SPIRITUAL_PALETTE.brown800,
   },
   spiritualHeading: {
     fontSize: 24,
     fontWeight: 'bold' as const,
-    color: '#3d1f0a',
+    color: SPIRITUAL_PALETTE.brown800,
   },
   author: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#c17f3c',
+    color: SPIRITUAL_PALETTE.brown500,
     textAlign: 'right' as const,
   },
   reflection: {
     fontSize: 14,
-    color: '#5a2d0c',
+    color: SPIRITUAL_PALETTE.brown600,
     fontStyle: 'italic' as const,
     lineHeight: 20,
   },
