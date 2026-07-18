@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
   Dimensions,
   Modal,
   ActivityIndicator,
+  Animated,
+  PanResponder,
   Platform,
   Linking,
   Alert,
@@ -21,7 +23,7 @@ import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_PALETTE } from '@/cons
 import { styles } from '@/styles/calendar.styles';
 
 const { width: screenWidth } = Dimensions.get('window');
-const CARD_WIDTH = (screenWidth - 16 * 3) / 2;
+const CARD_WIDTH = (screenWidth - 16 * 2 - 12) / 2;
 
 // Type pill styles (mockup: light bg + colored text)
 function getEventTypePillStyle(type: Event['type']) {
@@ -57,6 +59,28 @@ export default function CalendarScreen() {
   const [selectedMonth, setSelectedMonth] = useState<MonthData | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
+  // Drag-to-dismiss for the bottom sheets: grab the handle area and swipe down
+  const sheetTranslateY = useRef(new Animated.Value(0)).current;
+  const sheetPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_e, g) => g.dy > 4 && Math.abs(g.dy) > Math.abs(g.dx),
+      onPanResponderMove: (_e, g) => {
+        if (g.dy > 0) sheetTranslateY.setValue(g.dy);
+      },
+      onPanResponderRelease: (_e, g) => {
+        if (g.dy > 120 || g.vy > 0.8) {
+          Animated.timing(sheetTranslateY, { toValue: 700, duration: 180, useNativeDriver: true }).start(() => {
+            sheetTranslateY.setValue(0);
+            closeModal();
+          });
+        } else {
+          Animated.spring(sheetTranslateY, { toValue: 0, useNativeDriver: true }).start();
+        }
+      },
+    })
+  ).current;
+
   const currentMonthIndex = new Date().getMonth();
   const currentMonthName = monthNames[currentMonthIndex];
 
@@ -72,6 +96,7 @@ export default function CalendarScreen() {
 
   const openMonthModal = (monthData: MonthData) => {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    sheetTranslateY.setValue(0);
     setSelectedMonth(monthData);
     setModalView('month');
     setModalVisible(true);
@@ -79,6 +104,7 @@ export default function CalendarScreen() {
 
   const openEventDetail = (event: Event) => {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    sheetTranslateY.setValue(0);
     setSelectedEvent(event);
     setModalView('event');
     setModalVisible(true);
@@ -133,9 +159,6 @@ export default function CalendarScreen() {
     <View style={styles.container}>
       <LinearGradient colors={['#fdf6ec', '#f5e2c4']} style={styles.gradient}>
         <SafeAreaView style={styles.safeArea}>
-        {/* Subtle warm glow at top */}
-        <View style={styles.glowOverlay} pointerEvents="none" />
-
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
@@ -285,6 +308,12 @@ export default function CalendarScreen() {
               );
             })}
           </View>
+          {/* Ornamental divider – page footer */}
+          <View style={[styles.divider, styles.dividerMargin]}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>— ✦ —</Text>
+            <View style={[styles.dividerLine, styles.dividerLineRight]} />
+          </View>
           <View style={styles.bottomPadding} />
         </ScrollView>
         </SafeAreaView>
@@ -294,10 +323,15 @@ export default function CalendarScreen() {
           <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={closeModal}>
             <View style={styles.modalContentWrapper} pointerEvents="box-none">
               {modalView === 'month' && selectedMonth && (
-                <View style={[styles.sheetContainer, styles.monthSheetContainer]} onStartShouldSetResponder={() => true}>
-                  <View style={styles.sheetHandle} />
-                  <Text style={styles.sheetYear}>{selectedMonth.year}</Text>
-                  <Text style={styles.sheetMonthTitle}>{selectedMonth.month}</Text>
+                <Animated.View
+                  style={[styles.sheetContainer, styles.monthSheetContainer, { transform: [{ translateY: sheetTranslateY }] }]}
+                  onStartShouldSetResponder={() => true}
+                >
+                  <View {...sheetPanResponder.panHandlers}>
+                    <View style={styles.sheetHandle} />
+                    <Text style={styles.sheetYear}>{selectedMonth.year}</Text>
+                    <Text style={styles.sheetMonthTitle}>{selectedMonth.month}</Text>
+                  </View>
                   <ScrollView style={styles.sheetScroll} contentContainerStyle={styles.sheetScrollContent} showsVerticalScrollIndicator>
                     {selectedMonth.events.length > 0 ? (
                       selectedMonth.events.map((event) => {
@@ -332,12 +366,17 @@ export default function CalendarScreen() {
                       <Text style={styles.noEventsMessage}>No events scheduled this month</Text>
                     )}
                   </ScrollView>
-                </View>
+                </Animated.View>
               )}
 
               {modalView === 'event' && selectedEvent && (
-                <View style={[styles.sheetContainer, styles.eventSheetContainer]}>
-                  <View style={styles.sheetHandle} />
+                <Animated.View
+                  style={[styles.sheetContainer, styles.eventSheetContainer, { transform: [{ translateY: sheetTranslateY }] }]}
+                  onStartShouldSetResponder={() => true}
+                >
+                  <View {...sheetPanResponder.panHandlers}>
+                    <View style={styles.sheetHandle} />
+                  </View>
                   <View style={styles.eventSheetHeader}>
                     <Text style={styles.eventSheetTitle} numberOfLines={2}>{selectedEvent.title}</Text>
                     <TouchableOpacity onPress={closeModal} style={styles.sheetCloseBtn}>
@@ -384,7 +423,7 @@ export default function CalendarScreen() {
                       </LinearGradient>
                     </TouchableOpacity>
                   </ScrollView>
-                </View>
+                </Animated.View>
               )}
             </View>
           </TouchableOpacity>

@@ -8,15 +8,6 @@ export const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: SPIRITUAL_COLORS.background },
   gradient: { flex: 1 },
   safeArea: { flex: 1 },
-  glowOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 280,
-    backgroundColor: 'rgba(193,127,60,0.06)',
-    zIndex: 0,
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -264,7 +255,6 @@ export const styles = StyleSheet.create({
   monthGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
     gap: 12,
   },
   monthCard: {

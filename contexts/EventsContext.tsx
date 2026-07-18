@@ -63,19 +63,26 @@ export function EventsProvider({ children }: { children: ReactNode }) {
 
   // Organize events by month
   const monthlyData = useMemo((): MonthData[] => {
-    const currentYear = new Date().getFullYear();
-    return monthNames.map((month, index) => ({
-      month,
-      year: currentYear,
-      events: events.filter(event => {
-        try {
-          const eventMonth = new Date(event.date).getMonth();
-          return eventMonth === index;
-        } catch {
-          return false;
-        }
-      })
-    }));
+    // Rolling 12-month window starting from the current month
+    const now = new Date();
+    return Array.from({ length: 12 }, (_, i) => {
+      const monthStart = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      return {
+        month: monthNames[monthStart.getMonth()],
+        year: monthStart.getFullYear(),
+        events: events.filter(event => {
+          try {
+            const eventDate = new Date(event.date);
+            return (
+              eventDate.getMonth() === monthStart.getMonth() &&
+              eventDate.getFullYear() === monthStart.getFullYear()
+            );
+          } catch {
+            return false;
+          }
+        }),
+      };
+    });
   }, [events]);
 
   // Get color for event type
