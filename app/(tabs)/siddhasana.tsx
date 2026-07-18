@@ -97,7 +97,6 @@ export default function SiddhasanaScreen() {
               colors={['#faf5ef', '#f0e4d4']}
               style={styles.eventsCard}
             >
-              <Text style={styles.eventsTitle}>Join the Community</Text>
               <Text style={styles.eventsSubtitle}>
                 Explore upcoming gatherings, meditations, and sacred celebrations
               </Text>

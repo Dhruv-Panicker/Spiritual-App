@@ -87,13 +87,6 @@ export const styles = StyleSheet.create({
     borderColor: 'rgba(193,127,60,0.18)',
     ...SPIRITUAL_SHADOWS.peaceful,
   },
-  eventsTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: SPIRITUAL_COLORS.foreground,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
   eventsSubtitle: {
     fontSize: 16,
     color: SPIRITUAL_COLORS.textMuted,
