@@ -42,11 +42,20 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
   },
   headerDivider: {
-    textAlign: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 16,
+    marginHorizontal: 24,
+  },
+  headerDividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: SPIRITUAL_PALETTE.brown300,
+  },
+  headerDividerStar: {
     color: SPIRITUAL_PALETTE.brown300,
     fontSize: 16,
-    letterSpacing: 6,
-    marginBottom: 16,
   },
   scrollView: {
     flex: 1,

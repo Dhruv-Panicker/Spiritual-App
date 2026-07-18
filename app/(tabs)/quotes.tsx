@@ -163,7 +163,11 @@ export default function QuotesScreen() {
             </Text>
             <Text style={styles.headerSubtitle}>Find peace in sacred teachings</Text>
           </View>
-          <Text style={styles.headerDivider}>— ✦ —</Text>
+          <View style={styles.headerDivider}>
+            <View style={styles.headerDividerLine} />
+            <Text style={styles.headerDividerStar}>✦</Text>
+            <View style={styles.headerDividerLine} />
+          </View>
 
           {quotes.length === 0 ? (
             <View style={styles.emptyContainer}>
