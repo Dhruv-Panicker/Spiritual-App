@@ -42,10 +42,11 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
   },
   headerDivider: {
-    height: 1,
-    backgroundColor: SPIRITUAL_PALETTE.brown300,
+    textAlign: 'center',
+    color: SPIRITUAL_PALETTE.brown300,
+    fontSize: 16,
+    letterSpacing: 6,
     marginBottom: 16,
-    marginHorizontal: 8,
   },
   scrollView: {
     flex: 1,
