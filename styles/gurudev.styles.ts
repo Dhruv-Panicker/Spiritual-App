@@ -1,5 +1,5 @@
-import { Dimensions, Platform, StyleSheet } from 'react-native';
-import { SPIRITUAL_COLORS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
+import { Dimensions, StyleSheet } from 'react-native';
+import { SPIRITUAL_COLORS, SPIRITUAL_PALETTE, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
 
 const { height: screenHeight } = Dimensions.get('window');
 
@@ -37,30 +37,18 @@ export const styles = StyleSheet.create({
     right: 24,
     alignItems: 'center',
   },
-  omLogoWrap: {
-    marginBottom: 16,
-  },
-  omLogo: {
-    width: 48,
-    height: 48,
-  },
   heroTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontFamily: 'LibreBaskerville_700Bold',
+    fontSize: 30,
     color: '#FFFFFF',
     marginBottom: 8,
     textAlign: 'center',
     ...SPIRITUAL_SHADOWS.divine,
   },
-  heroSubtitle: {
-    fontSize: 18,
-    color: 'rgba(255,255,255,0.9)',
-    textAlign: 'center',
-  },
   contentCard: {
     backgroundColor: SPIRITUAL_COLORS.cardBackground,
     marginHorizontal: 16,
-    marginTop: -24,
+    marginTop: 16,
     borderRadius: 16,
     padding: 24,
     ...SPIRITUAL_SHADOWS.divine,
@@ -69,50 +57,25 @@ export const styles = StyleSheet.create({
     gap: 20,
   },
   bodyText: {
+    fontFamily: 'DMSans_400Regular',
     fontSize: 16,
     lineHeight: 26,
     color: SPIRITUAL_COLORS.foreground,
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
-  shareSection: {
+  taglineCard: {
     margin: 16,
     marginTop: 24,
-  },
-  shareCard: {
+    marginBottom: 32,
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: SPIRITUAL_PALETTE.brown300,
     padding: 24,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(193,127,60,0.18)',
-    ...SPIRITUAL_SHADOWS.peaceful,
   },
-  shareTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: SPIRITUAL_COLORS.foreground,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  shareSubtitle: {
+  taglineText: {
+    fontFamily: 'DMSans_400Regular_Italic',
     fontSize: 16,
     color: SPIRITUAL_COLORS.textMuted,
     textAlign: 'center',
-    marginBottom: 20,
-  },
-  shareButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.75)',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(193,127,60,0.22)',
-  },
-  shareButtonText: {
-    marginLeft: 8,
-    fontSize: 16,
-    fontWeight: '600',
-    color: SPIRITUAL_COLORS.primary,
   },
 });
