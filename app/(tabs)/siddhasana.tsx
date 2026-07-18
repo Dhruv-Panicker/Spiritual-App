@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import {
   View,
   Text,
+  Image,
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
@@ -48,10 +49,10 @@ export default function SiddhasanaScreen() {
         >
           {/* Hero Section */}
           <View style={styles.heroContainer}>
-            {/* TODO: Replace LinearGradient below with Image once photo is provided */}
-            <LinearGradient
-              colors={['#8B5E2A', '#c17f3c', '#fdf6ec']}
+            <Image
+              source={require('@/assets/images/siddhasana-yoga.jpeg')}
               style={styles.heroImage}
+              resizeMode="cover"
             />
             <LinearGradient
               colors={['rgba(247,236,220,0)', 'rgba(247,236,220,0.85)', '#F7ECDC']}
