@@ -32,6 +32,7 @@ export default function GurudevScreen() {
         <SafeAreaView style={{ flex: 1 }}>
         <ScrollView
           style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           bounces={true}
         >
@@ -77,6 +78,11 @@ export default function GurudevScreen() {
             </View>
           </Animated.View>
 
+          <View style={styles.footerDivider}>
+            <View style={styles.footerDividerLine} />
+            <Text style={styles.footerDividerStar}>✦</Text>
+            <View style={styles.footerDividerLine} />
+          </View>
         </ScrollView>
         </SafeAreaView>
       </LinearGradient>

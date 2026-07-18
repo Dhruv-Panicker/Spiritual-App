@@ -42,6 +42,7 @@ export default function SiddhasanaScreen() {
         <SafeAreaView style={{ flex: 1 }}>
         <ScrollView
           style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           bounces={true}
         >
@@ -109,6 +110,11 @@ export default function SiddhasanaScreen() {
                 <Text style={styles.eventsButtonText}>See Upcoming Events</Text>
               </TouchableOpacity>
             </LinearGradient>
+          </View>
+          <View style={styles.footerDivider}>
+            <View style={styles.footerDividerLine} />
+            <Text style={styles.footerDividerStar}>✦</Text>
+            <View style={styles.footerDividerLine} />
           </View>
         </ScrollView>
         </SafeAreaView>

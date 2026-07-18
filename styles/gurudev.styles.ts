@@ -14,6 +14,9 @@ export const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  scrollContent: {
+    paddingBottom: 24,
+  },
   heroContainer: {
     height: screenHeight * 0.5,
     position: 'relative',
@@ -28,7 +31,7 @@ export const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: '55%',
+    height: '18%',
   },
   heroContent: {
     position: 'absolute',
@@ -66,5 +69,22 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 26,
     color: SPIRITUAL_COLORS.foreground,
+  },
+  footerDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 28,
+    marginBottom: 12,
+    marginHorizontal: 40,
+  },
+  footerDividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: SPIRITUAL_PALETTE.brown300,
+  },
+  footerDividerStar: {
+    color: SPIRITUAL_PALETTE.brown300,
+    fontSize: 16,
   },
 });

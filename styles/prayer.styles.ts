@@ -223,4 +223,21 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
     color: SPIRITUAL_COLORS.primaryForeground,
   },
+  footerDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 28,
+    marginBottom: 12,
+    marginHorizontal: 40,
+  },
+  footerDividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: SPIRITUAL_PALETTE.brown300,
+  },
+  footerDividerStar: {
+    color: SPIRITUAL_PALETTE.brown300,
+    fontSize: 16,
+  },
 });

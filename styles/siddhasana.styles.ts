@@ -14,6 +14,9 @@ export const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  scrollContent: {
+    paddingBottom: 24,
+  },
   heroContainer: {
     height: screenHeight * 0.5,
     position: 'relative',
@@ -106,5 +109,22 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  footerDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 28,
+    marginBottom: 12,
+    marginHorizontal: 40,
+  },
+  footerDividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: SPIRITUAL_PALETTE.brown300,
+  },
+  footerDividerStar: {
+    color: SPIRITUAL_PALETTE.brown300,
+    fontSize: 16,
   },
 });

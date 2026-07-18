@@ -165,6 +165,11 @@ export default function QuotesScreen() {
               <QuoteCard key={quote.id} quote={quote} />
             ))
           )}
+          <View style={styles.footerDivider}>
+            <View style={styles.footerDividerLine} />
+            <Text style={styles.footerDividerStar}>✦</Text>
+            <View style={styles.footerDividerLine} />
+          </View>
         </ScrollView>
       </LinearGradient>
     </View>
