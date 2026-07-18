@@ -43,11 +43,12 @@ export default function GurudevScreen() {
               resizeMode="cover"
             />
             <LinearGradient
-              colors={['transparent', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.6)']}
-              style={styles.heroOverlay}
+              colors={['rgba(251,243,231,0)', 'rgba(251,243,231,0.85)', '#FBF3E7']}
+              style={styles.heroFade}
             />
             <View style={styles.heroContent}>
               <Text style={styles.heroTitle}>Om Siddheshwar</Text>
+              <Text style={styles.heroSubtitle}>A beacon of wisdom and compassion</Text>
             </View>
           </View>
 
@@ -76,10 +77,6 @@ export default function GurudevScreen() {
             </View>
           </Animated.View>
 
-          {/* Tagline */}
-          <View style={styles.taglineCard}>
-            <Text style={styles.taglineText}>A beacon of wisdom and compassion</Text>
-          </View>
         </ScrollView>
         </SafeAreaView>
       </LinearGradient>

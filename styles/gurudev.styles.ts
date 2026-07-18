@@ -23,12 +23,12 @@ export const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  heroOverlay: {
+  heroFade: {
     position: 'absolute',
-    top: 0,
     left: 0,
     right: 0,
     bottom: 0,
+    height: '55%',
   },
   heroContent: {
     position: 'absolute',
@@ -40,10 +40,15 @@ export const styles = StyleSheet.create({
   heroTitle: {
     fontFamily: 'LibreBaskerville_700Bold',
     fontSize: 30,
-    color: '#FFFFFF',
+    color: SPIRITUAL_PALETTE.brown800,
     marginBottom: 8,
     textAlign: 'center',
-    ...SPIRITUAL_SHADOWS.divine,
+  },
+  heroSubtitle: {
+    fontFamily: 'DMSans_400Regular_Italic',
+    fontSize: 16,
+    color: SPIRITUAL_PALETTE.brown600,
+    textAlign: 'center',
   },
   contentCard: {
     backgroundColor: SPIRITUAL_COLORS.cardBackground,
@@ -61,21 +66,5 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 26,
     color: SPIRITUAL_COLORS.foreground,
-  },
-  taglineCard: {
-    margin: 16,
-    marginTop: 24,
-    marginBottom: 32,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: SPIRITUAL_PALETTE.brown300,
-    padding: 24,
-    alignItems: 'center',
-  },
-  taglineText: {
-    fontFamily: 'DMSans_400Regular_Italic',
-    fontSize: 16,
-    color: SPIRITUAL_COLORS.textMuted,
-    textAlign: 'center',
   },
 });
