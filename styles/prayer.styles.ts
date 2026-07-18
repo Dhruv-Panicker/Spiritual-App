@@ -1,5 +1,5 @@
 import { Dimensions, StyleSheet } from 'react-native';
-import { SPIRITUAL_COLORS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
+import { SPIRITUAL_COLORS, SPIRITUAL_PALETTE } from '@/constants/SpiritualColors';
 
 const { height: screenHeight } = Dimensions.get('window');
 
@@ -31,12 +31,12 @@ export const styles = StyleSheet.create({
     tintColor: SPIRITUAL_COLORS.borderSoft,
     opacity: 0.35,
   },
-  heroOverlay: {
+  heroFade: {
     position: 'absolute',
-    top: 0,
     left: 0,
     right: 0,
     bottom: 0,
+    height: '30%',
   },
   heroContent: {
     position: 'absolute',
@@ -46,38 +46,40 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   heroTitle: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontFamily: 'LibreBaskerville_700Bold',
+    fontSize: 24,
+    color: SPIRITUAL_PALETTE.brown800,
     marginBottom: 10,
     textAlign: 'center',
-    ...SPIRITUAL_SHADOWS.divine,
   },
   heroSubtitle: {
+    fontFamily: 'DMSans_400Regular',
     fontSize: 15,
-    color: 'rgba(255,255,255,0.92)',
+    color: SPIRITUAL_PALETTE.brown600,
     textAlign: 'center',
     lineHeight: 22,
     paddingHorizontal: 8,
   },
   privacyNote: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 12,
     paddingHorizontal: 8,
     gap: 6,
   },
   privacyText: {
+    fontFamily: 'DMSans_400Regular_Italic',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.75)',
+    color: SPIRITUAL_PALETTE.brown500,
     lineHeight: 18,
-    flex: 1,
-    fontStyle: 'italic',
+    flexShrink: 1,
+    textAlign: 'center',
   },
   formCard: {
     backgroundColor: SPIRITUAL_COLORS.cardBackground,
     marginHorizontal: 16,
-    marginTop: -20,
+    marginTop: 16,
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,
@@ -90,6 +92,11 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: SPIRITUAL_COLORS.foreground,
+    marginBottom: 6,
+  },
+  labelSub: {
+    fontSize: 12,
+    color: SPIRITUAL_PALETTE.brown500,
     marginBottom: 6,
   },
   row: {
@@ -146,11 +153,19 @@ export const styles = StyleSheet.create({
     color: SPIRITUAL_COLORS.foreground,
     minHeight: 140,
   },
+  textAreaError: {
+    borderWidth: 1.5,
+    borderColor: SPIRITUAL_PALETTE.kumkum,
+  },
   charCount: {
     fontSize: 12,
     color: SPIRITUAL_COLORS.textMuted,
     marginTop: 4,
     textAlign: 'right',
+  },
+  charCountOver: {
+    color: SPIRITUAL_PALETTE.kumkum,
+    fontWeight: '700',
   },
   addPhotoBtn: {
     flexDirection: 'row',
@@ -191,22 +206,14 @@ export const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     marginTop: 8,
-  },
-  submitButtonEnabled: {
     backgroundColor: SPIRITUAL_COLORS.primary,
-    borderWidth: 0,
   },
-  submitButtonDisabled: {
-    backgroundColor: SPIRITUAL_COLORS.input,
-    borderWidth: 1.5,
-    borderColor: SPIRITUAL_COLORS.border,
+  submitButtonBusy: {
+    opacity: 0.7,
   },
   submitButtonText: {
     fontSize: 17,
     fontWeight: '600',
     color: SPIRITUAL_COLORS.primaryForeground,
-  },
-  submitButtonTextDisabled: {
-    color: SPIRITUAL_COLORS.foreground,
   },
 });
