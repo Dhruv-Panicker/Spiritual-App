@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { env } from '@/config/env';
 
 export interface UserLoginData {
@@ -93,28 +94,83 @@ class GoogleSheetsService {
   }
 
   /**
-   * Generic method to read data from any sheet using Google Sheets API
+   * Generic method to read data from any sheet using Google Sheets API.
+   * Retries once on 429 (rate limit) with a jittered delay so launch-day
+   * bursts from many fresh installs spread out instead of failing together.
    */
   private async readSheet(sheetName: string, range: string = ''): Promise<any[][]> {
+    const url = `${this.BASE_URL}/${sheetName}${range ? `!${range}` : ''}?key=${this.API_KEY}`;
+    if (__DEV__) {
+      console.log(`Reading sheet via API: ${sheetName}${range ? ` (${range})` : ''}`);
+    }
+
+    const maxAttempts = 2;
+    for (let attempt = 1; ; attempt++) {
+      try {
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          await response.text(); // consume body without logging (may contain sensitive data)
+          if (response.status === 429 && attempt < maxAttempts) {
+            const delayMs = 1000 + Math.random() * 2000;
+            console.warn(`Rate limited reading ${sheetName}, retrying in ${Math.round(delayMs)}ms`);
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+            continue;
+          }
+          console.error(`HTTP error! status: ${response.status}`);
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log(`Successfully read ${data.values?.length || 0} rows from sheet: ${sheetName}`);
+        return data.values || [];
+      } catch (error) {
+        if (attempt < maxAttempts && error instanceof TypeError) {
+          // Network failure (not HTTP error) — retry once as well
+          await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
+          continue;
+        }
+        console.error(`Error reading sheet ${sheetName}:`, error);
+        throw error;
+      }
+    }
+  }
+
+  /**
+   * Cached wrapper for content sheets (quotes/videos/events).
+   * Fresh cache (< TTL) skips the network entirely; on fetch failure any
+   * cached copy is served regardless of age (stale-if-error) so users see
+   * old content instead of an empty screen when rate limits hit.
+   */
+  private static readonly CACHE_TTL_MS = 15 * 60 * 1000;
+
+  private async readSheetCached(sheetName: string): Promise<any[][]> {
+    const key = `sheets_cache_${sheetName}`;
+
+    let cached: { timestamp: number; rows: any[][] } | null = null;
     try {
-      const url = `${this.BASE_URL}/${sheetName}${range ? `!${range}` : ''}?key=${this.API_KEY}`;
+      const raw = await AsyncStorage.getItem(key);
+      if (raw) cached = JSON.parse(raw);
+    } catch (_) {
+      cached = null;
+    }
+
+    if (cached && Date.now() - cached.timestamp < GoogleSheetsService.CACHE_TTL_MS) {
       if (__DEV__) {
-        console.log(`Reading sheet via API: ${sheetName}${range ? ` (${range})` : ''}`);
+        console.log(`Using cached ${sheetName} (${Math.round((Date.now() - cached.timestamp) / 1000)}s old)`);
       }
-      
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        await response.text(); // consume body without logging (may contain sensitive data)
-        console.error(`HTTP error! status: ${response.status}`);
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log(`Successfully read ${data.values?.length || 0} rows from sheet: ${sheetName}`);
-      return data.values || [];
+      return cached.rows;
+    }
+
+    try {
+      const rows = await this.readSheet(sheetName);
+      AsyncStorage.setItem(key, JSON.stringify({ timestamp: Date.now(), rows })).catch(() => {});
+      return rows;
     } catch (error) {
-      console.error(`Error reading sheet ${sheetName}:`, error);
+      if (cached) {
+        console.warn(`Fetch failed for ${sheetName}, serving stale cache`);
+        return cached.rows;
+      }
       throw error;
     }
   }
@@ -165,8 +221,8 @@ class GoogleSheetsService {
   async getQuotes(): Promise<Quote[]> {
     try {
       console.log('Loading quotes from Google Sheets...');
-      
-      const rows = await this.readSheet('quotes');
+
+      const rows = await this.readSheetCached('quotes');
       
       if (!rows.length) {
         console.log('No quotes found in sheet (sheet is empty or does not exist)');
@@ -291,8 +347,8 @@ class GoogleSheetsService {
   async getVideos(): Promise<Video[]> {
     try {
       console.log('Loading videos from Google Sheets...');
-      
-      const rows = await this.readSheet('videos');
+
+      const rows = await this.readSheetCached('videos');
       
       if (!rows.length) {
         console.log('No videos found in sheet (sheet is empty or does not exist)');
@@ -382,8 +438,8 @@ class GoogleSheetsService {
   async getEvents(): Promise<Event[]> {
     try {
       console.log('Loading events from Google Sheets...');
-      
-      const rows = await this.readSheet('events');
+
+      const rows = await this.readSheetCached('events');
       
       if (!rows.length) {
         console.log('No events found in sheet (sheet is empty or does not exist)');
