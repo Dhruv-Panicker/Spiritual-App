@@ -94,6 +94,14 @@ export default function CalendarScreen() {
     return future || sortedUpcomingEvents[0] || null;
   }, [sortedUpcomingEvents]);
 
+  // Only the next 5 future events are listed; the rest live in Browse by Month
+  const displayedUpcomingEvents = useMemo(() => {
+    const now = Date.now();
+    return sortedUpcomingEvents
+      .filter(e => new Date(e.date).getTime() >= now)
+      .slice(0, 5);
+  }, [sortedUpcomingEvents]);
+
   const openMonthModal = (monthData: MonthData) => {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     sheetTranslateY.setValue(0);
@@ -225,7 +233,7 @@ export default function CalendarScreen() {
             </View>
           </View>
           <View style={styles.allEventsList}>
-            {sortedUpcomingEvents.map((event) => {
+            {displayedUpcomingEvents.map((event) => {
               const pill = getEventTypePillStyle(event.type);
               return (
                 <TouchableOpacity
