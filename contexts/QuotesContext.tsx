@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { Image as CachedImage } from 'expo-image';
 import { googleSheetsService, Quote } from '../services/googleSheetsService';
 
 interface QuotesContextType {
@@ -20,6 +21,15 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
       const loadedQuotes = await googleSheetsService.getQuotes();
       setQuotes(loadedQuotes);
       console.log(`📚 Loaded ${loadedQuotes.length} quotes`);
+
+      // Warm the image cache for the first cards so the quotes tab feels instant
+      const imageUrls = loadedQuotes
+        .map(q => q.imageUrl)
+        .filter((u): u is string => !!u)
+        .slice(0, 6);
+      if (imageUrls.length) {
+        CachedImage.prefetch(imageUrls).catch(() => {});
+      }
     } catch (error) {
       console.error('Error loading quotes:', error);
     } finally {
