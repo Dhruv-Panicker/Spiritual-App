@@ -65,12 +65,14 @@ export interface PrayerSubmissionData {
   photoMimeType?: string;
 }
 
-// Converts a Google Drive sharing URL to a direct image URL
-// Admins can paste the standard "Copy link" URL from Drive and it just works
+// Converts a Google Drive sharing URL to a fast image URL.
+// Admins can paste the standard "Copy link" URL from Drive and it just works.
+// The thumbnail endpoint is CDN-backed and serves a resized image, unlike
+// uc?export=view which redirects and serves the full-size original.
 function toDriveDirectUrl(url: string): string | undefined {
   if (!url.startsWith('http')) return undefined;
-  const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-  if (match) return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+  const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (match) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1200`;
   return url;
 }
 
