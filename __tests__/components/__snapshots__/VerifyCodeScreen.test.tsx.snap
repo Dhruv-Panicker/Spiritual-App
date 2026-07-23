@@ -4,7 +4,7 @@ exports[`VerifyCodeScreen snapshot matches snapshot 1`] = `
 <RCTSafeAreaView
   style={
     {
-      "backgroundColor": "#fdf6ec",
+      "backgroundColor": "#FBF3E7",
       "flex": 1,
     }
   }
@@ -74,7 +74,7 @@ exports[`VerifyCodeScreen snapshot matches snapshot 1`] = `
           <Text
             style={
               {
-                "color": "#c17f3c",
+                "color": "#8C2C37",
                 "fontSize": 16,
                 "fontWeight": "500",
               }
@@ -95,7 +95,7 @@ exports[`VerifyCodeScreen snapshot matches snapshot 1`] = `
           <Text
             style={
               {
-                "color": "#3d1f0a",
+                "color": "#392218",
                 "fontSize": 26,
                 "fontWeight": "bold",
                 "marginBottom": 12,
@@ -108,7 +108,7 @@ exports[`VerifyCodeScreen snapshot matches snapshot 1`] = `
           <Text
             style={
               {
-                "color": "#8b6a4a",
+                "color": "#594136",
                 "fontSize": 15,
                 "lineHeight": 22,
                 "marginBottom": 28,
@@ -122,7 +122,7 @@ exports[`VerifyCodeScreen snapshot matches snapshot 1`] = `
             <Text
               style={
                 {
-                  "color": "#3d1f0a",
+                  "color": "#392218",
                   "fontWeight": "600",
                 }
               }
@@ -139,15 +139,15 @@ exports[`VerifyCodeScreen snapshot matches snapshot 1`] = `
             maxLength={6}
             onChangeText={[Function]}
             placeholder="000000"
-            placeholderTextColor="#8b6a4a"
+            placeholderTextColor="#594136"
             style={
               [
                 {
-                  "backgroundColor": "rgba(255,255,255,0.9)",
-                  "borderColor": "rgba(193,127,60,0.25)",
+                  "backgroundColor": "#F3E6D2",
+                  "borderColor": "#9C8980",
                   "borderRadius": 12,
                   "borderWidth": 1,
-                  "color": "#3d1f0a",
+                  "color": "#392218",
                   "fontSize": 24,
                   "letterSpacing": 8,
                   "marginBottom": 8,
@@ -191,7 +191,7 @@ exports[`VerifyCodeScreen snapshot matches snapshot 1`] = `
             style={
               {
                 "alignItems": "center",
-                "backgroundColor": "#c17f3c",
+                "backgroundColor": "#8C2C37",
                 "borderRadius": 12,
                 "justifyContent": "center",
                 "marginTop": 8,
@@ -205,7 +205,7 @@ exports[`VerifyCodeScreen snapshot matches snapshot 1`] = `
             <Text
               style={
                 {
-                  "color": "#fdf6ec",
+                  "color": "#FBF3E7",
                   "fontSize": 16,
                   "fontWeight": "600",
                 }
@@ -217,7 +217,7 @@ exports[`VerifyCodeScreen snapshot matches snapshot 1`] = `
           <Text
             style={
               {
-                "color": "#8b6a4a",
+                "color": "#594136",
                 "fontSize": 14,
                 "marginTop": 24,
                 "textAlign": "center",

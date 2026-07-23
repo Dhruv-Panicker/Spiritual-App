@@ -17,7 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
-import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
+import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_PALETTE, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
 import { googleSheetsService } from '@/services/googleSheetsService';
 import { env } from '@/config/env';
 import { styles } from '@/styles/prayer.styles';
@@ -99,8 +99,18 @@ export default function PrayerScreen() {
     );
   }, [name, dobDay, dobMonth, dobYear, city, country, phoneAreaCode, phoneNumber, email, prayer]);
 
+  const prayerOverLimit = prayer.length > PRAYER_MAX_LENGTH;
+
   const handleSubmit = async () => {
-    if (!mandatoryFilled || isSubmitting) return;
+    if (isSubmitting) return;
+    if (prayerOverLimit) {
+      Alert.alert('Prayer too long', `Your prayer is ${prayer.length} characters — the maximum is ${PRAYER_MAX_LENGTH}. Please shorten it before submitting.`);
+      return;
+    }
+    if (!mandatoryFilled) {
+      Alert.alert('Missing required fields', 'Please fill in all required fields before submitting your prayer.');
+      return;
+    }
     if (Platform.OS !== 'web') {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
@@ -184,8 +194,8 @@ export default function PrayerScreen() {
                 resizeMode="cover"
               />
               <LinearGradient
-                colors={['transparent', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.6)']}
-                style={styles.heroOverlay}
+                colors={['rgba(247,236,220,0)', 'rgba(247,236,220,0.85)', '#F7ECDC']}
+                style={styles.heroFade}
               />
               <View style={styles.heroContent}>
                 <Text style={styles.heroTitle}>Send a prayer to Om Siddheshwar</Text>
@@ -194,9 +204,9 @@ export default function PrayerScreen() {
                   words will be received with love and blessings.
                 </Text>
                 <View style={styles.privacyNote}>
-                  <Ionicons name="lock-closed" size={13} color="rgba(255,255,255,0.85)" />
+                  <Ionicons name="lock-closed" size={13} color={SPIRITUAL_PALETTE.brown500} />
                   <Text style={styles.privacyText}>
-                    This prayer is private and will reach Om Siddheshwar directly — no one else will view what you've shared.
+                    This prayer is private and will reach Om Siddheshwar directly. No one else will view what you've shared.
                   </Text>
                 </View>
               </View>
@@ -209,7 +219,7 @@ export default function PrayerScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Person being prayed for"
-                  placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+                  placeholderTextColor={SPIRITUAL_PALETTE.brown400}
                   value={name}
                   onChangeText={setName}
                 />
@@ -221,7 +231,7 @@ export default function PrayerScreen() {
                   <TextInput
                     style={[styles.input, styles.inputDD]}
                     placeholder="DD"
-                    placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+                    placeholderTextColor={SPIRITUAL_PALETTE.brown400}
                     value={dobDay}
                     onChangeText={setDobDay}
                     keyboardType="number-pad"
@@ -230,7 +240,7 @@ export default function PrayerScreen() {
                   <TextInput
                     style={[styles.input, styles.inputMM]}
                     placeholder="MM"
-                    placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+                    placeholderTextColor={SPIRITUAL_PALETTE.brown400}
                     value={dobMonth}
                     onChangeText={setDobMonth}
                     keyboardType="number-pad"
@@ -239,7 +249,7 @@ export default function PrayerScreen() {
                   <TextInput
                     style={[styles.input, styles.inputYYYY]}
                     placeholder="YYYY"
-                    placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+                    placeholderTextColor={SPIRITUAL_PALETTE.brown400}
                     value={dobYear}
                     onChangeText={setDobYear}
                     keyboardType="number-pad"
@@ -254,14 +264,14 @@ export default function PrayerScreen() {
                   <TextInput
                     style={[styles.input, styles.inputCity]}
                     placeholder="City"
-                    placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+                    placeholderTextColor={SPIRITUAL_PALETTE.brown400}
                     value={city}
                     onChangeText={setCity}
                   />
                   <TextInput
                     style={[styles.input, styles.inputCountry]}
                     placeholder="Country"
-                    placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+                    placeholderTextColor={SPIRITUAL_PALETTE.brown400}
                     value={country}
                     onChangeText={setCountry}
                   />
@@ -291,15 +301,18 @@ export default function PrayerScreen() {
                   <TextInput
                     style={[styles.input, styles.inputAreaCode]}
                     placeholder="+1"
-                    placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+                    placeholderTextColor={SPIRITUAL_PALETTE.brown400}
                     value={phoneAreaCode}
-                    onChangeText={setPhoneAreaCode}
+                    onChangeText={(t) => {
+                      const digits = t.replace(/[^0-9]/g, '');
+                      setPhoneAreaCode(digits ? `+${digits}` : '');
+                    }}
                     keyboardType="phone-pad"
                   />
                   <TextInput
                     style={[styles.input, styles.inputPhone]}
                     placeholder="234 567 8900"
-                    placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+                    placeholderTextColor={SPIRITUAL_PALETTE.brown400}
                     value={phoneNumber}
                     onChangeText={setPhoneNumber}
                     keyboardType="phone-pad"
@@ -312,7 +325,7 @@ export default function PrayerScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="your@email.com"
-                  placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+                  placeholderTextColor={SPIRITUAL_PALETTE.brown400}
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -322,53 +335,46 @@ export default function PrayerScreen() {
               </View>
 
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Prayer * (max {PRAYER_MAX_LENGTH} characters, ~400–500 words)</Text>
+                <Text style={styles.label}>Prayer *</Text>
+                <Text style={styles.labelSub}>Max {PRAYER_MAX_LENGTH} characters (~400–500 words)</Text>
                 <TextInput
-                  style={styles.textArea}
+                  style={[styles.textArea, prayerOverLimit && styles.textAreaError]}
                   placeholder="Write your prayer or wishes here..."
-                  placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+                  placeholderTextColor={SPIRITUAL_PALETTE.brown400}
                   value={prayer}
-                  onChangeText={(t) => setPrayer(t.slice(0, PRAYER_MAX_LENGTH))}
+                  onChangeText={setPrayer}
                   multiline
                   numberOfLines={8}
                   textAlignVertical="top"
-                  maxLength={PRAYER_MAX_LENGTH}
                 />
-                <Text style={styles.charCount}>
+                <Text style={[styles.charCount, prayerOverLimit && styles.charCountOver]}>
                   {prayer.length} / {PRAYER_MAX_LENGTH}
                 </Text>
+                {prayerOverLimit && (
+                  <Text style={styles.charLimitError}>Character limit exceeded</Text>
+                )}
               </View>
 
               <TouchableOpacity
-                style={[
-                  styles.submitButton,
-                  mandatoryFilled ? styles.submitButtonEnabled : styles.submitButtonDisabled,
-                  isSubmitting && styles.submitButtonDisabled,
-                ]}
+                style={[styles.submitButton, isSubmitting && styles.submitButtonBusy]}
                 onPress={handleSubmit}
-                disabled={!mandatoryFilled || isSubmitting}
-                activeOpacity={mandatoryFilled ? 0.8 : 1}
+                disabled={isSubmitting}
+                activeOpacity={0.8}
               >
                 {isSubmitting ? (
                   <ActivityIndicator color={SPIRITUAL_COLORS.primaryForeground} />
                 ) : (
                   <>
-                    <Ionicons
-                      name="send"
-                      size={20}
-                      color={mandatoryFilled ? SPIRITUAL_COLORS.primaryForeground : SPIRITUAL_COLORS.foreground}
-                    />
-                    <Text
-                      style={[
-                        styles.submitButtonText,
-                        !mandatoryFilled && styles.submitButtonTextDisabled,
-                      ]}
-                    >
-                      Submit prayer
-                    </Text>
+                    <Ionicons name="send" size={20} color={SPIRITUAL_COLORS.primaryForeground} />
+                    <Text style={styles.submitButtonText}>Submit prayer</Text>
                   </>
                 )}
               </TouchableOpacity>
+            </View>
+            <View style={styles.footerDivider}>
+              <View style={styles.footerDividerLine} />
+              <Text style={styles.footerDividerStar}>✦</Text>
+              <View style={styles.footerDividerLine} />
             </View>
           </ScrollView>
         </KeyboardAvoidingView>

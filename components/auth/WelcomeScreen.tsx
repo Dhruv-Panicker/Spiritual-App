@@ -29,8 +29,8 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onSignUp, onLogIn 
         >
           {/* Title block */}
           <View style={styles.titleBlock}>
-            <Text style={styles.titleLine1}>Sri Sidheshwar</Text>
-            <Text style={styles.titleLine2}>SiddhGuru</Text>
+            <Text style={styles.titleLine1}>A Living Divine Power</Text>
+            <Text style={styles.titleLine2}>Om Siddheshwar</Text>
           </View>
 
           {/* Gurudev image – circular container with image clipped to circle */}
@@ -72,7 +72,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onSignUp, onLogIn 
             </TouchableOpacity>
 
             <Text style={styles.footerTagline}>
-              Sri SiddhGuru · Vedic Wisdom · Ancient Path
+              Om Siddheshwar · Vedic Wisdom · Ancient Path
             </Text>
 
             <Text style={styles.legalText}>

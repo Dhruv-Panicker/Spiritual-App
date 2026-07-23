@@ -71,17 +71,10 @@ describe('shareQuote()', () => {
     expect(call.message).toContain('Siddhguru');
   });
 
-  it('includes the imageUrl when present', async () => {
+  it('never includes the image link, even when imageUrl is present', async () => {
     const quoteWithImage = { ...mockQuote, imageUrl: 'https://drive.google.com/uc?export=view&id=abc' };
 
     await shareService.shareQuote(quoteWithImage);
-
-    const call = mockShare.mock.calls[0][0];
-    expect(call.message).toContain('https://drive.google.com/uc?export=view&id=abc');
-  });
-
-  it('does not include an image link when imageUrl is absent', async () => {
-    await shareService.shareQuote(mockQuote);
 
     const call = mockShare.mock.calls[0][0];
     expect(call.message).not.toContain('drive.google.com');

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
   Dimensions,
   Modal,
   ActivityIndicator,
+  Animated,
+  PanResponder,
   Platform,
   Linking,
   Alert,
@@ -17,25 +19,21 @@ import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { useEvents, type MonthData, type Event } from '@/contexts/EventsContext';
 import { shareService } from '@/services/shareService';
-import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS } from '@/constants/SpiritualColors';
+import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_PALETTE } from '@/constants/SpiritualColors';
 import { styles } from '@/styles/calendar.styles';
 
 const { width: screenWidth } = Dimensions.get('window');
-const CARD_WIDTH = (screenWidth - 16 * 3) / 2;
+const CARD_WIDTH = (screenWidth - 16 * 2 - 12) / 2;
 
 // Type pill styles (mockup: light bg + colored text)
 function getEventTypePillStyle(type: Event['type']) {
-  const color = {
-    meditation: SPIRITUAL_COLORS.primary,
-    teaching: SPIRITUAL_COLORS.secondary,
-    celebration: SPIRITUAL_COLORS.spiritualRed,
-    retreat: SPIRITUAL_COLORS.omGold,
-  }[type] || SPIRITUAL_COLORS.textMuted;
-  return {
-    bg: `${color}20`,
-    text: color,
-    dot: color,
+  const styles = {
+    meditation: { bg: SPIRITUAL_PALETTE.marigoldLo, text: SPIRITUAL_PALETTE.brown800, dot: SPIRITUAL_PALETTE.marigold, icon: 'flower-outline' as const },
+    teaching: { bg: SPIRITUAL_PALETTE.brown200, text: SPIRITUAL_PALETTE.brown800, dot: SPIRITUAL_PALETTE.brown600, icon: 'book-outline' as const },
+    celebration: { bg: SPIRITUAL_PALETTE.kumkum, text: SPIRITUAL_PALETTE.bg, dot: SPIRITUAL_PALETTE.kumkum, icon: 'sparkles-outline' as const },
+    retreat: { bg: SPIRITUAL_PALETTE.tulsiLo, text: SPIRITUAL_PALETTE.tulsi, dot: SPIRITUAL_PALETTE.tulsi, icon: 'leaf-outline' as const },
   };
+  return styles[type] || { bg: SPIRITUAL_PALETTE.sunken, text: SPIRITUAL_PALETTE.brown600, dot: SPIRITUAL_PALETTE.brown400, icon: 'ellipse-outline' as const };
 }
 
 function formatEventDate(dateStr: string) {
@@ -61,6 +59,28 @@ export default function CalendarScreen() {
   const [selectedMonth, setSelectedMonth] = useState<MonthData | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
+  // Drag-to-dismiss for the bottom sheets: grab the handle area and swipe down
+  const sheetTranslateY = useRef(new Animated.Value(0)).current;
+  const sheetPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_e, g) => g.dy > 4 && Math.abs(g.dy) > Math.abs(g.dx),
+      onPanResponderMove: (_e, g) => {
+        if (g.dy > 0) sheetTranslateY.setValue(g.dy);
+      },
+      onPanResponderRelease: (_e, g) => {
+        if (g.dy > 120 || g.vy > 0.8) {
+          Animated.timing(sheetTranslateY, { toValue: 700, duration: 180, useNativeDriver: true }).start(() => {
+            sheetTranslateY.setValue(0);
+            closeModal();
+          });
+        } else {
+          Animated.spring(sheetTranslateY, { toValue: 0, useNativeDriver: true }).start();
+        }
+      },
+    })
+  ).current;
+
   const currentMonthIndex = new Date().getMonth();
   const currentMonthName = monthNames[currentMonthIndex];
 
@@ -74,8 +94,17 @@ export default function CalendarScreen() {
     return future || sortedUpcomingEvents[0] || null;
   }, [sortedUpcomingEvents]);
 
+  // Only the next 3 future events are listed; the rest live in Browse by Month
+  const displayedUpcomingEvents = useMemo(() => {
+    const now = Date.now();
+    return sortedUpcomingEvents
+      .filter(e => new Date(e.date).getTime() >= now)
+      .slice(0, 3);
+  }, [sortedUpcomingEvents]);
+
   const openMonthModal = (monthData: MonthData) => {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    sheetTranslateY.setValue(0);
     setSelectedMonth(monthData);
     setModalView('month');
     setModalVisible(true);
@@ -83,6 +112,7 @@ export default function CalendarScreen() {
 
   const openEventDetail = (event: Event) => {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    sheetTranslateY.setValue(0);
     setSelectedEvent(event);
     setModalView('event');
     setModalVisible(true);
@@ -137,9 +167,6 @@ export default function CalendarScreen() {
     <View style={styles.container}>
       <LinearGradient colors={['#fdf6ec', '#f5e2c4']} style={styles.gradient}>
         <SafeAreaView style={styles.safeArea}>
-        {/* Subtle warm glow at top */}
-        <View style={styles.glowOverlay} pointerEvents="none" />
-
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
@@ -159,7 +186,7 @@ export default function CalendarScreen() {
               activeOpacity={0.9}
             >
               <LinearGradient
-                colors={[SPIRITUAL_COLORS.secondary, SPIRITUAL_COLORS.primary]}
+                colors={SPIRITUAL_GRADIENTS.marigold as [string, string]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.heroCard}
@@ -200,13 +227,13 @@ export default function CalendarScreen() {
 
           {/* All Upcoming Events */}
           <View style={styles.sectionTitleRow}>
-            <Text style={styles.sectionTitle}>All Upcoming Events</Text>
+            <Text style={styles.sectionTitle}>Upcoming Events</Text>
             <View style={styles.totalPill}>
               <Text style={styles.totalPillText}>{sortedUpcomingEvents.length} total</Text>
             </View>
           </View>
           <View style={styles.allEventsList}>
-            {sortedUpcomingEvents.map((event) => {
+            {displayedUpcomingEvents.map((event) => {
               const pill = getEventTypePillStyle(event.type);
               return (
                 <TouchableOpacity
@@ -219,6 +246,7 @@ export default function CalendarScreen() {
                   <View style={styles.eventPillContent}>
                     <View style={styles.eventPillHeader}>
                       <View style={[styles.eventPillBadge, { backgroundColor: pill.bg }]}>
+                        <Ionicons name={pill.icon} size={16} color={pill.text} />
                         <Text style={[styles.eventPillBadgeText, { color: pill.text }]}>{event.type}</Text>
                       </View>
                     </View>
@@ -288,6 +316,12 @@ export default function CalendarScreen() {
               );
             })}
           </View>
+          {/* Ornamental divider – page footer */}
+          <View style={[styles.divider, styles.dividerMargin]}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>— ✦ —</Text>
+            <View style={[styles.dividerLine, styles.dividerLineRight]} />
+          </View>
           <View style={styles.bottomPadding} />
         </ScrollView>
         </SafeAreaView>
@@ -297,10 +331,15 @@ export default function CalendarScreen() {
           <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={closeModal}>
             <View style={styles.modalContentWrapper} pointerEvents="box-none">
               {modalView === 'month' && selectedMonth && (
-                <View style={[styles.sheetContainer, styles.monthSheetContainer]} onStartShouldSetResponder={() => true}>
-                  <View style={styles.sheetHandle} />
-                  <Text style={styles.sheetYear}>{selectedMonth.year}</Text>
-                  <Text style={styles.sheetMonthTitle}>{selectedMonth.month}</Text>
+                <Animated.View
+                  style={[styles.sheetContainer, styles.monthSheetContainer, { transform: [{ translateY: sheetTranslateY }] }]}
+                  onStartShouldSetResponder={() => true}
+                >
+                  <View {...sheetPanResponder.panHandlers}>
+                    <View style={styles.sheetHandle} />
+                    <Text style={styles.sheetYear}>{selectedMonth.year}</Text>
+                    <Text style={styles.sheetMonthTitle}>{selectedMonth.month}</Text>
+                  </View>
                   <ScrollView style={styles.sheetScroll} contentContainerStyle={styles.sheetScrollContent} showsVerticalScrollIndicator>
                     {selectedMonth.events.length > 0 ? (
                       selectedMonth.events.map((event) => {
@@ -315,6 +354,7 @@ export default function CalendarScreen() {
                             <View style={[styles.eventPillBar, { backgroundColor: pill.dot }]} />
                             <View style={styles.eventPillContent}>
                               <View style={[styles.eventPillBadge, { backgroundColor: pill.bg }]}>
+                                <Ionicons name={pill.icon} size={16} color={pill.text} />
                                 <Text style={[styles.eventPillBadgeText, { color: pill.text }]}>{event.type}</Text>
                               </View>
                               <Text style={styles.eventPillTitle}>{event.title}</Text>
@@ -334,12 +374,17 @@ export default function CalendarScreen() {
                       <Text style={styles.noEventsMessage}>No events scheduled this month</Text>
                     )}
                   </ScrollView>
-                </View>
+                </Animated.View>
               )}
 
               {modalView === 'event' && selectedEvent && (
-                <View style={[styles.sheetContainer, styles.eventSheetContainer]}>
-                  <View style={styles.sheetHandle} />
+                <Animated.View
+                  style={[styles.sheetContainer, styles.eventSheetContainer, { transform: [{ translateY: sheetTranslateY }] }]}
+                  onStartShouldSetResponder={() => true}
+                >
+                  <View {...sheetPanResponder.panHandlers}>
+                    <View style={styles.sheetHandle} />
+                  </View>
                   <View style={styles.eventSheetHeader}>
                     <Text style={styles.eventSheetTitle} numberOfLines={2}>{selectedEvent.title}</Text>
                     <TouchableOpacity onPress={closeModal} style={styles.sheetCloseBtn}>
@@ -348,6 +393,7 @@ export default function CalendarScreen() {
                   </View>
                   <ScrollView style={styles.sheetScroll} contentContainerStyle={styles.sheetScrollContent} showsVerticalScrollIndicator>
                     <View style={[styles.eventPillBadge, styles.eventDetailBadge, { backgroundColor: getEventTypePillStyle(selectedEvent.type).bg }]}>
+                      <Ionicons name={getEventTypePillStyle(selectedEvent.type).icon} size={16} color={getEventTypePillStyle(selectedEvent.type).text} />
                       <Text style={[styles.eventPillBadgeText, { color: getEventTypePillStyle(selectedEvent.type).text }]}>{selectedEvent.type}</Text>
                     </View>
                     <View style={styles.eventDetailMeta}>
@@ -385,7 +431,7 @@ export default function CalendarScreen() {
                       </LinearGradient>
                     </TouchableOpacity>
                   </ScrollView>
-                </View>
+                </Animated.View>
               )}
             </View>
           </TouchableOpacity>

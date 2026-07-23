@@ -25,9 +25,12 @@ jest.mock('@/config/env', () => ({
   validateEnv: jest.fn(),
 }));
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { googleSheetsService } from '@/services/googleSheetsService';
 
 const mockFetch = global.fetch as jest.Mock;
+const mockGetItem = AsyncStorage.getItem as jest.Mock;
+const mockSetItem = AsyncStorage.setItem as jest.Mock;
 
 function makeOkResponse(data: object) {
   return {
@@ -49,6 +52,8 @@ function makeErrorResponse(status: number, body = '') {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockGetItem.mockResolvedValue(null);
+  mockSetItem.mockResolvedValue(undefined);
 });
 
 // ─── getQuotes ────────────────────────────────────────────────────────────────
@@ -134,6 +139,95 @@ describe('getQuotes()', () => {
     expect(quotes).toHaveLength(1);
     expect(quotes[0].author).toBe('Unknown');
     expect(quotes[0].category).toBe('General');
+  });
+});
+
+// ─── content caching (quotes/videos/events) ──────────────────────────────────
+
+describe('content sheet caching', () => {
+  const quoteRows = [
+    ['id', 'text', 'author', 'category', 'dateAdded', 'imageUrl'],
+    ['q1', 'Cached wisdom', 'Siddhguru', 'General', '2024-01-01', ''],
+  ];
+
+  it('serves fresh cache without hitting the network', async () => {
+    mockGetItem.mockResolvedValue(
+      JSON.stringify({ timestamp: Date.now() - 60 * 1000, rows: quoteRows })
+    );
+
+    const quotes = await googleSheetsService.getQuotes();
+
+    expect(mockFetch).not.toHaveBeenCalled();
+    expect(quotes).toHaveLength(1);
+    expect(quotes[0].text).toBe('Cached wisdom');
+  });
+
+  it('refetches and rewrites cache when the cached copy is older than the TTL', async () => {
+    mockGetItem.mockResolvedValue(
+      JSON.stringify({ timestamp: Date.now() - 60 * 60 * 1000, rows: quoteRows })
+    );
+    const freshRows = [
+      ['id', 'text', 'author', 'category', 'dateAdded', 'imageUrl'],
+      ['q2', 'Fresh wisdom', 'Siddhguru', 'General', '2024-01-02', ''],
+    ];
+    mockFetch.mockResolvedValueOnce(makeOkResponse({ values: freshRows }));
+
+    const quotes = await googleSheetsService.getQuotes();
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(quotes[0].text).toBe('Fresh wisdom');
+    expect(mockSetItem).toHaveBeenCalledWith(
+      'sheets_cache_quotes',
+      expect.stringContaining('Fresh wisdom')
+    );
+  });
+
+  it('serves stale cache when the fetch fails (rate limited)', async () => {
+    mockGetItem.mockResolvedValue(
+      JSON.stringify({ timestamp: Date.now() - 60 * 60 * 1000, rows: quoteRows })
+    );
+    // Both the initial request and the retry are rate limited
+    mockFetch.mockResolvedValue(makeErrorResponse(429, 'Rate limited'));
+    const setTimeoutSpy = jest
+      .spyOn(global, 'setTimeout')
+      .mockImplementation(((cb: () => void) => {
+        cb();
+        return 0 as unknown as NodeJS.Timeout;
+      }) as typeof setTimeout);
+
+    const quotes = await googleSheetsService.getQuotes();
+
+    expect(quotes).toHaveLength(1);
+    expect(quotes[0].text).toBe('Cached wisdom');
+    setTimeoutSpy.mockRestore();
+  });
+
+  it('retries once on 429 and succeeds', async () => {
+    mockFetch
+      .mockResolvedValueOnce(makeErrorResponse(429, 'Rate limited'))
+      .mockResolvedValueOnce(makeOkResponse({ values: quoteRows }));
+    const setTimeoutSpy = jest
+      .spyOn(global, 'setTimeout')
+      .mockImplementation(((cb: () => void) => {
+        cb();
+        return 0 as unknown as NodeJS.Timeout;
+      }) as typeof setTimeout);
+
+    const quotes = await googleSheetsService.getQuotes();
+
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(quotes[0].text).toBe('Cached wisdom');
+    setTimeoutSpy.mockRestore();
+  });
+
+  it('ignores corrupt cache entries and fetches normally', async () => {
+    mockGetItem.mockResolvedValue('not valid json {');
+    mockFetch.mockResolvedValueOnce(makeOkResponse({ values: quoteRows }));
+
+    const quotes = await googleSheetsService.getQuotes();
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(quotes).toHaveLength(1);
   });
 });
 
