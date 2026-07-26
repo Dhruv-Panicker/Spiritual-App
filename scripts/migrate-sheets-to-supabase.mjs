@@ -46,6 +46,11 @@ function driveFileId(url) {
 
 function parseDateOrNull(s) {
   if (!s) return null;
+  // Date-only strings like 2026-07-19 must be treated as plain calendar
+  // dates: new Date() would parse them as UTC midnight, which lands on the
+  // previous day when converted to a local date in UTC-negative timezones.
+  const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(s.trim());
+  if (iso) return new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
   const d = new Date(s);
   return isNaN(d.getTime()) ? null : d;
 }
