@@ -149,8 +149,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
    * Login step 1: send the OTP code. Fails with UNVERIFIED_USER when the
    * email has no account so the UI can point the user to sign-up.
    */
+  // Note: deliberately does NOT touch the global isLoading — that unmounts
+  // AuthFlow (AuthGuard swaps in the loading ring), which would reset the
+  // flow back to the welcome screen instead of advancing to code entry.
   const login = async (email: string) => {
-    setIsLoading(true);
     try {
       const normalizedEmail = email.trim().toLowerCase();
       if (!normalizedEmail || !normalizedEmail.includes('@')) {
@@ -168,8 +170,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } catch (error) {
       console.error('Login error:', error);
       throw error instanceof Error ? error : new Error('Login failed');
-    } finally {
-      setIsLoading(false);
     }
   };
 

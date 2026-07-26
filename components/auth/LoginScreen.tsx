@@ -21,8 +21,9 @@ interface LoginScreenProps {
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ onGoToSignUp, onCodeSent }) => {
-  const { login, isLoading } = useAuth();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async () => {
@@ -32,6 +33,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onGoToSignUp, onCodeSe
       return;
     }
     setError(null);
+    setIsLoading(true);
     try {
       await login(trimmed);
       onCodeSent?.(trimmed.toLowerCase());
@@ -39,6 +41,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onGoToSignUp, onCodeSe
       const message = err instanceof Error ? err.message : 'Login failed';
       setError(message === 'UNVERIFIED_USER' ? 'UNVERIFIED_USER' : message);
       console.error('Login error:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
