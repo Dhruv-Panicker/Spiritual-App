@@ -14,6 +14,8 @@ const expoConfig = appJson.expo || {};
 
 // Env keys we inject into extra (from .env or EAS secrets)
 const ENV_KEYS = [
+  'SUPABASE_URL',
+  'SUPABASE_ANON_KEY',
   'GOOGLE_SHEETS_API_KEY',
   'GOOGLE_SHEET_ID',
   'GOOGLE_APPS_SCRIPT_WEBHOOK_URL',

@@ -36,6 +36,10 @@ const getEnvVar = (key: string, defaultValue: string = ''): string => {
 
 // Configuration object
 export const env = {
+  // Supabase Configuration
+  supabaseUrl: getEnvVar('SUPABASE_URL'),
+  supabaseAnonKey: getEnvVar('SUPABASE_ANON_KEY'),
+
   // Google Sheets Configuration
   googleSheetsApiKey: getEnvVar('GOOGLE_SHEETS_API_KEY'),
   googleSheetId: getEnvVar('GOOGLE_SHEET_ID'),
