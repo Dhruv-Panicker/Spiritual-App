@@ -8,9 +8,35 @@
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/services/supabaseClient';
-import type { Quote, Video, Event, PrayerSubmissionData } from '@/services/googleSheetsService';
+import type { PrayerSubmissionData } from '@/services/googleSheetsService';
 
-export type { Quote, Video, Event };
+export interface Quote {
+  id: string;
+  text: string;
+  author: string;
+  category: string;
+  dateAdded: string;
+  imageUrl?: string;
+}
+
+export interface Video {
+  id: string;
+  title: string;
+  description: string;
+  youtubeId: string;
+  dateAdded: string;
+}
+
+export interface Event {
+  id: string;
+  title: string;
+  date: string;
+  time: string;
+  description: string;
+  location?: string;
+  type: 'meditation' | 'teaching' | 'celebration' | 'retreat';
+  link?: string;
+}
 
 const CACHE_PREFIX = 'supabase-cache-';
 
