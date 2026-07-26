@@ -5,9 +5,10 @@
  * Reads keep a last-good copy in AsyncStorage and serve it when the
  * network fails, so the app still shows content offline.
  */
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/services/supabaseClient';
-import type { Quote, Video, Event } from '@/services/googleSheetsService';
+import type { Quote, Video, Event, PrayerSubmissionData } from '@/services/googleSheetsService';
 
 export type { Quote, Video, Event };
 
@@ -184,6 +185,97 @@ class SupabaseService {
       type: data.event_type as Event['type'],
       link: data.link || undefined,
     };
+  }
+
+  /** Save/refresh this device's push token, tied to the signed-in user. */
+  async savePushToken(email: string, pushToken: string): Promise<boolean> {
+    try {
+      const { error } = await supabase.from('push_tokens').upsert(
+        {
+          token: pushToken,
+          email: email.trim().toLowerCase(),
+          platform: Platform.OS,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'token' }
+      );
+      if (error) {
+        console.error('savePushToken error:', error.message);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error('savePushToken error:', err);
+      return false;
+    }
+  }
+
+  /** Best-effort login log (replaces the Sheets login sheet). */
+  async logLogin(email: string, isAdmin: boolean): Promise<boolean> {
+    try {
+      const { error } = await supabase.from('login_logs').insert({
+        email: email.trim().toLowerCase(),
+        is_admin: isAdmin,
+      });
+      if (error) {
+        console.error('logLogin error:', error.message);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error('logLogin error:', err);
+      return false;
+    }
+  }
+
+  /**
+   * Best-effort record of a prayer submission (the email to the recipient is
+   * the primary delivery; this keeps a queryable copy for the admins).
+   */
+  async recordPrayer(data: PrayerSubmissionData): Promise<boolean> {
+    try {
+      const { error } = await supabase.from('prayers').insert({
+        name: data.name,
+        date_of_birth: data.dateOfBirth,
+        city: data.city,
+        country: data.country,
+        phone: data.phone,
+        email: data.email.trim().toLowerCase(),
+        prayer: data.prayer,
+      });
+      if (error) {
+        console.error('recordPrayer error:', error.message);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error('recordPrayer error:', err);
+      return false;
+    }
+  }
+
+  /**
+   * Broadcast a push notification to all users via the admin-only edge
+   * function. Tokens stay server-side. Returns the number delivered.
+   */
+  async broadcastPush(notification: {
+    title: string;
+    body: string;
+    data?: Record<string, unknown>;
+    excludeToken?: string | null;
+  }): Promise<number> {
+    const { data, error } = await supabase.functions.invoke('broadcast-push', {
+      body: {
+        title: notification.title,
+        body: notification.body,
+        data: notification.data,
+        excludeToken: notification.excludeToken || undefined,
+      },
+    });
+    if (error) {
+      throw new Error(error.message || 'Broadcast failed');
+    }
+    return typeof data?.sent === 'number' ? data.sent : 0;
   }
 
   /**

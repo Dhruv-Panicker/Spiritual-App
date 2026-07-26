@@ -20,7 +20,6 @@ import { useQuotes } from '@/contexts/QuotesContext';
 import { useVideos } from '@/contexts/VideosContext';
 import { useEvents } from '@/contexts/EventsContext';
 import { notificationService } from '@/services/notificationService';
-import { googleSheetsService } from '@/services/googleSheetsService';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS } from '@/constants/SpiritualColors';
 import { styles } from '@/styles/admin.styles';
 
@@ -81,29 +80,6 @@ export default function AdminScreen() {
     setActiveTab(tab);
   };
 
-  // Get push tokens from all users stored in Google Sheets
-  const getPushTokens = async (): Promise<string[]> => {
-    try {
-      // Get all push tokens from Google Sheets
-      const tokens = await googleSheetsService.getPushTokens();
-      
-      if (tokens.length === 0) {
-        console.log('No push tokens found in Google Sheets, using local notification');
-        // Fallback: if no tokens in sheets, use local token (for testing)
-        const localToken = await notificationService.getStoredPushToken();
-        return localToken ? [localToken] : [];
-      }
-      
-      console.log(`Found ${tokens.length} push tokens from Google Sheets`);
-      return tokens;
-    } catch (error) {
-      console.error('Error getting push tokens from Google Sheets:', error);
-      // Fallback to local token
-      const localToken = await notificationService.getStoredPushToken();
-      return localToken ? [localToken] : [];
-    }
-  };
-
   const handleQuoteSubmit = async () => {
     if (!quoteText.trim() || !quoteAuthor.trim()) {
       Alert.alert('Error', 'Please fill in both quote and author fields');
@@ -123,12 +99,7 @@ export default function AdminScreen() {
 
       if (sendQuoteNotification) {
         try {
-          const pushTokens = await getPushTokens();
-          const adminToken = notificationService.getPushToken() || await notificationService.getStoredPushToken();
-          const remoteTokens = adminToken ? pushTokens.filter(t => t !== adminToken) : pushTokens;
-          if (remoteTokens.length > 0) {
-            await notificationService.notifyNewQuote(quoteData.text, quoteData.author, remoteTokens);
-          }
+          await notificationService.notifyNewQuote(quoteData.text, quoteData.author);
         } catch (notifError) {
           console.error('Error sending notification:', notifError);
         }
@@ -208,12 +179,7 @@ export default function AdminScreen() {
 
       if (sendVideoNotification) {
         try {
-          const pushTokens = await getPushTokens();
-          const adminToken = notificationService.getPushToken() || await notificationService.getStoredPushToken();
-          const remoteTokens = adminToken ? pushTokens.filter(t => t !== adminToken) : pushTokens;
-          if (remoteTokens.length > 0) {
-            await notificationService.notifyNewVideo(videoData.title, remoteTokens);
-          }
+          await notificationService.notifyNewVideo(videoData.title);
         } catch (notifError) {
           console.error('Error sending notification:', notifError);
         }
@@ -274,12 +240,7 @@ export default function AdminScreen() {
 
       if (sendEventNotification) {
         try {
-          const pushTokens = await getPushTokens();
-          const adminToken = notificationService.getPushToken() || await notificationService.getStoredPushToken();
-          const remoteTokens = adminToken ? pushTokens.filter(t => t !== adminToken) : pushTokens;
-          if (remoteTokens.length > 0) {
-            await notificationService.notifyNewEvent(eventData.title, eventData.date, remoteTokens);
-          }
+          await notificationService.notifyNewEvent(eventData.title, eventData.date);
         } catch (notifError) {
           console.error('Error sending notification:', notifError);
         }
@@ -644,19 +605,9 @@ export default function AdminScreen() {
         return;
       }
 
-      // Get all push tokens from Google Sheets
-      const allTokens = await getPushTokens();
-
-      // Get admin's own token so we can exclude it from push (admin gets local instead)
-      const adminToken = notificationService.getPushToken() || await notificationService.getStoredPushToken();
-      const remoteTokens = adminToken
-        ? allTokens.filter(t => t !== adminToken)
-        : allTokens;
-
-      // Send push to all other users
-      if (remoteTokens.length > 0) {
-        await notificationService.notifyGeneral(notificationMessage.trim(), remoteTokens);
-      }
+      // Broadcast to all users via the edge function (the sender's own
+      // device is excluded and gets the local notification below instead)
+      await notificationService.notifyGeneral(notificationMessage.trim());
 
       const message = notificationMessage.trim();
       setNotificationMessage('');

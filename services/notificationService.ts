@@ -268,50 +268,24 @@ class NotificationService {
     }
   }
 
-  // Send push notification to all users (requires backend or Expo push service)
-  async sendPushNotification(notificationData: NotificationData, pushTokens: string[]): Promise<boolean> {
-    if (!pushTokens || pushTokens.length === 0) {
-      console.log('📱 Using LOCAL notification (works immediately, no backend needed)');
-      try {
-        const notificationId = await this.sendLocalNotification(notificationData);
-        return notificationId !== null;
-      } catch (error) {
-        console.error('❌ Failed to send local notification:', error);
-        return false;
-      }
-    }
-
+  // Broadcast a push notification to all users via the admin-only edge
+  // function (tokens never come to the client). The sender's own device is
+  // excluded from the push and shown a local notification by callers instead.
+  async sendPushNotification(notificationData: NotificationData): Promise<boolean> {
+    // Lazy import: keeps module init order simple
+    const { supabaseService } = require('@/services/supabaseService');
     try {
-      const messages = pushTokens.map(token => ({
-        to: token,
-        sound: 'default',
+      const ownToken = this.getPushToken() || await this.getStoredPushToken();
+      const sent = await supabaseService.broadcastPush({
         title: notificationData.title || 'Om Siddheshwar',
         body: notificationData.body,
-        data: {
-          type: notificationData.type,
-          ...notificationData.data,
-          timestamp: new Date().toISOString(),
-        },
-      }));
-
-      const response = await fetch('https://exp.host/--/api/v2/push/send', {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Accept-encoding': 'gzip, deflate',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(messages),
+        data: { type: notificationData.type, ...notificationData.data },
+        excludeToken: ownToken,
       });
-
-      const result = await response.json();
-      console.log('📤 Push notifications sent:', result);
-      
-      // Check if at least one notification was sent successfully
-      if (Array.isArray(result.data)) {
-        return result.data.some((item: any) => item.status === 'ok');
-      }
-      return result.data?.status === 'ok';
+      console.log(`📤 Push broadcast delivered to ${sent} device(s)`);
+      if (sent > 0) return true;
+      // No other devices registered — show locally so the admin can verify
+      return (await this.sendLocalNotification(notificationData)) !== null;
     } catch (error) {
       console.error('❌ Error sending push notification:', error);
       // Fallback to local notification
@@ -320,56 +294,44 @@ class NotificationService {
   }
 
   // Helper method: Send notification for new quote
-  async notifyNewQuote(quoteText: string, author: string, pushTokens: string[] = []): Promise<boolean> {
+  async notifyNewQuote(quoteText: string, author: string): Promise<boolean> {
     const truncatedQuote = quoteText.length > 60 ? quoteText.substring(0, 57) + '...' : quoteText;
-    return await this.sendPushNotification(
-      {
-        type: 'quote',
-        title: 'New Daily Wisdom',
-        body: `"${truncatedQuote}" - ${author}`,
-        data: { quote: quoteText, author },
-      },
-      pushTokens
-    );
+    return await this.sendPushNotification({
+      type: 'quote',
+      title: 'New Daily Wisdom',
+      body: `"${truncatedQuote}" - ${author}`,
+      data: { quote: quoteText, author },
+    });
   }
 
   // Helper method: Send notification for new video
-  async notifyNewVideo(videoTitle: string, pushTokens: string[] = []): Promise<boolean> {
-    return await this.sendPushNotification(
-      {
-        type: 'video',
-        title: 'New Spiritual Video',
-        body: `New video available: ${videoTitle}`,
-        data: { title: videoTitle },
-      },
-      pushTokens
-    );
+  async notifyNewVideo(videoTitle: string): Promise<boolean> {
+    return await this.sendPushNotification({
+      type: 'video',
+      title: 'New Spiritual Video',
+      body: `New video available: ${videoTitle}`,
+      data: { title: videoTitle },
+    });
   }
 
   // Helper method: Send notification for new event
-  async notifyNewEvent(eventTitle: string, eventDate: string, pushTokens: string[] = []): Promise<boolean> {
+  async notifyNewEvent(eventTitle: string, eventDate: string): Promise<boolean> {
     const date = new Date(eventDate).toLocaleDateString();
-    return await this.sendPushNotification(
-      {
-        type: 'event',
-        title: 'New Event',
-        body: `${eventTitle} - ${date}`,
-        data: { title: eventTitle, date: eventDate },
-      },
-      pushTokens
-    );
+    return await this.sendPushNotification({
+      type: 'event',
+      title: 'New Event',
+      body: `${eventTitle} - ${date}`,
+      data: { title: eventTitle, date: eventDate },
+    });
   }
 
   // Helper method: Send general notification
-  async notifyGeneral(message: string, pushTokens: string[] = []): Promise<boolean> {
-    return await this.sendPushNotification(
-      {
-        type: 'general',
-        title: 'Om Siddheshwar',
-        body: message,
-      },
-      pushTokens
-    );
+  async notifyGeneral(message: string): Promise<boolean> {
+    return await this.sendPushNotification({
+      type: 'general',
+      title: 'Om Siddheshwar',
+      body: message,
+    });
   }
 
   // Get current push token

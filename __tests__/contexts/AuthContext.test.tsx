@@ -48,9 +48,9 @@ jest.mock('@/services/twoFactorService', () => ({
   },
 }));
 
-jest.mock('@/services/googleSheetsService', () => ({
-  googleSheetsService: {
-    logUserLogin: jest.fn(() => Promise.resolve(true)),
+jest.mock('@/services/supabaseService', () => ({
+  supabaseService: {
+    logLogin: jest.fn(() => Promise.resolve(true)),
     savePushToken: jest.fn(() => Promise.resolve(true)),
   },
 }));

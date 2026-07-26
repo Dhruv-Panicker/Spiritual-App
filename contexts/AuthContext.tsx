@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../services/supabaseClient';
 import { twoFactorService } from '../services/twoFactorService';
-import { googleSheetsService } from '../services/googleSheetsService';
+import { supabaseService } from '../services/supabaseService';
 import { notificationService } from '../services/notificationService';
 
 export interface User {
@@ -121,12 +121,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const finishSession = async (profile: User) => {
     setUser(profile);
     await AsyncStorage.setItem(SESSION_KEY, JSON.stringify(profile));
-    googleSheetsService.logUserLogin({
-      email: profile.email,
-      name: profile.name,
-      loginTime: new Date().toISOString(),
-      isAdmin: profile.isAdmin,
-    }).catch(() => {});
+    supabaseService.logLogin(profile.email, profile.isAdmin).catch(() => {});
     (async () => {
       try {
         await notificationService.initialize();
@@ -135,7 +130,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           attempt++;
           const pushToken = notificationService.getPushToken() || await notificationService.getStoredPushToken();
           if (pushToken) {
-            await googleSheetsService.savePushToken(profile.email, pushToken);
+            await supabaseService.savePushToken(profile.email, pushToken);
             return;
           }
           if (attempt < 10) setTimeout(() => trySaveToken(), 2000);
