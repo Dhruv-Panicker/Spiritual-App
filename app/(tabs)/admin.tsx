@@ -36,11 +36,6 @@ export default function AdminScreen() {
     }
   }, [user]);
 
-  // Return null while checking or if not admin 
-  if (!user || !user.isAdmin) {
-    return null;
-  }
-
   // Tab navigation state
   const [activeTab, setActiveTab] = useState<'quotes' | 'videos' | 'events' | 'notifications'>('quotes');
 
@@ -72,6 +67,14 @@ export default function AdminScreen() {
   // Notification tab states
   const [notificationMessage, setNotificationMessage] = useState('');
   const [isSendingNotification, setIsSendingNotification] = useState(false);
+
+  // Return null while checking or if not admin.
+  // Must come AFTER every hook above: an early return before the hooks
+  // crashes React ("fewer hooks than expected") when user becomes null
+  // on logout while this screen is mounted.
+  if (!user || !user.isAdmin) {
+    return null;
+  }
 
   const handleTabPress = async (tab: 'quotes' | 'videos' | 'events' | 'notifications') => {
     if (Platform.OS !== 'web') {
