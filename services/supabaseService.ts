@@ -141,9 +141,10 @@ class SupabaseService {
         .map((row): Event => ({
           id: row.id,
           title: row.title || '',
-          // Slash format parses as local time in new Date(); dashes would
-          // parse as UTC and shift the day in negative-offset timezones.
-          date: (row.event_date || '').replace(/-/g, '/'),
+          // T00:00:00 (no zone) parses as LOCAL midnight in new Date() —
+          // bare YYYY-MM-DD would parse as UTC and shift the day back in
+          // negative-offset timezones, and Hermes can't parse slash dates.
+          date: row.event_date ? `${row.event_date}T00:00:00` : '',
           time: row.event_time || '',
           description: row.description || '',
           location: row.location || undefined,
@@ -176,7 +177,7 @@ class SupabaseService {
     return {
       id: data.id,
       title: data.title,
-      date: (data.event_date || '').replace(/-/g, '/'),
+      date: data.event_date ? `${data.event_date}T00:00:00` : '',
       time: data.event_time || '',
       description: data.description || '',
       location: data.location || undefined,
