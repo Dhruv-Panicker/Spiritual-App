@@ -27,7 +27,9 @@ function friendlySendError(message: string): string {
   if (s.includes('signups not allowed')) {
     return 'No account found for this email.';
   }
-  if (s.includes('rate limit') || s.includes('after') || s.includes('seconds')) {
+  // e.g. "email rate limit exceeded", "For security purposes, you can only
+  // request this after 54 seconds"
+  if (s.includes('rate limit') || s.includes('security purposes') || s.includes('only request this')) {
     return 'Too many attempts. Please wait a minute and try again.';
   }
   return message || 'Could not send code. Please try again later.';
