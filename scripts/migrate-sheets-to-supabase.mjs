@@ -96,7 +96,8 @@ async function migrateQuotes() {
   console.log('\nQuotes:');
   const [, ...rows] = await readTab('quotes'); // first row is headers
   const out = [];
-  for (const row of rows) {
+  const base = Date.now() - rows.length * 1000;
+  for (const [index, row] of rows.entries()) {
     // Sheet columns: [id, text, author, category, imageUrl, dateAdded]
     const text = (row[1] || '').trim();
     const rawImage = (row[4] || '').trim();
@@ -106,13 +107,15 @@ async function migrateQuotes() {
       imageUrl = await migrateImage(rawImage);
       console.log(`  image: ${rawImage.slice(0, 60)}… → ${imageUrl ? imageUrl.slice(0, 80) : 'none'}`);
     }
-    const created = parseDateOrNull(row[5]);
+    // Always set created_at: batch inserts turn missing keys into NULLs
+    // instead of column defaults. Fallback preserves sheet order.
+    const created = parseDateOrNull(row[5]) || new Date(base + index * 1000);
     out.push({
       text,
       author: (row[2] || '').trim(),
       category: (row[3] || '').trim(),
       image_url: imageUrl,
-      ...(created ? { created_at: created.toISOString() } : {}),
+      created_at: created.toISOString(),
     });
   }
   await wipe('quotes');
@@ -126,17 +129,18 @@ async function migrateVideos() {
   console.log('\nVideos:');
   const [, ...rows] = await readTab('videos');
   const out = [];
-  for (const row of rows) {
+  const base = Date.now() - rows.length * 1000;
+  for (const [index, row] of rows.entries()) {
     // Sheet columns: [id, title, description, youtubeId, dateAdded]
     const title = (row[1] || '').trim();
     const youtubeId = (row[3] || '').trim();
     if (!title || !youtubeId) continue;
-    const created = parseDateOrNull(row[4]);
+    const created = parseDateOrNull(row[4]) || new Date(base + index * 1000);
     out.push({
       title,
       description: (row[2] || '').trim(),
       youtube_id: youtubeId,
-      ...(created ? { created_at: created.toISOString() } : {}),
+      created_at: created.toISOString(),
     });
   }
   await wipe('videos');
