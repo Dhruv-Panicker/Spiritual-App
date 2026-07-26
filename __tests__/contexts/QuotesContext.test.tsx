@@ -24,8 +24,8 @@ jest.mock('@/config/env', () => ({
   validateEnv: jest.fn(),
 }));
 
-jest.mock('@/services/googleSheetsService', () => ({
-  googleSheetsService: {
+jest.mock('@/services/supabaseService', () => ({
+  supabaseService: {
     getQuotes: jest.fn(),
     addQuote: jest.fn(),
   },
@@ -35,10 +35,10 @@ import React from 'react';
 import { Text } from 'react-native';
 import { render, waitFor, act } from '@testing-library/react-native';
 import { QuotesProvider, useQuotes } from '@/contexts/QuotesContext';
-import { googleSheetsService } from '@/services/googleSheetsService';
+import { supabaseService } from '@/services/supabaseService';
 
-const mockGetQuotes = googleSheetsService.getQuotes as jest.Mock;
-const mockAddQuote = googleSheetsService.addQuote as jest.Mock;
+const mockGetQuotes = supabaseService.getQuotes as jest.Mock;
+const mockAddQuote = supabaseService.addQuote as jest.Mock;
 
 const sampleQuotes = [
   { id: 'q1', text: 'Peace within', author: 'Siddhguru', category: 'Wisdom', dateAdded: '2024-01-01' },

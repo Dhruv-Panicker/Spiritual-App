@@ -27,8 +27,8 @@ jest.mock('@/config/env', () => ({
   validateEnv: jest.fn(),
 }));
 
-jest.mock('@/services/googleSheetsService', () => ({
-  googleSheetsService: {
+jest.mock('@/services/supabaseService', () => ({
+  supabaseService: {
     getEvents: jest.fn(),
     addEvent: jest.fn(),
   },
@@ -38,11 +38,11 @@ import React from 'react';
 import { Text } from 'react-native';
 import { render, waitFor, act } from '@testing-library/react-native';
 import { EventsProvider, useEvents } from '@/contexts/EventsContext';
-import { googleSheetsService } from '@/services/googleSheetsService';
-import type { Event } from '@/services/googleSheetsService';
+import { supabaseService } from '@/services/supabaseService';
+import type { Event } from '@/services/supabaseService';
 
-const mockGetEvents = googleSheetsService.getEvents as jest.Mock;
-const mockAddEvent = googleSheetsService.addEvent as jest.Mock;
+const mockGetEvents = supabaseService.getEvents as jest.Mock;
+const mockAddEvent = supabaseService.addEvent as jest.Mock;
 
 // Build dates with the current month for "getCurrentMonthEvents" tests
 const now = new Date();

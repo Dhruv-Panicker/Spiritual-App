@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Image as CachedImage } from 'expo-image';
-import { googleSheetsService, Quote } from '../services/googleSheetsService';
+import { supabaseService, Quote } from '../services/supabaseService';
 
 interface QuotesContextType {
   quotes: Quote[];
@@ -18,7 +18,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
   const loadQuotes = async () => {
     try {
       setLoading(true);
-      const loadedQuotes = await googleSheetsService.getQuotes();
+      const loadedQuotes = await supabaseService.getQuotes();
       setQuotes(loadedQuotes);
       console.log(`📚 Loaded ${loadedQuotes.length} quotes`);
 
@@ -44,7 +44,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
 
   const addQuote = async (newQuote: Omit<Quote, 'id' | 'dateAdded'>) => {
     try {
-      const addedQuote = await googleSheetsService.addQuote(newQuote);
+      const addedQuote = await supabaseService.addQuote(newQuote);
       setQuotes(prev => [addedQuote, ...prev]);
       console.log('Quote added successfully');
     } catch (error) {
