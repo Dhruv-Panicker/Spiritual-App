@@ -43,6 +43,7 @@ export default function AdminScreen() {
   const [quoteText, setQuoteText] = useState('');
   const [quoteAuthor, setQuoteAuthor] = useState('');
   const [quoteCategory, setQuoteCategory] = useState('');
+  const [quoteImageUrl, setQuoteImageUrl] = useState('');
   const [isSubmittingQuote, setIsSubmittingQuote] = useState(false);
   const [sendQuoteNotification, setSendQuoteNotification] = useState(true);
 
@@ -84,8 +85,14 @@ export default function AdminScreen() {
   };
 
   const handleQuoteSubmit = async () => {
-    if (!quoteText.trim() || !quoteAuthor.trim()) {
-      Alert.alert('Error', 'Please fill in both quote and author fields');
+    const hasImage = quoteImageUrl.trim().length > 0;
+    // Image quotes stand alone; text quotes need both text and author
+    if (!hasImage && (!quoteText.trim() || !quoteAuthor.trim())) {
+      Alert.alert('Error', 'Fill in quote and author, or provide an image URL');
+      return;
+    }
+    if (hasImage && !quoteImageUrl.trim().startsWith('http')) {
+      Alert.alert('Error', 'Image URL must be a valid link (starting with http)');
       return;
     }
 
@@ -96,19 +103,24 @@ export default function AdminScreen() {
         text: quoteText.trim(),
         author: quoteAuthor.trim(),
         category: quoteCategory.trim() || 'General',
+        ...(hasImage ? { imageUrl: quoteImageUrl.trim() } : {}),
       };
 
       await addQuote(quoteData);
 
+      // Image-only quotes have no text/author to preview in the notification
+      const notifText = quoteData.text || 'New wisdom awaits you in the app';
+      const notifAuthor = quoteData.author || 'Om Siddheshwar';
+
       if (sendQuoteNotification) {
         try {
-          await notificationService.notifyNewQuote(quoteData.text, quoteData.author);
+          await notificationService.notifyNewQuote(notifText, notifAuthor);
         } catch (notifError) {
           console.error('Error sending notification:', notifError);
         }
       }
 
-      const quotePreview = quoteData.text.length > 60 ? quoteData.text.substring(0, 57) + '...' : quoteData.text;
+      const quotePreview = notifText.length > 60 ? notifText.substring(0, 57) + '...' : notifText;
       Alert.alert('Success', 'Quote has been added successfully!', [{
         text: 'OK',
         onPress: () => {
@@ -116,16 +128,17 @@ export default function AdminScreen() {
             notificationService.sendLocalNotification({
               type: 'quote',
               title: 'New Daily Wisdom',
-              body: `"${quotePreview}" - ${quoteData.author}`,
+              body: `"${quotePreview}" - ${notifAuthor}`,
             }).catch(() => {});
           }
         },
       }]);
-      
+
       // Clear form
       setQuoteText('');
       setQuoteAuthor('');
       setQuoteCategory('');
+      setQuoteImageUrl('');
       
       // Refresh quotes
       await refreshQuotes();
@@ -329,6 +342,23 @@ export default function AdminScreen() {
               value={quoteCategory}
               onChangeText={setQuoteCategory}
             />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Image URL (Optional)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Public Google Drive link or image URL..."
+              placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+              value={quoteImageUrl}
+              onChangeText={setQuoteImageUrl}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+            />
+            <Text style={styles.helperText}>
+              When set, the image is shown as the quote card. Use a Drive "Anyone with the link" share link.
+            </Text>
           </View>
 
           <View style={styles.checkboxContainer}>
