@@ -29,12 +29,9 @@ jest.mock('@/config/env', () => ({
 }));
 
 // Mock the services directly in the factory using jest.fn()
-jest.mock('@/services/googleSheetsService', () => ({
-  googleSheetsService: {
-    checkUserInUserbase: jest.fn(),
-    addToUserbase: jest.fn(),
-    logUserLogin: jest.fn(),
-    savePushToken: jest.fn(),
+jest.mock('@/services/supabaseService', () => ({
+  supabaseService: {
+    checkUserExists: jest.fn(),
   },
 }));
 
@@ -50,11 +47,11 @@ jest.mock('@/services/twoFactorService', () => ({
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { SignUpEmailScreen } from '@/components/auth/SignUpEmailScreen';
-import { googleSheetsService } from '@/services/googleSheetsService';
+import { supabaseService } from '@/services/supabaseService';
 import { twoFactorService } from '@/services/twoFactorService';
 
 // Get typed references to the mock functions
-const mockCheckUser = googleSheetsService.checkUserInUserbase as jest.Mock;
+const mockCheckUser = supabaseService.checkUserExists as jest.Mock;
 const mockSendCode = twoFactorService.sendVerificationCode as jest.Mock;
 
 const mockOnBack = jest.fn();
@@ -152,7 +149,7 @@ describe('SignUpEmailScreen validation', () => {
 
 describe('SignUpEmailScreen duplicate email check', () => {
   it('shows error when email is already in userbase', async () => {
-    mockCheckUser.mockResolvedValueOnce({ exists: true });
+    mockCheckUser.mockResolvedValueOnce(true);
 
     const { getByText, getByPlaceholderText } = renderScreen();
 
@@ -169,7 +166,7 @@ describe('SignUpEmailScreen duplicate email check', () => {
 
 describe('SignUpEmailScreen success flow', () => {
   it('calls onCodeSent with lowercase email and trimmed name on success', async () => {
-    mockCheckUser.mockResolvedValueOnce({ exists: false });
+    mockCheckUser.mockResolvedValueOnce(false);
     mockSendCode.mockResolvedValueOnce({ success: true });
 
     const { getByText, getByPlaceholderText } = renderScreen();
@@ -184,7 +181,7 @@ describe('SignUpEmailScreen success flow', () => {
   });
 
   it('calls sendVerificationCode with lowercase email', async () => {
-    mockCheckUser.mockResolvedValueOnce({ exists: false });
+    mockCheckUser.mockResolvedValueOnce(false);
     mockSendCode.mockResolvedValueOnce({ success: true });
 
     const { getByText, getByPlaceholderText } = renderScreen();
@@ -201,7 +198,7 @@ describe('SignUpEmailScreen success flow', () => {
 
 describe('SignUpEmailScreen service error handling', () => {
   it('shows error returned by twoFactorService', async () => {
-    mockCheckUser.mockResolvedValueOnce({ exists: false });
+    mockCheckUser.mockResolvedValueOnce(false);
     mockSendCode.mockResolvedValueOnce({
       success: false,
       error: 'Email service unavailable',
@@ -220,7 +217,7 @@ describe('SignUpEmailScreen service error handling', () => {
   });
 
   it('shows fallback error when service returns no error message', async () => {
-    mockCheckUser.mockResolvedValueOnce({ exists: false });
+    mockCheckUser.mockResolvedValueOnce(false);
     mockSendCode.mockResolvedValueOnce({ success: false });
 
     const { getByText, getByPlaceholderText } = renderScreen();
