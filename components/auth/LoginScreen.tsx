@@ -16,9 +16,11 @@ import { styles } from './styles/LoginScreen.styles';
 
 interface LoginScreenProps {
   onGoToSignUp?: () => void;
+  /** Called after the login code has been sent; navigates to code entry. */
+  onCodeSent?: (email: string) => void;
 }
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({ onGoToSignUp }) => {
+export const LoginScreen: React.FC<LoginScreenProps> = ({ onGoToSignUp, onCodeSent }) => {
   const { login, isLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +34,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onGoToSignUp }) => {
     setError(null);
     try {
       await login(trimmed);
+      onCodeSent?.(trimmed.toLowerCase());
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Login failed';
       setError(message === 'UNVERIFIED_USER' ? 'UNVERIFIED_USER' : message);

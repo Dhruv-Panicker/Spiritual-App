@@ -4,15 +4,35 @@ import { SignUpEmailScreen } from './SignUpEmailScreen';
 import { VerifyCodeScreen } from './VerifyCodeScreen';
 import { LoginScreen } from './LoginScreen';
 
-type AuthStep = 'welcome' | 'signup-email' | 'verify-code' | 'login';
+type AuthStep = 'welcome' | 'signup-email' | 'verify-code' | 'login' | 'login-verify';
 
 export const AuthFlow: React.FC = () => {
   const [step, setStep] = useState<AuthStep>('welcome');
   const [signUpEmail, setSignUpEmail] = useState('');
   const [signUpName, setSignUpName] = useState('');
+  const [loginEmail, setLoginEmail] = useState('');
 
   if (step === 'login') {
-    return <LoginScreen onGoToSignUp={() => setStep('welcome')} />;
+    return (
+      <LoginScreen
+        onGoToSignUp={() => setStep('welcome')}
+        onCodeSent={(email) => {
+          setLoginEmail(email);
+          setStep('login-verify');
+        }}
+      />
+    );
+  }
+
+  if (step === 'login-verify') {
+    return (
+      <VerifyCodeScreen
+        email={loginEmail}
+        name=""
+        mode="login"
+        onBack={() => setStep('login')}
+      />
+    );
   }
 
   if (step === 'welcome') {

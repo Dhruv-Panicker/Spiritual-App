@@ -1,22 +1,24 @@
 /**
- * Integration tests for AuthContext / AuthProvider
+ * Integration tests for AuthContext / AuthProvider (Supabase auth)
  *
  * Tests cover:
  * - Initial loading state
- * - Session restoration from AsyncStorage
- * - login(): success, UNVERIFIED_USER, invalid email
- * - completeSignUp(): sets user, calls addToUserbase
- * - logout(): clears user and storage
+ * - Session restoration from Supabase session + cached profile
+ * - login(): sends OTP, UNVERIFIED_USER, invalid email
+ * - completeLogin(): loads profile, admin detection from is_admin
+ * - completeSignUp(): creates profile row, derives display name
+ * - logout(): signs out and clears storage
  * - useAuth() throws when used outside provider
- * - Admin role detection by email
  */
 
 jest.mock('@/config/env', () => ({
   env: {
+    supabaseUrl: 'https://test.supabase.co',
+    supabaseAnonKey: 'test-anon-key',
     googleSheetsApiKey: 'test-key',
     googleSheetId: 'test-sheet',
     googleAppsScriptWebhookUrl: 'https://script.google.com/test',
-    adminEmails: ['admin@example.com'],
+    adminEmails: [],
     prayerRecipientEmail: 'prayer@example.com',
     appName: 'Test App',
     appStoreLink: 'https://apps.apple.com/test',
@@ -26,10 +28,28 @@ jest.mock('@/config/env', () => ({
   validateEnv: jest.fn(),
 }));
 
+jest.mock('@/services/supabaseClient', () => ({
+  supabase: {
+    auth: {
+      getSession: jest.fn(),
+      getUser: jest.fn(),
+      signOut: jest.fn(),
+    },
+    from: jest.fn(),
+  },
+}));
+
+jest.mock('@/services/twoFactorService', () => ({
+  twoFactorService: {
+    sendVerificationCode: jest.fn(),
+    verifyCode: jest.fn(),
+    CODE_LENGTH: 6,
+    RETRY_COOLDOWN_SECONDS: 60,
+  },
+}));
+
 jest.mock('@/services/googleSheetsService', () => ({
   googleSheetsService: {
-    checkUserInUserbase: jest.fn(),
-    addToUserbase: jest.fn(),
     logUserLogin: jest.fn(() => Promise.resolve(true)),
     savePushToken: jest.fn(() => Promise.resolve(true)),
   },
@@ -48,13 +68,32 @@ import { Text } from 'react-native';
 import { render, waitFor, act } from '@testing-library/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
-import { googleSheetsService } from '@/services/googleSheetsService';
+import { supabase } from '@/services/supabaseClient';
+import { twoFactorService } from '@/services/twoFactorService';
 
-const mockCheckUser = googleSheetsService.checkUserInUserbase as jest.Mock;
-const mockAddToUserbase = googleSheetsService.addToUserbase as jest.Mock;
+const mockGetSession = supabase.auth.getSession as jest.Mock;
+const mockGetUser = supabase.auth.getUser as jest.Mock;
+const mockSignOut = supabase.auth.signOut as jest.Mock;
+const mockFrom = supabase.from as jest.Mock;
+const mockSendCode = twoFactorService.sendVerificationCode as jest.Mock;
 const mockAsyncGet = AsyncStorage.getItem as jest.Mock;
 const mockAsyncSet = AsyncStorage.setItem as jest.Mock;
 const mockAsyncRemove = AsyncStorage.removeItem as jest.Mock;
+
+/** Mock the users-table query chain: select().eq().maybeSingle() and insert(). */
+function mockUsersTable(options: {
+  row?: object | null;
+  selectError?: object | null;
+  insertError?: (object & { code?: string }) | null;
+} = {}) {
+  const { row = null, selectError = null, insertError = null } = options;
+  const maybeSingle = jest.fn(() => Promise.resolve({ data: row, error: selectError }));
+  const eq = jest.fn(() => ({ maybeSingle }));
+  const select = jest.fn(() => ({ eq }));
+  const insert = jest.fn(() => Promise.resolve({ error: insertError }));
+  mockFrom.mockReturnValue({ select, insert });
+  return { select, eq, maybeSingle, insert };
+}
 
 // ─── Helper: render a provider that exposes context state via text testIDs ────
 
@@ -76,6 +115,7 @@ function setupProvider() {
     login?: (email: string) => Promise<void>;
     logout?: () => Promise<void>;
     completeSignUp?: (email: string, name: string) => Promise<void>;
+    completeLogin?: (email: string) => Promise<void>;
   } = {};
 
   function CaptureContext() {
@@ -83,6 +123,7 @@ function setupProvider() {
     ref.login = auth.login;
     ref.logout = auth.logout;
     ref.completeSignUp = auth.completeSignUp;
+    ref.completeLogin = auth.completeLogin;
     return null;
   }
 
@@ -115,6 +156,11 @@ beforeEach(() => {
   mockAsyncGet.mockResolvedValue(null);
   mockAsyncSet.mockResolvedValue(undefined);
   mockAsyncRemove.mockResolvedValue(undefined);
+  mockGetSession.mockResolvedValue({ data: { session: null } });
+  mockGetUser.mockResolvedValue({ data: { user: { id: 'uid-1', email: 'user@example.com' } } });
+  mockSignOut.mockResolvedValue({ error: null });
+  mockSendCode.mockResolvedValue({ success: true });
+  mockUsersTable();
 });
 
 afterEach(() => {
@@ -141,9 +187,12 @@ describe('initial state', () => {
 // ─── Session restoration ──────────────────────────────────────────────────────
 
 describe('session restoration', () => {
-  it('restores user from AsyncStorage on mount', async () => {
+  it('restores cached user when a Supabase session exists', async () => {
+    mockGetSession.mockResolvedValueOnce({
+      data: { session: { user: { id: 'uid-1', email: 'restored@example.com' } } },
+    });
     const storedUser = {
-      id: 'restored@example.com',
+      id: 'uid-1',
       name: 'Restored User',
       email: 'restored@example.com',
       isAdmin: false,
@@ -155,10 +204,11 @@ describe('session restoration', () => {
     await waitFor(() =>
       expect(getByTestId('user-email').props.children).toBe('restored@example.com')
     );
+    expect(getByTestId('user-name').props.children).toBe('Restored User');
   });
 
-  it('stays with no user when AsyncStorage is empty', async () => {
-    mockAsyncGet.mockResolvedValueOnce(null);
+  it('stays logged out and clears stale cache when there is no Supabase session', async () => {
+    mockGetSession.mockResolvedValueOnce({ data: { session: null } });
 
     const { getByTestId } = setupProvider();
 
@@ -166,60 +216,75 @@ describe('session restoration', () => {
       expect(getByTestId('loading').props.children).toBe('ready');
       expect(getByTestId('user-email').props.children).toBe('no-user');
     });
+    expect(mockAsyncRemove).toHaveBeenCalledWith('spiritual-app-user');
   });
 
-  it('handles corrupt AsyncStorage data gracefully', async () => {
+  it('fetches the profile when a session exists but no cache does', async () => {
+    mockGetSession.mockResolvedValueOnce({
+      data: { session: { user: { id: 'uid-1', email: 'fresh@example.com' } } },
+    });
+    mockAsyncGet.mockResolvedValueOnce(null);
+    mockUsersTable({
+      row: { id: 'uid-1', name: 'Fresh User', email: 'fresh@example.com', is_admin: false },
+    });
+
+    const { getByTestId } = setupProvider();
+
+    await waitFor(() =>
+      expect(getByTestId('user-email').props.children).toBe('fresh@example.com')
+    );
+    expect(mockAsyncSet).toHaveBeenCalledWith(
+      'spiritual-app-user',
+      expect.stringContaining('fresh@example.com')
+    );
+  });
+
+  it('handles corrupt cached data gracefully', async () => {
+    mockGetSession.mockResolvedValueOnce({
+      data: { session: { user: { id: 'uid-1', email: 'user@example.com' } } },
+    });
     mockAsyncGet.mockResolvedValueOnce('invalid-json{{');
 
     const { getByTestId } = setupProvider();
 
     await waitFor(() => {
       expect(getByTestId('loading').props.children).toBe('ready');
-      expect(getByTestId('user-email').props.children).toBe('no-user');
     });
+    // No crash; user stays logged out until profile can be loaded
+    expect(getByTestId('user-email').props.children).toBe('no-user');
   });
 });
 
-// ─── login() ──────────────────────────────────────────────────────────────────
+// ─── login() — sends the OTP code ─────────────────────────────────────────────
 
 describe('login()', () => {
-  it('sets user on successful login', async () => {
-    mockCheckUser.mockResolvedValueOnce({ exists: true, name: 'Dhruv Panicker' });
-
+  it('sends a login code without creating an account', async () => {
     const { getByTestId, ref } = setupProvider();
     await waitFor(() => expect(getByTestId('loading').props.children).toBe('ready'));
 
     const error = await tryCallFn(() => ref.login!('dhruv@example.com'));
 
     expect(error).toBeNull();
-    expect(getByTestId('user-email').props.children).toBe('dhruv@example.com');
-    expect(getByTestId('user-name').props.children).toBe('Dhruv Panicker');
+    expect(mockSendCode).toHaveBeenCalledWith('dhruv@example.com', { shouldCreateUser: false });
+    // Not logged in yet — code still needs to be verified
+    expect(getByTestId('user-email').props.children).toBe('no-user');
   });
 
-  it('detects admin status for admin email', async () => {
-    mockCheckUser.mockResolvedValueOnce({ exists: true, name: 'Admin User' });
-
+  it('normalizes email to lowercase', async () => {
     const { getByTestId, ref } = setupProvider();
     await waitFor(() => expect(getByTestId('loading').props.children).toBe('ready'));
 
-    await tryCallFn(() => ref.login!('admin@example.com'));
+    await tryCallFn(() => ref.login!('TEST@EXAMPLE.COM'));
 
-    expect(getByTestId('is-admin').props.children).toBe('admin');
+    expect(mockSendCode).toHaveBeenCalledWith('test@example.com', { shouldCreateUser: false });
   });
 
-  it('non-admin email sets isAdmin to false', async () => {
-    mockCheckUser.mockResolvedValueOnce({ exists: true, name: 'Regular User' });
-
-    const { getByTestId, ref } = setupProvider();
-    await waitFor(() => expect(getByTestId('loading').props.children).toBe('ready'));
-
-    await tryCallFn(() => ref.login!('regular@example.com'));
-
-    expect(getByTestId('is-admin').props.children).toBe('not-admin');
-  });
-
-  it('throws UNVERIFIED_USER when user is not in userbase', async () => {
-    mockCheckUser.mockResolvedValueOnce({ exists: false });
+  it('throws UNVERIFIED_USER when the email has no account', async () => {
+    mockSendCode.mockResolvedValueOnce({
+      success: false,
+      userNotFound: true,
+      error: 'No account found for this email.',
+    });
 
     const { getByTestId, ref } = setupProvider();
     await waitFor(() => expect(getByTestId('loading').props.children).toBe('ready'));
@@ -231,7 +296,22 @@ describe('login()', () => {
     expect(getByTestId('user-email').props.children).toBe('no-user');
   });
 
-  it('throws for invalid email format', async () => {
+  it('throws the service error for non-userNotFound failures', async () => {
+    mockSendCode.mockResolvedValueOnce({
+      success: false,
+      error: 'Too many attempts. Please wait a minute and try again.',
+    });
+
+    const { getByTestId, ref } = setupProvider();
+    await waitFor(() => expect(getByTestId('loading').props.children).toBe('ready'));
+
+    const error = await tryCallFn(() => ref.login!('user@example.com'));
+
+    expect(error).not.toBeNull();
+    expect(error!.message).toContain('Too many attempts');
+  });
+
+  it('throws for invalid email format without calling the service', async () => {
     const { getByTestId, ref } = setupProvider();
     await waitFor(() => expect(getByTestId('loading').props.children).toBe('ready'));
 
@@ -239,26 +319,69 @@ describe('login()', () => {
 
     expect(error).not.toBeNull();
     expect(error!.message).toContain('valid email');
+    expect(mockSendCode).not.toHaveBeenCalled();
   });
+});
 
-  it('normalizes email to lowercase', async () => {
-    mockCheckUser.mockResolvedValueOnce({ exists: true, name: 'Test User' });
+// ─── completeLogin() — after OTP verification ─────────────────────────────────
+
+describe('completeLogin()', () => {
+  it('loads the profile row and sets the user', async () => {
+    mockUsersTable({
+      row: { id: 'uid-1', name: 'Dhruv Panicker', email: 'dhruv@example.com', is_admin: false },
+    });
 
     const { getByTestId, ref } = setupProvider();
     await waitFor(() => expect(getByTestId('loading').props.children).toBe('ready'));
 
-    await tryCallFn(() => ref.login!('TEST@EXAMPLE.COM'));
+    const error = await tryCallFn(() => ref.completeLogin!('dhruv@example.com'));
 
-    expect(getByTestId('user-email').props.children).toBe('test@example.com');
+    expect(error).toBeNull();
+    expect(getByTestId('user-email').props.children).toBe('dhruv@example.com');
+    expect(getByTestId('user-name').props.children).toBe('Dhruv Panicker');
+    expect(getByTestId('is-admin').props.children).toBe('not-admin');
   });
 
-  it('persists user object to AsyncStorage after login', async () => {
-    mockCheckUser.mockResolvedValueOnce({ exists: true, name: 'User Name' });
+  it('detects admin status from the is_admin column', async () => {
+    mockUsersTable({
+      row: { id: 'uid-2', name: 'Admin User', email: 'admin@example.com', is_admin: true },
+    });
 
     const { getByTestId, ref } = setupProvider();
     await waitFor(() => expect(getByTestId('loading').props.children).toBe('ready'));
 
-    await tryCallFn(() => ref.login!('user@example.com'));
+    await tryCallFn(() => ref.completeLogin!('admin@example.com'));
+
+    expect(getByTestId('is-admin').props.children).toBe('admin');
+  });
+
+  it('creates a profile row when one is missing (account predates profiles)', async () => {
+    const { insert } = mockUsersTable({ row: null });
+    mockGetUser.mockResolvedValueOnce({
+      data: { user: { id: 'uid-9', email: 'old.user@example.com' } },
+    });
+
+    const { getByTestId, ref } = setupProvider();
+    await waitFor(() => expect(getByTestId('loading').props.children).toBe('ready'));
+
+    const error = await tryCallFn(() => ref.completeLogin!('old.user@example.com'));
+
+    expect(error).toBeNull();
+    expect(insert).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'uid-9', email: 'old.user@example.com' })
+    );
+    expect(getByTestId('user-email').props.children).toBe('old.user@example.com');
+  });
+
+  it('persists the profile to AsyncStorage', async () => {
+    mockUsersTable({
+      row: { id: 'uid-1', name: 'User Name', email: 'user@example.com', is_admin: false },
+    });
+
+    const { getByTestId, ref } = setupProvider();
+    await waitFor(() => expect(getByTestId('loading').props.children).toBe('ready'));
+
+    await tryCallFn(() => ref.completeLogin!('user@example.com'));
 
     expect(mockAsyncSet).toHaveBeenCalledWith(
       'spiritual-app-user',
@@ -270,8 +393,11 @@ describe('login()', () => {
 // ─── completeSignUp() ─────────────────────────────────────────────────────────
 
 describe('completeSignUp()', () => {
-  it('sets user and calls addToUserbase on success', async () => {
-    mockAddToUserbase.mockResolvedValueOnce(true);
+  it('creates the profile row and sets the user', async () => {
+    const { insert } = mockUsersTable({ row: null });
+    mockGetUser.mockResolvedValueOnce({
+      data: { user: { id: 'uid-3', email: 'new@example.com' } },
+    });
 
     const { getByTestId, ref } = setupProvider();
     await waitFor(() => expect(getByTestId('loading').props.children).toBe('ready'));
@@ -280,7 +406,20 @@ describe('completeSignUp()', () => {
 
     expect(error).toBeNull();
     expect(getByTestId('user-email').props.children).toBe('new@example.com');
-    expect(mockAddToUserbase).toHaveBeenCalledWith('new@example.com', 'New User');
+    expect(insert).toHaveBeenCalledWith({ id: 'uid-3', email: 'new@example.com', name: 'New User' });
+  });
+
+  it('keeps the existing profile name when the row already exists', async () => {
+    mockUsersTable({
+      row: { id: 'uid-1', name: 'Original Name', email: 'existing@example.com', is_admin: false },
+    });
+
+    const { getByTestId, ref } = setupProvider();
+    await waitFor(() => expect(getByTestId('loading').props.children).toBe('ready'));
+
+    await tryCallFn(() => ref.completeSignUp!('existing@example.com', 'Different Name'));
+
+    expect(getByTestId('user-name').props.children).toBe('Original Name');
   });
 
   it('throws for invalid email', async () => {
@@ -294,7 +433,10 @@ describe('completeSignUp()', () => {
   });
 
   it('derives display name from email when name is empty', async () => {
-    mockAddToUserbase.mockResolvedValueOnce(true);
+    mockUsersTable({ row: null });
+    mockGetUser.mockResolvedValueOnce({
+      data: { user: { id: 'uid-4', email: 'john.doe@example.com' } },
+    });
 
     const { getByTestId, ref } = setupProvider();
     await waitFor(() => expect(getByTestId('loading').props.children).toBe('ready'));
@@ -311,9 +453,12 @@ describe('completeSignUp()', () => {
 // ─── logout() ─────────────────────────────────────────────────────────────────
 
 describe('logout()', () => {
-  it('clears user state and removes from AsyncStorage', async () => {
+  it('signs out of Supabase, clears user state and storage', async () => {
+    mockGetSession.mockResolvedValueOnce({
+      data: { session: { user: { id: 'uid-1', email: 'user@example.com' } } },
+    });
     const storedUser = {
-      id: 'user@example.com',
+      id: 'uid-1',
       name: 'User',
       email: 'user@example.com',
       isAdmin: false,
@@ -330,6 +475,7 @@ describe('logout()', () => {
     });
 
     expect(getByTestId('user-email').props.children).toBe('no-user');
+    expect(mockSignOut).toHaveBeenCalled();
     expect(mockAsyncRemove).toHaveBeenCalledWith('spiritual-app-user');
   });
 });
