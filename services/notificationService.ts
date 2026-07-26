@@ -8,7 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // IMPORTANT: This ensures notifications show even when app is in foreground
 Notifications.setNotificationHandler({
   handleNotification: async (notification) => {
-    console.log('🔔 Notification received in handler:', notification.request.content.title);
+    console.log('Notification received in handler:', notification.request.content.title);
     return {
       shouldShowAlert: true,
       shouldPlaySound: true,
@@ -32,12 +32,12 @@ class NotificationService {
 
   async initialize(): Promise<void> {
     if (this.initialized) {
-      console.log('🔔 Notification service already initialized, skipping...');
+      console.log('Notification service already initialized, skipping...');
       return;
     }
 
     try {
-      console.log('🔔 Initializing notification service...');
+      console.log('Initializing notification service...');
       
       // Request permissions
       const hasPermission = await this.requestPermissions();
@@ -52,15 +52,15 @@ class NotificationService {
         console.log('  Setting up notification listeners...');
         this.setupNotificationListeners();
         
-        console.log('✅ Notification service initialized successfully');
+        console.log('Notification service initialized successfully');
         this.initialized = true;
       } else {
-        console.log('⚠️ Notification permissions denied - local notifications may still work');
+        console.log('Notification permissions denied - local notifications may still work');
         // Even without permissions, we can still mark as initialized for local notifications
         this.initialized = true;
       }
     } catch (error) {
-      console.error('❌ Failed to initialize notifications:', error);
+      console.error('Failed to initialize notifications:', error);
       // Mark as initialized even on error so we can still try local notifications
       this.initialized = true;
     }
@@ -88,19 +88,19 @@ class NotificationService {
         }
 
         if (finalStatus !== 'granted') {
-          console.log('❌ Permission not granted for push notifications');
+          console.log('Permission not granted for push notifications');
           return false;
         }
 
-        console.log('✅ Notification permissions granted');
+        console.log('Notification permissions granted');
         return true;
       } else {
-        console.log('⚠️ Using simulator - push notifications require a physical device');
+        console.log('Using simulator - push notifications require a physical device');
         // For simulator, we can still use local notifications
         return true;
       }
     } catch (error) {
-      console.error('❌ Error requesting permissions:', error);
+      console.error('Error requesting permissions:', error);
       return false;
     }
   }
@@ -120,16 +120,16 @@ class NotificationService {
           }
           
           this.expoPushToken = token.data;
-          console.log('🎫 Expo Push Token:', this.expoPushToken);
+          console.log('Expo Push Token:', this.expoPushToken);
           
           await AsyncStorage.setItem('@expo_push_token', this.expoPushToken);
         } catch (tokenError) {
-          console.log('⚠️ Push token not available - using local notifications only');
+          console.log('Push token not available - using local notifications only');
           this.expoPushToken = null;
         }
       }
     } catch (error) {
-      console.error('❌ Error getting push token:', error);
+      console.error('Error getting push token:', error);
     }
   }
 
@@ -154,24 +154,24 @@ class NotificationService {
   }
 
   private handleNotificationTap(data: any): void {
-    console.log('🎯 Handling notification tap:', data);
+    console.log('Handling notification tap:', data);
     // Navigation can be handled here in the future
   }
 
   // Public method: Check if permissions are granted
   async checkPermissions(): Promise<boolean> {
     try {
-      console.log('🔍 Checking notification permissions...');
+      console.log('Checking notification permissions...');
       const { status, canAskAgain } = await Notifications.getPermissionsAsync();
       console.log('  Current status:', status);
       
       if (status === 'granted') {
-        console.log('✅ Permissions already granted');
+        console.log('Permissions already granted');
         return true;
       }
       
       if (status === 'denied' && !canAskAgain) {
-        console.log('❌ Permissions denied and cannot ask again - user must enable in settings');
+        console.log('Permissions denied and cannot ask again - user must enable in settings');
         return false;
       }
       
@@ -188,7 +188,7 @@ class NotificationService {
       console.log('  New status after request:', newStatus);
       return newStatus === 'granted';
     } catch (error) {
-      console.error('❌ Error checking permissions:', error);
+      console.error(' Error checking permissions:', error);
       return false;
     }
   }
@@ -203,19 +203,19 @@ class NotificationService {
       console.log('  Platform:', Platform.OS);
       
       // Ensure permissions are granted
-      console.log('🔍 Checking permissions...');
+      console.log('Checking permissions...');
       const hasPermission = await this.checkPermissions();
       console.log('  Permission status:', hasPermission);
       
       if (!hasPermission) {
         const errorMsg = 'Notification permissions not granted';
-        console.error('❌ Cannot send notification:', errorMsg);
+        console.error('Cannot send notification:', errorMsg);
         throw new Error(errorMsg);
       }
 
       // Ensure Android channel is set up
       if (Platform.OS === 'android') {
-        console.log('📱 Setting up Android notification channel...');
+        console.log('Setting up Android notification channel...');
         await Notifications.setNotificationChannelAsync('default', {
           name: 'default',
           importance: Notifications.AndroidImportance.MAX,
@@ -225,15 +225,15 @@ class NotificationService {
           enableVibrate: true,
           enableLights: true,
         });
-        console.log('✅ Android channel set up');
+        console.log('Android channel set up');
       }
 
       // For iOS, ensure we have proper configuration
       if (Platform.OS === 'ios') {
-        console.log('📱 iOS platform - ensuring proper notification setup...');
+        console.log('iOS platform - ensuring proper notification setup...');
       }
 
-      console.log('📤 Scheduling notification with trigger: immediate...');
+      console.log(' Scheduling notification with trigger: immediate...');
 
       // Try immediate trigger first (works better on iOS)
       const notificationId = await Notifications.scheduleNotificationAsync({
@@ -250,7 +250,7 @@ class NotificationService {
         trigger: { seconds: 1 },
       });
 
-      console.log('✅ Local notification scheduled successfully!');
+      console.log('  Local notification scheduled successfully!');
       console.log('  Notification ID:', notificationId);
       console.log('  Platform:', Platform.OS);
       console.log('  Trigger: immediate (null)');
@@ -258,7 +258,7 @@ class NotificationService {
       return notificationId;
     } catch (error: any) {
       const errorMsg = error?.message || error?.toString() || 'Unknown error';
-      console.error('❌ Error sending local notification:', errorMsg);
+      console.error('  Error sending local notification:', errorMsg);
       console.error('  Error type:', error?.constructor?.name);
       if (error?.stack) {
         console.error('  Stack trace:', error.stack);
@@ -268,26 +268,54 @@ class NotificationService {
     }
   }
 
-  // Broadcast a push notification to all users via the admin-only edge
-  // function (tokens never come to the client). The sender's own device is
-  // excluded from the push and shown a local notification by callers instead.
+  // Broadcast a push notification to all users. The token list is read from
+  // Supabase, where row-level security only serves it to admins. The sender's
+  // own device is excluded from the push and shown a local notification.
   async sendPushNotification(notificationData: NotificationData): Promise<boolean> {
     // Lazy import: keeps module init order simple
     const { supabaseService } = require('@/services/supabaseService');
     try {
+      const allTokens: string[] = await supabaseService.getPushTokens();
       const ownToken = this.getPushToken() || await this.getStoredPushToken();
-      const sent = await supabaseService.broadcastPush({
-        title: notificationData.title || 'Om Siddheshwar',
-        body: notificationData.body,
-        data: { type: notificationData.type, ...notificationData.data },
-        excludeToken: ownToken,
-      });
-      console.log(`📤 Push broadcast delivered to ${sent} device(s)`);
-      if (sent > 0) return true;
-      // No other devices registered — show locally so the admin can verify
-      return (await this.sendLocalNotification(notificationData)) !== null;
+      const tokens = ownToken ? allTokens.filter(t => t !== ownToken) : allTokens;
+
+      if (tokens.length === 0) {
+        console.log('📱 No other devices registered — using LOCAL notification');
+        return (await this.sendLocalNotification(notificationData)) !== null;
+      }
+
+      // Expo accepts at most 100 messages per request
+      let delivered = 0;
+      for (let i = 0; i < tokens.length; i += 100) {
+        const messages = tokens.slice(i, i + 100).map(token => ({
+          to: token,
+          sound: 'default',
+          title: notificationData.title || 'Om Siddheshwar',
+          body: notificationData.body,
+          data: {
+            type: notificationData.type,
+            ...notificationData.data,
+            timestamp: new Date().toISOString(),
+          },
+        }));
+        const response = await fetch('https://exp.host/--/api/v2/push/send', {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Accept-encoding': 'gzip, deflate',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(messages),
+        });
+        const result = await response.json();
+        if (Array.isArray(result.data)) {
+          delivered += result.data.filter((item: any) => item.status === 'ok').length;
+        }
+      }
+      console.log(`Push broadcast delivered to ${delivered} of ${tokens.length} device(s)`);
+      return delivered > 0;
     } catch (error) {
-      console.error('❌ Error sending push notification:', error);
+      console.error(' Error sending push notification:', error);
       // Fallback to local notification
       return (await this.sendLocalNotification(notificationData)) !== null;
     }

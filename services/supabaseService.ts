@@ -255,27 +255,21 @@ class SupabaseService {
   }
 
   /**
-   * Broadcast a push notification to all users via the admin-only edge
-   * function. Tokens stay server-side. Returns the number delivered.
+   * All registered push tokens, for admin broadcasts. RLS only returns rows
+   * to admins — every other caller gets an empty list.
    */
-  async broadcastPush(notification: {
-    title: string;
-    body: string;
-    data?: Record<string, unknown>;
-    excludeToken?: string | null;
-  }): Promise<number> {
-    const { data, error } = await supabase.functions.invoke('broadcast-push', {
-      body: {
-        title: notification.title,
-        body: notification.body,
-        data: notification.data,
-        excludeToken: notification.excludeToken || undefined,
-      },
-    });
-    if (error) {
-      throw new Error(error.message || 'Broadcast failed');
+  async getPushTokens(): Promise<string[]> {
+    try {
+      const { data, error } = await supabase.from('push_tokens').select('token');
+      if (error) {
+        console.error('getPushTokens error:', error.message);
+        return [];
+      }
+      return (data || []).map((row) => row.token).filter(Boolean);
+    } catch (err) {
+      console.error('getPushTokens error:', err);
+      return [];
     }
-    return typeof data?.sent === 'number' ? data.sent : 0;
   }
 
   /**
