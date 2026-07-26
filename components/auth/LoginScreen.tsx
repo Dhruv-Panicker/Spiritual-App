@@ -16,11 +16,14 @@ import { styles } from './styles/LoginScreen.styles';
 
 interface LoginScreenProps {
   onGoToSignUp?: () => void;
+  /** Called after the login code has been sent; navigates to code entry. */
+  onCodeSent?: (email: string) => void;
 }
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({ onGoToSignUp }) => {
-  const { login, isLoading } = useAuth();
+export const LoginScreen: React.FC<LoginScreenProps> = ({ onGoToSignUp, onCodeSent }) => {
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async () => {
@@ -30,12 +33,16 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onGoToSignUp }) => {
       return;
     }
     setError(null);
+    setIsLoading(true);
     try {
       await login(trimmed);
+      onCodeSent?.(trimmed.toLowerCase());
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Login failed';
       setError(message === 'UNVERIFIED_USER' ? 'UNVERIFIED_USER' : message);
       console.error('Login error:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 

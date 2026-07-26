@@ -13,11 +13,13 @@ const appJson = require('./app.json');
 const expoConfig = appJson.expo || {};
 
 // Env keys we inject into extra (from .env or EAS secrets)
+// Note: GOOGLE_SHEETS_API_KEY / GOOGLE_SHEET_ID / ADMIN_EMAILS are no longer
+// bundled into the app — they are only read from .env by the local
+// migration scripts in scripts/.
 const ENV_KEYS = [
-  'GOOGLE_SHEETS_API_KEY',
-  'GOOGLE_SHEET_ID',
+  'SUPABASE_URL',
+  'SUPABASE_ANON_KEY',
   'GOOGLE_APPS_SCRIPT_WEBHOOK_URL',
-  'ADMIN_EMAILS',
   'PRAYER_RECIPIENT_EMAIL',
   'APP_NAME',
   'APP_STORE_LINK',

@@ -1,26 +1,20 @@
 /**
- * Two-factor authentication service for sign-up.
- * Sends a 6-digit code to the user's email via the existing Apps Script webhook
- * and verifies the code. Requires the webhook to handle actions:
- * - sendVerificationCode
- * - verifyCode
- * See docs/APPS_SCRIPT_2FA.md for backend implementation.
+ * Two-factor authentication service.
+ * Sends a 6-digit code to the user's email via Supabase Auth (email OTP)
+ * and verifies it. Verifying creates the Supabase session.
  */
 
-import { env } from '@/config/env';
-
-/** Detect server-side JS errors we should not show to end users */
-function isDeveloperError(message: string): boolean {
-  const s = message.toLowerCase();
-  return s.includes('referenceerror') || s.includes('syntaxerror') || s.includes('before initialization') || s.includes('is not defined');
-}
+import { supabase } from '@/services/supabaseClient';
 
 const CODE_LENGTH = 6;
-const RETRY_COOLDOWN_SECONDS = 30;
+// Supabase enforces a 60s minimum between OTP emails to the same address.
+const RETRY_COOLDOWN_SECONDS = 60;
 
 export interface SendCodeResult {
   success: boolean;
   error?: string;
+  /** True when the email has no account (login with shouldCreateUser: false). */
+  userNotFound?: boolean;
 }
 
 export interface VerifyCodeResult {
@@ -28,50 +22,44 @@ export interface VerifyCodeResult {
   error?: string;
 }
 
-function getWebhookUrl(): string {
-  const url = env.googleAppsScriptWebhookUrl;
-  if (!url || !url.trim()) {
-    throw new Error('Webhook URL is not configured. Set GOOGLE_APPS_SCRIPT_WEBHOOK_URL.');
+function friendlySendError(message: string): string {
+  const s = message.toLowerCase();
+  if (s.includes('signups not allowed')) {
+    return 'No account found for this email.';
   }
-  return url;
+  // e.g. "email rate limit exceeded", "For security purposes, you can only
+  // request this after 54 seconds"
+  if (s.includes('rate limit') || s.includes('security purposes') || s.includes('only request this')) {
+    return 'Too many attempts. Please wait a minute and try again.';
+  }
+  return message || 'Could not send code. Please try again later.';
+}
+
+export interface SendCodeOptions {
+  /** Set false for login: fails with userNotFound instead of creating an account. */
+  shouldCreateUser?: boolean;
 }
 
 /**
  * Request that a 6-digit verification code be sent to the given email.
- * The webhook must generate the code, store it with expiry, and email it.
  */
-export async function sendVerificationCode(email: string): Promise<SendCodeResult> {
+export async function sendVerificationCode(
+  email: string,
+  options: SendCodeOptions = {}
+): Promise<SendCodeResult> {
   const normalizedEmail = email.trim().toLowerCase();
   if (!normalizedEmail || !normalizedEmail.includes('@')) {
     return { success: false, error: 'Invalid email address' };
   }
 
   try {
-    const response = await fetch(getWebhookUrl(), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'sendVerificationCode',
-        data: { email: normalizedEmail },
-      }),
+    const { error } = await supabase.auth.signInWithOtp({
+      email: normalizedEmail,
+      options: { shouldCreateUser: options.shouldCreateUser !== false },
     });
-
-    const text = await response.text();
-    let json: { success?: boolean; error?: string };
-    try {
-      json = text ? JSON.parse(text) : {};
-    } catch {
-      return { success: false, error: 'Invalid response from server' };
-    }
-
-    if (!response.ok) {
-      return { success: false, error: json.error || `Request failed (${response.status})` };
-    }
-    if (json.success !== true) {
-      const serverError = json.error || 'Failed to send code';
-      // Don't show raw JS errors (e.g. ReferenceError) to the user
-      const friendlyError = isDeveloperError(serverError) ? 'Could not send code. Please try again later.' : serverError;
-      return { success: false, error: friendlyError };
+    if (error) {
+      const userNotFound = error.message.toLowerCase().includes('signups not allowed');
+      return { success: false, error: friendlySendError(error.message), userNotFound };
     }
     return { success: true };
   } catch (err) {
@@ -83,7 +71,7 @@ export async function sendVerificationCode(email: string): Promise<SendCodeResul
 
 /**
  * Verify the 6-digit code entered by the user.
- * The webhook must check the stored code for this email and return success/failure.
+ * On success the Supabase session is established and persisted.
  */
 export async function verifyCode(email: string, code: string): Promise<VerifyCodeResult> {
   const normalizedEmail = email.trim().toLowerCase();
@@ -96,30 +84,17 @@ export async function verifyCode(email: string, code: string): Promise<VerifyCod
   }
 
   try {
-    const response = await fetch(getWebhookUrl(), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'verifyCode',
-        data: { email: normalizedEmail, code: digits },
-      }),
+    const { data, error } = await supabase.auth.verifyOtp({
+      email: normalizedEmail,
+      token: digits,
+      type: 'email',
     });
-
-    const text = await response.text();
-    let json: { success?: boolean; error?: string };
-    try {
-      json = text ? JSON.parse(text) : {};
-    } catch {
-      return { success: false, error: 'Invalid response from server' };
-    }
-
-    if (!response.ok) {
-      return { success: false, error: json.error || `Request failed (${response.status})` };
-    }
-    if (json.success !== true) {
-      const serverError = json.error || 'Invalid or expired code';
-      const friendlyError = isDeveloperError(serverError) ? 'Invalid or expired code. Please try again.' : serverError;
-      return { success: false, error: friendlyError };
+    if (error || !data.session) {
+      const raw = error?.message || 'Invalid or expired code';
+      const friendly = raw.toLowerCase().includes('expired') || raw.toLowerCase().includes('invalid')
+        ? 'Invalid or expired code. Please try again.'
+        : raw;
+      return { success: false, error: friendly };
     }
     return { success: true };
   } catch (err) {

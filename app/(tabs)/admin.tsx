@@ -20,7 +20,6 @@ import { useQuotes } from '@/contexts/QuotesContext';
 import { useVideos } from '@/contexts/VideosContext';
 import { useEvents } from '@/contexts/EventsContext';
 import { notificationService } from '@/services/notificationService';
-import { googleSheetsService } from '@/services/googleSheetsService';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS } from '@/constants/SpiritualColors';
 import { styles } from '@/styles/admin.styles';
 
@@ -37,11 +36,6 @@ export default function AdminScreen() {
     }
   }, [user]);
 
-  // Return null while checking or if not admin 
-  if (!user || !user.isAdmin) {
-    return null;
-  }
-
   // Tab navigation state
   const [activeTab, setActiveTab] = useState<'quotes' | 'videos' | 'events' | 'notifications'>('quotes');
 
@@ -49,6 +43,7 @@ export default function AdminScreen() {
   const [quoteText, setQuoteText] = useState('');
   const [quoteAuthor, setQuoteAuthor] = useState('');
   const [quoteCategory, setQuoteCategory] = useState('');
+  const [quoteImageUrl, setQuoteImageUrl] = useState('');
   const [isSubmittingQuote, setIsSubmittingQuote] = useState(false);
   const [sendQuoteNotification, setSendQuoteNotification] = useState(true);
 
@@ -74,6 +69,14 @@ export default function AdminScreen() {
   const [notificationMessage, setNotificationMessage] = useState('');
   const [isSendingNotification, setIsSendingNotification] = useState(false);
 
+  // Return null while checking or if not admin.
+  // Must come AFTER every hook above: an early return before the hooks
+  // crashes React ("fewer hooks than expected") when user becomes null
+  // on logout while this screen is mounted.
+  if (!user || !user.isAdmin) {
+    return null;
+  }
+
   const handleTabPress = async (tab: 'quotes' | 'videos' | 'events' | 'notifications') => {
     if (Platform.OS !== 'web') {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -81,32 +84,15 @@ export default function AdminScreen() {
     setActiveTab(tab);
   };
 
-  // Get push tokens from all users stored in Google Sheets
-  const getPushTokens = async (): Promise<string[]> => {
-    try {
-      // Get all push tokens from Google Sheets
-      const tokens = await googleSheetsService.getPushTokens();
-      
-      if (tokens.length === 0) {
-        console.log('No push tokens found in Google Sheets, using local notification');
-        // Fallback: if no tokens in sheets, use local token (for testing)
-        const localToken = await notificationService.getStoredPushToken();
-        return localToken ? [localToken] : [];
-      }
-      
-      console.log(`Found ${tokens.length} push tokens from Google Sheets`);
-      return tokens;
-    } catch (error) {
-      console.error('Error getting push tokens from Google Sheets:', error);
-      // Fallback to local token
-      const localToken = await notificationService.getStoredPushToken();
-      return localToken ? [localToken] : [];
-    }
-  };
-
   const handleQuoteSubmit = async () => {
-    if (!quoteText.trim() || !quoteAuthor.trim()) {
-      Alert.alert('Error', 'Please fill in both quote and author fields');
+    const hasImage = quoteImageUrl.trim().length > 0;
+    // Image quotes stand alone; text quotes need both text and author
+    if (!hasImage && (!quoteText.trim() || !quoteAuthor.trim())) {
+      Alert.alert('Error', 'Fill in quote and author, or provide an image URL');
+      return;
+    }
+    if (hasImage && !quoteImageUrl.trim().startsWith('http')) {
+      Alert.alert('Error', 'Image URL must be a valid link (starting with http)');
       return;
     }
 
@@ -117,24 +103,24 @@ export default function AdminScreen() {
         text: quoteText.trim(),
         author: quoteAuthor.trim(),
         category: quoteCategory.trim() || 'General',
+        ...(hasImage ? { imageUrl: quoteImageUrl.trim() } : {}),
       };
 
       await addQuote(quoteData);
 
+      // Image-only quotes have no text/author to preview in the notification
+      const notifText = quoteData.text || 'New wisdom awaits you in the app';
+      const notifAuthor = quoteData.author || 'Om Siddheshwar';
+
       if (sendQuoteNotification) {
         try {
-          const pushTokens = await getPushTokens();
-          const adminToken = notificationService.getPushToken() || await notificationService.getStoredPushToken();
-          const remoteTokens = adminToken ? pushTokens.filter(t => t !== adminToken) : pushTokens;
-          if (remoteTokens.length > 0) {
-            await notificationService.notifyNewQuote(quoteData.text, quoteData.author, remoteTokens);
-          }
+          await notificationService.notifyNewQuote(notifText, notifAuthor);
         } catch (notifError) {
           console.error('Error sending notification:', notifError);
         }
       }
 
-      const quotePreview = quoteData.text.length > 60 ? quoteData.text.substring(0, 57) + '...' : quoteData.text;
+      const quotePreview = notifText.length > 60 ? notifText.substring(0, 57) + '...' : notifText;
       Alert.alert('Success', 'Quote has been added successfully!', [{
         text: 'OK',
         onPress: () => {
@@ -142,16 +128,17 @@ export default function AdminScreen() {
             notificationService.sendLocalNotification({
               type: 'quote',
               title: 'New Daily Wisdom',
-              body: `"${quotePreview}" - ${quoteData.author}`,
+              body: `"${quotePreview}" - ${notifAuthor}`,
             }).catch(() => {});
           }
         },
       }]);
-      
+
       // Clear form
       setQuoteText('');
       setQuoteAuthor('');
       setQuoteCategory('');
+      setQuoteImageUrl('');
       
       // Refresh quotes
       await refreshQuotes();
@@ -208,12 +195,7 @@ export default function AdminScreen() {
 
       if (sendVideoNotification) {
         try {
-          const pushTokens = await getPushTokens();
-          const adminToken = notificationService.getPushToken() || await notificationService.getStoredPushToken();
-          const remoteTokens = adminToken ? pushTokens.filter(t => t !== adminToken) : pushTokens;
-          if (remoteTokens.length > 0) {
-            await notificationService.notifyNewVideo(videoData.title, remoteTokens);
-          }
+          await notificationService.notifyNewVideo(videoData.title);
         } catch (notifError) {
           console.error('Error sending notification:', notifError);
         }
@@ -274,12 +256,7 @@ export default function AdminScreen() {
 
       if (sendEventNotification) {
         try {
-          const pushTokens = await getPushTokens();
-          const adminToken = notificationService.getPushToken() || await notificationService.getStoredPushToken();
-          const remoteTokens = adminToken ? pushTokens.filter(t => t !== adminToken) : pushTokens;
-          if (remoteTokens.length > 0) {
-            await notificationService.notifyNewEvent(eventData.title, eventData.date, remoteTokens);
-          }
+          await notificationService.notifyNewEvent(eventData.title, eventData.date);
         } catch (notifError) {
           console.error('Error sending notification:', notifError);
         }
@@ -365,6 +342,23 @@ export default function AdminScreen() {
               value={quoteCategory}
               onChangeText={setQuoteCategory}
             />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Image URL (Optional)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Public Google Drive link or image URL..."
+              placeholderTextColor={SPIRITUAL_COLORS.textMuted}
+              value={quoteImageUrl}
+              onChangeText={setQuoteImageUrl}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+            />
+            <Text style={styles.helperText}>
+              When set, the image is shown as the quote card. Use a Drive "Anyone with the link" share link.
+            </Text>
           </View>
 
           <View style={styles.checkboxContainer}>
@@ -644,19 +638,9 @@ export default function AdminScreen() {
         return;
       }
 
-      // Get all push tokens from Google Sheets
-      const allTokens = await getPushTokens();
-
-      // Get admin's own token so we can exclude it from push (admin gets local instead)
-      const adminToken = notificationService.getPushToken() || await notificationService.getStoredPushToken();
-      const remoteTokens = adminToken
-        ? allTokens.filter(t => t !== adminToken)
-        : allTokens;
-
-      // Send push to all other users
-      if (remoteTokens.length > 0) {
-        await notificationService.notifyGeneral(notificationMessage.trim(), remoteTokens);
-      }
+      // Broadcast to all users via the edge function (the sender's own
+      // device is excluded and gets the local notification below instead)
+      await notificationService.notifyGeneral(notificationMessage.trim());
 
       const message = notificationMessage.trim();
       setNotificationMessage('');

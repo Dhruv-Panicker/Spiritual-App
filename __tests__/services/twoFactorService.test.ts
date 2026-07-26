@@ -1,45 +1,37 @@
 /**
- * Unit tests for twoFactorService
+ * Unit tests for twoFactorService (Supabase email OTP)
  *
  * Tests cover:
  * - Email validation before sending code
  * - Code length validation before verifying
  * - Success paths for sendVerificationCode and verifyCode
- * - Server-side error handling and developer-error sanitization
+ * - shouldCreateUser passthrough and userNotFound detection
+ * - Friendly error mapping (no account, rate limit, bad code)
  * - Network failure handling
- * - Invalid JSON response handling
  */
 
-jest.mock('@/config/env', () => ({
-  env: {
-    googleAppsScriptWebhookUrl: 'https://script.google.com/test-webhook',
+jest.mock('@/services/supabaseClient', () => ({
+  supabase: {
+    auth: {
+      signInWithOtp: jest.fn(),
+      verifyOtp: jest.fn(),
+    },
   },
-  validateEnv: jest.fn(),
 }));
 
 import { sendVerificationCode, verifyCode, twoFactorService } from '@/services/twoFactorService';
+import { supabase } from '@/services/supabaseClient';
 
-const mockFetch = global.fetch as jest.Mock;
-
-function makeOkResponse(data: object) {
-  return {
-    ok: true,
-    status: 200,
-    text: jest.fn(() => Promise.resolve(JSON.stringify(data))),
-  };
-}
-
-function makeErrorResponse(status: number, body: object | string = {}) {
-  const bodyStr = typeof body === 'string' ? body : JSON.stringify(body);
-  return {
-    ok: false,
-    status,
-    text: jest.fn(() => Promise.resolve(bodyStr)),
-  };
-}
+const mockSignInWithOtp = supabase.auth.signInWithOtp as jest.Mock;
+const mockVerifyOtp = supabase.auth.verifyOtp as jest.Mock;
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockSignInWithOtp.mockResolvedValue({ data: {}, error: null });
+  mockVerifyOtp.mockResolvedValue({
+    data: { session: { access_token: 'token' }, user: { id: 'uid-1' } },
+    error: null,
+  });
 });
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -49,8 +41,8 @@ describe('service constants', () => {
     expect(twoFactorService.CODE_LENGTH).toBe(6);
   });
 
-  it('exports RETRY_COOLDOWN_SECONDS as 30', () => {
-    expect(twoFactorService.RETRY_COOLDOWN_SECONDS).toBe(30);
+  it('exports RETRY_COOLDOWN_SECONDS as 60 (Supabase send interval)', () => {
+    expect(twoFactorService.RETRY_COOLDOWN_SECONDS).toBe(60);
   });
 });
 
@@ -62,7 +54,7 @@ describe('sendVerificationCode()', () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toBe('Invalid email address');
-    expect(mockFetch).not.toHaveBeenCalled();
+    expect(mockSignInWithOtp).not.toHaveBeenCalled();
   });
 
   it('returns error for email without @ symbol', async () => {
@@ -70,106 +62,74 @@ describe('sendVerificationCode()', () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toBe('Invalid email address');
-    expect(mockFetch).not.toHaveBeenCalled();
+    expect(mockSignInWithOtp).not.toHaveBeenCalled();
   });
 
   it('normalizes email to lowercase before sending', async () => {
-    mockFetch.mockResolvedValueOnce(makeOkResponse({ success: true }));
-
     await sendVerificationCode('USER@EXAMPLE.COM');
 
-    const body = JSON.parse((mockFetch.mock.calls[0][1] as any).body);
-    expect(body.data.email).toBe('user@example.com');
+    expect(mockSignInWithOtp).toHaveBeenCalledWith(
+      expect.objectContaining({ email: 'user@example.com' })
+    );
   });
 
-  it('sends correct action to webhook', async () => {
-    mockFetch.mockResolvedValueOnce(makeOkResponse({ success: true }));
-
+  it('creates accounts by default (sign-up flow)', async () => {
     await sendVerificationCode('user@example.com');
 
-    const body = JSON.parse((mockFetch.mock.calls[0][1] as any).body);
-    expect(body.action).toBe('sendVerificationCode');
+    expect(mockSignInWithOtp).toHaveBeenCalledWith({
+      email: 'user@example.com',
+      options: { shouldCreateUser: true },
+    });
+  });
+
+  it('passes shouldCreateUser: false through (login flow)', async () => {
+    await sendVerificationCode('user@example.com', { shouldCreateUser: false });
+
+    expect(mockSignInWithOtp).toHaveBeenCalledWith({
+      email: 'user@example.com',
+      options: { shouldCreateUser: false },
+    });
   });
 
   it('returns { success: true } on success', async () => {
-    mockFetch.mockResolvedValueOnce(makeOkResponse({ success: true }));
-
     const result = await sendVerificationCode('user@example.com');
 
     expect(result).toEqual({ success: true });
   });
 
-  it('returns error when server returns success: false', async () => {
-    mockFetch.mockResolvedValueOnce(makeOkResponse({ success: false, error: 'Email not found' }));
+  it('flags userNotFound when Supabase rejects unknown email on login', async () => {
+    mockSignInWithOtp.mockResolvedValueOnce({
+      data: {},
+      error: { message: 'Signups not allowed for otp' },
+    });
 
-    const result = await sendVerificationCode('user@example.com');
-
-    expect(result.success).toBe(false);
-    expect(result.error).toBe('Email not found');
-  });
-
-  it('returns generic error when server error is missing', async () => {
-    mockFetch.mockResolvedValueOnce(makeOkResponse({ success: false }));
-
-    const result = await sendVerificationCode('user@example.com');
+    const result = await sendVerificationCode('unknown@example.com', { shouldCreateUser: false });
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe('Failed to send code');
+    expect(result.userNotFound).toBe(true);
+    expect(result.error).toBe('No account found for this email.');
   });
 
-  it('sanitizes ReferenceError developer errors shown to user', async () => {
-    mockFetch.mockResolvedValueOnce(
-      makeOkResponse({ success: false, error: 'ReferenceError: someVar is not defined' })
-    );
-
-    const result = await sendVerificationCode('user@example.com');
-
-    expect(result.success).toBe(false);
-    expect(result.error).toBe('Could not send code. Please try again later.');
-    expect(result.error).not.toContain('ReferenceError');
-  });
-
-  it('sanitizes SyntaxError developer errors', async () => {
-    mockFetch.mockResolvedValueOnce(
-      makeOkResponse({ success: false, error: 'SyntaxError: Unexpected token' })
-    );
-
-    const result = await sendVerificationCode('user@example.com');
-
-    expect(result.success).toBe(false);
-    expect(result.error).toBe('Could not send code. Please try again later.');
-  });
-
-  it('returns error on HTTP 400+', async () => {
-    // When server sends no error field, fallback includes the status code
-    mockFetch.mockResolvedValueOnce(makeErrorResponse(400, {}));
-
-    const result = await sendVerificationCode('user@example.com');
-
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('400');
-  });
-
-  it('returns error on network failure', async () => {
-    mockFetch.mockRejectedValueOnce(new Error('Network is down'));
-
-    const result = await sendVerificationCode('user@example.com');
-
-    expect(result.success).toBe(false);
-    expect(result.error).toBe('Network is down');
-  });
-
-  it('returns "Invalid response from server" on invalid JSON', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      text: jest.fn(() => Promise.resolve('this is not json {')),
+  it('maps rate-limit errors to a friendly message', async () => {
+    mockSignInWithOtp.mockResolvedValueOnce({
+      data: {},
+      error: { message: 'email rate limit exceeded' },
     });
 
     const result = await sendVerificationCode('user@example.com');
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe('Invalid response from server');
+    expect(result.error).toBe('Too many attempts. Please wait a minute and try again.');
+    expect(result.userNotFound).toBeFalsy();
+  });
+
+  it('returns error on network failure', async () => {
+    mockSignInWithOtp.mockRejectedValueOnce(new Error('Network is down'));
+
+    const result = await sendVerificationCode('user@example.com');
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Network is down');
   });
 });
 
@@ -181,7 +141,7 @@ describe('verifyCode()', () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toBe('Invalid email address');
-    expect(mockFetch).not.toHaveBeenCalled();
+    expect(mockVerifyOtp).not.toHaveBeenCalled();
   });
 
   it('returns error for email without @', async () => {
@@ -196,77 +156,55 @@ describe('verifyCode()', () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toBe('Please enter a 6-digit code');
+    expect(mockVerifyOtp).not.toHaveBeenCalled();
   });
 
   it('strips non-digit characters from code before checking length', async () => {
-    // Code with letters stripped = '123' (only 3 digits) → error
+    // Letters stripped leaves '123' (only 3 digits) → error
     const result = await verifyCode('user@example.com', '1a2b3c');
 
     expect(result.success).toBe(false);
     expect(result.error).toBe('Please enter a 6-digit code');
   });
 
-  it('sends only digits to the server', async () => {
-    mockFetch.mockResolvedValueOnce(makeOkResponse({ success: true }));
-
-    // Passing 6 digits mixed with spaces (spaces stripped = 6 digits)
+  it('verifies with digits only and type email', async () => {
     await verifyCode('user@example.com', '123456');
 
-    const body = JSON.parse((mockFetch.mock.calls[0][1] as any).body);
-    expect(body.data.code).toBe('123456');
-    expect(body.data.code).toMatch(/^\d{6}$/);
-  });
-
-  it('sends correct action to webhook', async () => {
-    mockFetch.mockResolvedValueOnce(makeOkResponse({ success: true }));
-
-    await verifyCode('user@example.com', '123456');
-
-    const body = JSON.parse((mockFetch.mock.calls[0][1] as any).body);
-    expect(body.action).toBe('verifyCode');
+    expect(mockVerifyOtp).toHaveBeenCalledWith({
+      email: 'user@example.com',
+      token: '123456',
+      type: 'email',
+    });
   });
 
   it('normalizes email to lowercase', async () => {
-    mockFetch.mockResolvedValueOnce(makeOkResponse({ success: true }));
-
     await verifyCode('USER@EXAMPLE.COM', '123456');
 
-    const body = JSON.parse((mockFetch.mock.calls[0][1] as any).body);
-    expect(body.data.email).toBe('user@example.com');
+    expect(mockVerifyOtp).toHaveBeenCalledWith(
+      expect.objectContaining({ email: 'user@example.com' })
+    );
   });
 
-  it('returns { success: true } on valid code', async () => {
-    mockFetch.mockResolvedValueOnce(makeOkResponse({ success: true }));
-
+  it('returns { success: true } when a session is created', async () => {
     const result = await verifyCode('user@example.com', '123456');
 
     expect(result).toEqual({ success: true });
   });
 
-  it('returns error when code is wrong', async () => {
-    mockFetch.mockResolvedValueOnce(
-      makeOkResponse({ success: false, error: 'Invalid or expired code' })
-    );
+  it('maps invalid/expired token errors to a friendly message', async () => {
+    mockVerifyOtp.mockResolvedValueOnce({
+      data: { session: null, user: null },
+      error: { message: 'Token has expired or is invalid' },
+    });
 
     const result = await verifyCode('user@example.com', '000000');
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe('Invalid or expired code');
+    expect(result.error).toBe('Invalid or expired code. Please try again.');
   });
 
-  it('uses fallback error message when server sends none', async () => {
-    mockFetch.mockResolvedValueOnce(makeOkResponse({ success: false }));
-
-    const result = await verifyCode('user@example.com', '000000');
-
-    expect(result.success).toBe(false);
-    expect(result.error).toBe('Invalid or expired code');
-  });
-
-  it('sanitizes developer errors from server', async () => {
-    mockFetch.mockResolvedValueOnce(
-      makeOkResponse({ success: false, error: 'ReferenceError: token is not defined' })
-    );
+  it('fails when no session is returned even without an error', async () => {
+    mockVerifyOtp.mockResolvedValueOnce({ data: { session: null, user: null }, error: null });
 
     const result = await verifyCode('user@example.com', '123456');
 
@@ -274,33 +212,12 @@ describe('verifyCode()', () => {
     expect(result.error).toBe('Invalid or expired code. Please try again.');
   });
 
-  it('returns error on HTTP error', async () => {
-    mockFetch.mockResolvedValueOnce(makeErrorResponse(500, { error: 'Internal error' }));
-
-    const result = await verifyCode('user@example.com', '123456');
-
-    expect(result.success).toBe(false);
-  });
-
   it('returns error on network failure', async () => {
-    mockFetch.mockRejectedValueOnce(new Error('Connection refused'));
+    mockVerifyOtp.mockRejectedValueOnce(new Error('Connection refused'));
 
     const result = await verifyCode('user@example.com', '123456');
 
     expect(result.success).toBe(false);
     expect(result.error).toBe('Connection refused');
-  });
-
-  it('returns "Invalid response from server" on invalid JSON', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      text: jest.fn(() => Promise.resolve('{bad json')),
-    });
-
-    const result = await verifyCode('user@example.com', '123456');
-
-    expect(result.success).toBe(false);
-    expect(result.error).toBe('Invalid response from server');
   });
 });

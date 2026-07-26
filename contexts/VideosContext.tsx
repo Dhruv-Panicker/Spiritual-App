@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { googleSheetsService, Video, LiveStatus } from '../services/googleSheetsService';
+import { googleSheetsService, LiveStatus } from '../services/googleSheetsService';
+import { supabaseService, Video } from '../services/supabaseService';
 
 interface VideosContextType {
   videos: Video[];
@@ -22,7 +23,7 @@ export function VideosProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       const [loadedVideos, loadedLive] = await Promise.all([
-        googleSheetsService.getVideos(),
+        supabaseService.getVideos(),
         googleSheetsService.getLiveStatus(),
       ]);
       setVideos(loadedVideos);
@@ -41,7 +42,7 @@ export function VideosProvider({ children }: { children: ReactNode }) {
 
   const addVideo = async (newVideo: Omit<Video, 'id' | 'dateAdded'>) => {
     try {
-      const addedVideo = await googleSheetsService.addVideo(newVideo);
+      const addedVideo = await supabaseService.addVideo(newVideo);
       setVideos(prev => [addedVideo, ...prev]);
       console.log('Video added successfully');
     } catch (error) {

@@ -36,20 +36,12 @@ const getEnvVar = (key: string, defaultValue: string = ''): string => {
 
 // Configuration object
 export const env = {
-  // Google Sheets Configuration
-  googleSheetsApiKey: getEnvVar('GOOGLE_SHEETS_API_KEY'),
-  googleSheetId: getEnvVar('GOOGLE_SHEET_ID'),
+  // Supabase Configuration (backend: database, auth, storage)
+  supabaseUrl: getEnvVar('SUPABASE_URL'),
+  supabaseAnonKey: getEnvVar('SUPABASE_ANON_KEY'),
+
+  // Apps Script webhook relay (prayer email + YouTube live status only)
   googleAppsScriptWebhookUrl: getEnvVar('GOOGLE_APPS_SCRIPT_WEBHOOK_URL'),
-  
-  // Admin Configuration
-  adminEmails: (() => {
-    const emailsStr = getEnvVar('ADMIN_EMAILS');
-    if (!emailsStr) return [];
-    return emailsStr
-      .split(',')
-      .map(email => email.trim().toLowerCase())
-      .filter(email => email.length > 0);
-  })(),
 
   // Prayer: email where all prayers are sent (default below)
   prayerRecipientEmail: getEnvVar('PRAYER_RECIPIENT_EMAIL', 'noreply.gurudevapp@gmail.com'),
@@ -66,8 +58,8 @@ export const validateEnv = (): void => {
   if (!__DEV__) return;
   
   const required: Array<keyof typeof env> = [
-    'googleSheetsApiKey',
-    'googleSheetId',
+    'supabaseUrl',
+    'supabaseAnonKey',
     'googleAppsScriptWebhookUrl',
   ];
   

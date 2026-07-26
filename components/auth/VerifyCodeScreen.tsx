@@ -22,10 +22,12 @@ interface VerifyCodeScreenProps {
   email: string;
   name: string;
   onBack: () => void;
+  /** 'signup' (default) creates the profile; 'login' loads the existing one. */
+  mode?: 'signup' | 'login';
 }
 
-export const VerifyCodeScreen: React.FC<VerifyCodeScreenProps> = ({ email, name, onBack }) => {
-  const { completeSignUp, isLoading: authLoading } = useAuth();
+export const VerifyCodeScreen: React.FC<VerifyCodeScreenProps> = ({ email, name, onBack, mode = 'signup' }) => {
+  const { completeSignUp, completeLogin, isLoading: authLoading } = useAuth();
   const [code, setCode] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +55,11 @@ export const VerifyCodeScreen: React.FC<VerifyCodeScreenProps> = ({ email, name,
     try {
       const result = await twoFactorService.verifyCode(email, digits);
       if (result.success) {
-        await completeSignUp(email, name);
+        if (mode === 'login') {
+          await completeLogin(email);
+        } else {
+          await completeSignUp(email, name);
+        }
       } else {
         setError(result.error || 'Invalid or expired code.');
       }
