@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
-import { googleSheetsService, Event } from '../services/googleSheetsService';
+import { supabaseService, Event } from '../services/supabaseService';
 
 export interface MonthData {
   month: string;
@@ -33,7 +33,7 @@ export function EventsProvider({ children }: { children: ReactNode }) {
   const loadEvents = async () => {
     try {
       setLoading(true);
-      const loadedEvents = await googleSheetsService.getEvents();
+      const loadedEvents = await supabaseService.getEvents();
       setEvents(loadedEvents);
       console.log(`Loaded ${loadedEvents.length} events`);
     } catch (error) {
@@ -109,7 +109,7 @@ export function EventsProvider({ children }: { children: ReactNode }) {
 
   const addEvent = async (newEvent: Omit<Event, 'id'>) => {
     try {
-      const addedEvent = await googleSheetsService.addEvent(newEvent);
+      const addedEvent = await supabaseService.addEvent(newEvent);
       setEvents(prev => [addedEvent, ...prev]);
       console.log('Event added successfully');
     } catch (error) {

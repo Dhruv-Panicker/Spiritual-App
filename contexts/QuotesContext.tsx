@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { googleSheetsService, Quote } from '../services/googleSheetsService';
+import { Image as CachedImage } from 'expo-image';
+import { supabaseService, Quote } from '../services/supabaseService';
 
 interface QuotesContextType {
   quotes: Quote[];
@@ -17,9 +18,18 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
   const loadQuotes = async () => {
     try {
       setLoading(true);
-      const loadedQuotes = await googleSheetsService.getQuotes();
+      const loadedQuotes = await supabaseService.getQuotes();
       setQuotes(loadedQuotes);
       console.log(`📚 Loaded ${loadedQuotes.length} quotes`);
+
+      // Warm the image cache for the first cards so the quotes tab feels instant
+      const imageUrls = loadedQuotes
+        .map(q => q.imageUrl)
+        .filter((u): u is string => !!u)
+        .slice(0, 6);
+      if (imageUrls.length) {
+        CachedImage.prefetch(imageUrls).catch(() => {});
+      }
     } catch (error) {
       console.error('Error loading quotes:', error);
     } finally {
@@ -34,7 +44,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
 
   const addQuote = async (newQuote: Omit<Quote, 'id' | 'dateAdded'>) => {
     try {
-      const addedQuote = await googleSheetsService.addQuote(newQuote);
+      const addedQuote = await supabaseService.addQuote(newQuote);
       setQuotes(prev => [addedQuote, ...prev]);
       console.log('Quote added successfully');
     } catch (error) {

@@ -59,3 +59,8 @@ build/
 
 app-example
 coverage/
+
+# Native build artifacts / machine-local files
+android/.gradle/
+android/local.properties
+ios/sentry.properties

@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Platform,
 } from 'react-native';
+import { Image as CachedImage } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
@@ -62,10 +63,12 @@ const QuoteCard: React.FC<{ quote: Quote }> = ({ quote }) => {
       </View>
 
       {quote.imageUrl ? (
-        <Image
+        <CachedImage
           source={{ uri: quote.imageUrl }}
           style={styles.quoteImage}
-          resizeMode="cover"
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          transition={200}
         />
       ) : (
         <Text style={[styles.quoteText, SPIRITUAL_TYPOGRAPHY.quoteText]}>

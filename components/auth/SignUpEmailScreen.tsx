@@ -13,7 +13,7 @@ import {
 import { SPIRITUAL_COLORS } from '@/constants/SpiritualColors';
 import { styles } from './styles/SignUpEmailScreen.styles';
 import { twoFactorService } from '@/services/twoFactorService';
-import { googleSheetsService } from '@/services/googleSheetsService';
+import { supabaseService } from '@/services/supabaseService';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -53,7 +53,7 @@ export const SignUpEmailScreen: React.FC<SignUpEmailScreenProps> = ({ onBack, on
     setError(null);
     const trimmedEmail = email.trim().toLowerCase();
     try {
-      const { exists } = await googleSheetsService.checkUserInUserbase(trimmedEmail);
+      const exists = await supabaseService.checkUserExists(trimmedEmail);
       if (exists) {
         setError('This email is already in use. Please enter a different email or log in.');
         setIsLoading(false);

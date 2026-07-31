@@ -19,6 +19,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_PALETTE, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
 import { googleSheetsService } from '@/services/googleSheetsService';
+import { supabaseService } from '@/services/supabaseService';
 import { env } from '@/config/env';
 import { styles } from '@/styles/prayer.styles';
 
@@ -129,6 +130,18 @@ export default function PrayerScreen() {
           console.warn('Could not read photo as base64:', e);
         }
       }
+      const prayerData = {
+        name: name.trim(),
+        dateOfBirth: `${dobDay.trim()}/${dobMonth.trim()}/${dobYear.trim()}`,
+        city: city.trim(),
+        country: country.trim(),
+        phone: `${phoneAreaCode.trim()} ${phoneNumber.trim()}`.trim(),
+        email: userEmail,
+        prayer: prayer.trim(),
+        hasPhoto: !!photoUri,
+      };
+      // Keep a queryable copy for admins; the email below is the delivery
+      supabaseService.recordPrayer(prayerData).catch(() => {});
       await googleSheetsService.submitPrayer(
         {
           name: name.trim(),

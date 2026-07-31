@@ -26,8 +26,13 @@ jest.mock('@/config/env', () => ({
 
 jest.mock('@/services/googleSheetsService', () => ({
   googleSheetsService: {
-    getVideos: jest.fn(),
     getLiveStatus: jest.fn(),
+  },
+}));
+
+jest.mock('@/services/supabaseService', () => ({
+  supabaseService: {
+    getVideos: jest.fn(),
     addVideo: jest.fn(),
   },
 }));
@@ -37,10 +42,11 @@ import { Text } from 'react-native';
 import { render, waitFor, act } from '@testing-library/react-native';
 import { VideosProvider, useVideos } from '@/contexts/VideosContext';
 import { googleSheetsService } from '@/services/googleSheetsService';
+import { supabaseService } from '@/services/supabaseService';
 
-const mockGetVideos = googleSheetsService.getVideos as jest.Mock;
+const mockGetVideos = supabaseService.getVideos as jest.Mock;
 const mockGetLiveStatus = googleSheetsService.getLiveStatus as jest.Mock;
-const mockAddVideo = googleSheetsService.addVideo as jest.Mock;
+const mockAddVideo = supabaseService.addVideo as jest.Mock;
 
 const emptyLive = { isLive: false, liveVideoId: null, channelUrl: '', liveTitle: null };
 

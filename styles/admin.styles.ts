@@ -87,6 +87,12 @@ export const styles = StyleSheet.create({
     color: SPIRITUAL_COLORS.foreground,
     marginBottom: 8,
   },
+  helperText: {
+    fontSize: 12,
+    color: SPIRITUAL_COLORS.textMuted,
+    marginTop: 6,
+    lineHeight: 16,
+  },
   input: {
     borderWidth: 1,
     borderColor: SPIRITUAL_COLORS.border,
