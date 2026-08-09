@@ -36,7 +36,7 @@
         "image": "macos-sequoia-15.5-xcode-26.0"
       },
       "android": {
-        "buildType": "apk"
+        "buildType": "app-bundle"
       },
       "env": {
         "SENTRY_DISABLE_AUTO_UPLOAD": "true"
@@ -44,6 +44,11 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./google-play-service-account.json",
+        "track": "production"
+      }
+    }
   }
 }

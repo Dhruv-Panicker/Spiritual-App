@@ -9,6 +9,7 @@ Sentry.init({
 import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet } from 'react-native';
 import { useFonts } from 'expo-font';
+import { Ionicons } from '@expo/vector-icons';
 import { LibreBaskerville_700Bold } from '@expo-google-fonts/libre-baskerville';
 import {
   DMSans_400Regular,
@@ -35,6 +36,7 @@ const LOADER_FADE_MS = 400;   // fade-out duration
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
+    ...Ionicons.font,
     LibreBaskerville_700Bold,
     DMSans_400Regular,
     DMSans_400Regular_Italic,
