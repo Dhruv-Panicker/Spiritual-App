@@ -16,7 +16,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system';
+// SDK 54 replaced expo-file-system's API; the legacy entry point keeps
+// readAsStringAsync/EncodingType working unchanged.
+import * as FileSystem from 'expo-file-system/legacy';
 import { SPIRITUAL_COLORS, SPIRITUAL_GRADIENTS, SPIRITUAL_PALETTE, SPIRITUAL_SHADOWS } from '@/constants/SpiritualColors';
 import { googleSheetsService } from '@/services/googleSheetsService';
 import { supabaseService } from '@/services/supabaseService';
