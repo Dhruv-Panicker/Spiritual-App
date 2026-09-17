@@ -22,13 +22,17 @@
       }
     },
     "android": {
-      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/gurudev-app-icon.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.spiritualapp.gurudarshan",
-      "permissions": ["RECEIVE_BOOT_COMPLETED", "VIBRATE"]
+      "googleServicesFile": "./google-services.json",
+      "permissions": [
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "POST_NOTIFICATIONS"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -37,6 +41,8 @@
     },
     "plugins": [
       "expo-router",
+      "expo-font",
+      "expo-asset",
       ["@sentry/react-native/expo", { "organization": "siddhguru", "project": "react-native" }],
       ["expo-notifications", { "icon": "./assets/images/gurudev-app-icon.png", "color": "#c17f3c", "defaultChannel": "default" }],
       ["expo-build-properties", { "android": { "kotlinVersion": "2.0.21" } }]

@@ -41,8 +41,12 @@ yarn-error.*
 *.tsbuildinfo
 
 # Google Services (sensitive files)
+# Public repo: google-services.json stays out of git; EAS builds receive it
+# via the GOOGLE_SERVICES_JSON file env var (see eas-build-pre-install).
 GoogleService-Info.plist
 google-services.json
+google-play-service-account.json
+*firebase-adminsdk*.json
 
 # IDE
 .vscode/
