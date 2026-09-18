@@ -15,6 +15,7 @@ jest.mock('@/services/supabaseClient', () => ({
     auth: {
       signInWithOtp: jest.fn(),
       verifyOtp: jest.fn(),
+      signInWithPassword: jest.fn(),
     },
   },
 }));
@@ -24,6 +25,8 @@ import { supabase } from '@/services/supabaseClient';
 
 const mockSignInWithOtp = supabase.auth.signInWithOtp as jest.Mock;
 const mockVerifyOtp = supabase.auth.verifyOtp as jest.Mock;
+const mockSignInWithPassword = supabase.auth.signInWithPassword as jest.Mock;
+const REVIEW_EMAIL = 'playstore.review@omsiddheshwar.app';
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -31,6 +34,53 @@ beforeEach(() => {
   mockVerifyOtp.mockResolvedValue({
     data: { session: { access_token: 'token' }, user: { id: 'uid-1' } },
     error: null,
+  });
+  mockSignInWithPassword.mockResolvedValue({
+    data: { session: { access_token: 'token' }, user: { id: 'review-uid' } },
+    error: null,
+  });
+});
+
+// ─── Play Store review account ────────────────────────────────────────────────
+
+describe('Play Store review account', () => {
+  it('does not send an OTP email to the review address', async () => {
+    const result = await sendVerificationCode(REVIEW_EMAIL);
+    expect(result.success).toBe(true);
+    expect(mockSignInWithOtp).not.toHaveBeenCalled();
+  });
+
+  it('signs in with a password instead of verifying an OTP', async () => {
+    const result = await verifyCode(REVIEW_EMAIL, '314159');
+    expect(result.success).toBe(true);
+    expect(mockVerifyOtp).not.toHaveBeenCalled();
+    expect(mockSignInWithPassword).toHaveBeenCalledWith({
+      email: REVIEW_EMAIL,
+      password: '314159',
+    });
+  });
+
+  it('matches the review address case-insensitively', async () => {
+    await verifyCode('  PlayStore.Review@OmSiddheshwar.app ', '314159');
+    expect(mockSignInWithPassword).toHaveBeenCalled();
+  });
+
+  it('reports a friendly error when the password is wrong', async () => {
+    mockSignInWithPassword.mockResolvedValue({
+      data: { session: null },
+      error: { message: 'Invalid login credentials' },
+    });
+    const result = await verifyCode(REVIEW_EMAIL, '000000');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/Invalid or expired code/);
+  });
+
+  it('leaves ordinary accounts on the OTP path', async () => {
+    await sendVerificationCode('devotee@example.com');
+    await verifyCode('devotee@example.com', '123456');
+    expect(mockSignInWithOtp).toHaveBeenCalled();
+    expect(mockVerifyOtp).toHaveBeenCalled();
+    expect(mockSignInWithPassword).not.toHaveBeenCalled();
   });
 });
 
