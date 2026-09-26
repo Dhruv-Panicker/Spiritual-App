@@ -7,6 +7,21 @@
 import { supabase } from '@/services/supabaseClient';
 
 const CODE_LENGTH = 6;
+
+/**
+ * Google Play's review team cannot receive our emailed login code, so this one
+ * address signs in with a password instead of an OTP. The reviewer types the
+ * password into the same 6-digit code field.
+ *
+ * Only the address lives in the app bundle — the password is stored in Supabase
+ * and in Play Console's "Sign in details", never here. The account is an
+ * ordinary user with no admin rights.
+ */
+const REVIEW_EMAIL = 'playstore.review@omsiddheshwar.app';
+
+function isReviewAccount(email: string): boolean {
+  return email === REVIEW_EMAIL;
+}
 // Supabase enforces a 60s minimum between OTP emails to the same address.
 const RETRY_COOLDOWN_SECONDS = 60;
 
@@ -52,6 +67,11 @@ export async function sendVerificationCode(
     return { success: false, error: 'Invalid email address' };
   }
 
+  // No code to send for the review account — it authenticates by password.
+  if (isReviewAccount(normalizedEmail)) {
+    return { success: true };
+  }
+
   try {
     const { error } = await supabase.auth.signInWithOtp({
       email: normalizedEmail,
@@ -81,6 +101,17 @@ export async function verifyCode(email: string, code: string): Promise<VerifyCod
   }
   if (digits.length !== CODE_LENGTH) {
     return { success: false, error: `Please enter a ${CODE_LENGTH}-digit code` };
+  }
+
+  if (isReviewAccount(normalizedEmail)) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: normalizedEmail,
+      password: digits,
+    });
+    if (error || !data.session) {
+      return { success: false, error: 'Invalid or expired code. Please try again.' };
+    }
+    return { success: true };
   }
 
   try {

@@ -75,7 +75,9 @@ export const SPIRITUAL_GRADIENTS = {
   meditation: [SPIRITUAL_PALETTE.marigoldLo, SPIRITUAL_PALETTE.marigold],
   sunset: [SPIRITUAL_PALETTE.marigold, SPIRITUAL_PALETTE.bg],
   marigold: ['#F2B45B', SPIRITUAL_PALETTE.marigold],
-};
+  // `as const` keeps each entry a fixed-length tuple, which is what
+  // LinearGradient's `colors` prop requires (string[] is too loose).
+} as const;
 
 // Shadows – brown-based
 export const SPIRITUAL_SHADOWS = {

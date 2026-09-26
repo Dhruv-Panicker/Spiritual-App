@@ -10,7 +10,9 @@ Notifications.setNotificationHandler({
   handleNotification: async (notification) => {
     console.log('Notification received in handler:', notification.request.content.title);
     return {
-      shouldShowAlert: true,
+      // shouldShowAlert was split into banner + list in expo-notifications 0.32
+      shouldShowBanner: true,
+      shouldShowList: true,
       shouldPlaySound: true,
       shouldSetBadge: true,
     };
@@ -181,7 +183,6 @@ class NotificationService {
           allowAlert: true,
           allowBadge: true,
           allowSound: true,
-          allowAnnouncements: false,
         },
       });
       
@@ -247,7 +248,10 @@ class NotificationService {
             ...notificationData.data,
           },
         },
-        trigger: { seconds: 1 },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: 1,
+        },
       });
 
       console.log('  Local notification scheduled successfully!');
